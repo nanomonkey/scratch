@@ -7,7 +7,11 @@
                    :task-list ["t1" "t2"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
-                 :equipment []
+                 :equipment {:items ["i1" "i2"]
+                             :qty {"i1" 1
+                                  "i2" 1}
+                             :units {"i1" "u1"
+                                    "i2" "u1"}}
                  :ingredients {:items ["i2" "i3"]
                                :qty {"i2" 1
                                      "i3" 2}

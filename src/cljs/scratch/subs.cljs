@@ -4,6 +4,11 @@
 
 ;; Units
 (re-frame/reg-sub
+ :units
+ (fn [db]
+   (:units db)))
+
+(re-frame/reg-sub
  :unit
  (fn [db [_ key]]
    (get-in db [:unit key])))
@@ -19,6 +24,11 @@
    (get-in db [:units key :abbrev])))
 
 ;; Items
+(re-frame/reg-sub
+ :items
+ (fn [db]
+   (:items db)))
+
 (re-frame/reg-sub
  :item
  (fn [db [_ id]]
@@ -112,23 +122,3 @@
               :item item-id})
            (get-in db [:tasks task-id :equipment :items]))))
 
-
-(comment
-
-(rf/reg-sub
-  :discounted-cart-items
-  (fn []
-    [(rf/subscribe :shopping-cart-items)
-     (rf/subscribe :coupon)])
-  (fn [[items coupon]]
-    (mapv #(apply-discount % (:discount coupon)) items)))
-
-  (rf/reg-sub
-   :task-
-   (fn [db]
-     (mapv (fn [id]
-             {:quantity (get-in db [:cart :quantities id])
-              :item (get-in db [:products id])})
-           (get-in db [:cart :order]))))
-
-)

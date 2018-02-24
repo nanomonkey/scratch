@@ -66,7 +66,7 @@
   (let [qty (:qty line-item)
         unit (re-frame/subscribe [:unit-abbrev (:unit line-item)])
         item (re-frame/subscribe [:item-name (:item line-item)])]
-    (goog.string/format "%i%s %s" qty @unit @item)))
+    (goog.string/format "%i%s - %s" qty @unit @item)))
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -91,10 +91,23 @@
            [:td @(re-frame/subscribe [:task-procedure task])]]
           ))])))  
 
+(defn item-editor []
+  (let [s (reagent/atom {})]
+    [:span 
+     [:form {:on-submit #(do (.preventDefault %))}
+      [:input {:type :number :name "qty" :value (:qty @s)}]
+      [:select 
+       (doall
+        (for [[id unit] @(re-frame/subscribe [:units])]
+          [:option {:value id} (:name unit)]))]
+      [:select
+       (doall
+        (for [[id item] @ (re-frame/subscribe [:items])]
+          [:option {:value id} (:name item)]))]]]))
+
 (defn main-panel []
   (let [name (re-frame/subscribe [:recipe-name "r1"])
         description (re-frame/subscribe [:recipe-description "r1"])]
-
     [:div
      [:h2 [inline-editor @name
            #(re-frame/dispatch [:update-name "r1" %])]]
@@ -102,6 +115,7 @@
             #(re-frame/dispatch [:update-description "r1" %])]]
      [:div [tag-editor "r1"]]
      [:div [task-table "r1"]]
+     [:div [item-editor]]
      [:div [:button {:on-click #(do
                                   (.preventDefault %))} "add task"]]]))
 
@@ -109,12 +123,3 @@
     (defonce _init (re-frame/dispatch-sync [:initialize]))
     (reagent/render [main-panel] el))
 
-
-(comment 
-            
-            
-           [:td 
-            [:ul
-             (for [i @(re-frame/subscribe [:task-ingredients task])]
-               [:li (re-frame/subscribe [:item i])])]]
-)
