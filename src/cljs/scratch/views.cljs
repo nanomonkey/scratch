@@ -66,7 +66,7 @@
   (let [qty (:qty line-item)
         unit (re-frame/subscribe [:unit-abbrev (:unit line-item)])
         item (re-frame/subscribe [:item-name (:item line-item)])]
-    (goog.string/format "%i%s %s" qty unit item)))
+    (goog.string/format "%i%s %s" qty @unit @item)))
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -80,11 +80,14 @@
        (doall
         (for [task tasks]
           [:tr 
-           [:td (comment [:div (re-frame/subscribe [:task-equipment task])])
+           [:td
             [:ul
-             (for [e  @(re-frame/subscribe [:task-equipment task])]
+             (for [e  @(re-frame/subscribe [:task-equipment-line-items task])]
                [:li e (display-line-item e)])]]
-           [:td [:div (re-frame/subscribe [:task-ingredients task])]]
+           [:td 
+            [:ul
+             (for [i @(re-frame/subscribe [:task-ingredients-line-items task])]
+               [:li (display-line-item i)])]]
            [:td @(re-frame/subscribe [:task-procedure task])]]
           ))])))  
 

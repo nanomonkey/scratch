@@ -7,7 +7,7 @@
                    :task-list ["t1" "t2"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
-                 :equipment ["i1"]
+                 :equipment []
                  :ingredients {:items ["i2" "i3"]
                                :qty {"i2" 1
                                      "i3" 2}
@@ -17,13 +17,13 @@
                  :yields []}
            "t2" {:id "t2"
                  :name "Bring to Boil"
-                 :equipment {:items ["i4"]
-                             :qty {"i4" 1}
-                             :unit {"i4" "u1"}}
-                 :ingredients {:items ["i2"]
-                               :qty {"i2" 1}
-                               :units {"i2" "u1"}
-                               :scaling {"i2" 1}}
+                 :equipment {:items ["i2"]
+                             :qty {"i2" 1}
+                             :units {"i2" "u1"}}
+                 :ingredients {:items ["i4"]
+                               :qty {"i4" 1}
+                               :units {"i4" "u1"}
+                               :scaling {"i4" 1}}
                  :procedure "-turn stove on medium \n-leave until boiling"
                  :products {:items ["i4"]
                             :qty {"i4" 6}
@@ -46,7 +46,7 @@
                  :tags []}}
    :units {"u1" {:id "u1"
                  :name "each"
-                 :abbrev "ea."
+                 :abbrev ""
                  :type "volume"}
            "u2" {:id "u2"
                  :name "quarts"

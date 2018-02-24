@@ -11,23 +11,23 @@
 (re-frame/reg-sub
  :unit-name
  (fn [db [_ key]]
-   (get-in db [:unit key :name])))
+   (get-in db [:units key :name])))
 
 (re-frame/reg-sub
  :unit-abbrev
  (fn [db [_ key]]
-   (get-in db [:unit key :abbrev])))
+   (get-in db [:units key :abbrev])))
 
 ;; Items
 (re-frame/reg-sub
  :item
  (fn [db [_ id]]
-   (get-in db [:item id])))
+   (get-in db [:items id])))
 
 (re-frame/reg-sub
  :item-name
  (fn [db [_ id]]
-   (get-in db [:item id :name])))
+   (get-in db [:items id :name])))
 
 ;;Recipes
 
@@ -90,15 +90,45 @@
   (get-in db [:tasks id :equipment])))
 
 (re-frame/reg-sub
-  :task-ingredients
+  :task-ingredients-items
   (fn [db [_ task-id]]
-    (get-in db [:tasks task-id :ingredients])))
+    (get-in db [:tasks task-id :ingredients :items])))
+
+(re-frame/reg-sub
+ :task-ingredients-line-items
+ (fn [db [_ task-id]]
+   (mapv (fn [item-id]
+             {:qty (get-in db [:tasks task-id :ingredients :qty item-id])
+              :unit (get-in db [:tasks task-id :ingredients :units item-id])
+              :item item-id})
+           (get-in db [:tasks task-id :ingredients :items]))))
+
+(re-frame/reg-sub
+ :task-equipment-line-items
+ (fn [db [_ task-id]]
+   (mapv (fn [item-id]
+             {:qty (get-in db [:tasks task-id :equipment :qty item-id])
+              :unit (get-in db [:tasks task-id :equipment :units item-id])
+              :item item-id})
+           (get-in db [:tasks task-id :equipment :items]))))
+
 
 (comment
+
+(rf/reg-sub
+  :discounted-cart-items
+  (fn []
+    [(rf/subscribe :shopping-cart-items)
+     (rf/subscribe :coupon)])
+  (fn [[items coupon]]
+    (mapv #(apply-discount % (:discount coupon)) items)))
+
   (rf/reg-sub
    :task-
    (fn [db]
      (mapv (fn [id]
              {:quantity (get-in db [:cart :quantities id])
               :item (get-in db [:products id])})
-           (get-in db [:cart :order])))))
+           (get-in db [:cart :order]))))
+
+)
