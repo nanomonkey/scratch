@@ -9,24 +9,24 @@
 
 (re-frame/reg-event-db
  :update-name
- (fn [db [_ name]]
-   (assoc db :name name)))
+ (fn [db [_ recipe-id name]]
+   (assoc-in db [:recipes recipe-id :name] name)))
 
 (re-frame/reg-event-db
  :update-description
- (fn [db [_  description]]
-   (assoc db :description description)))
+ (fn [db [_  recipe-id description]]
+   (assoc-in db [:recipes recipe-id :description] description)))
 
 (re-frame/reg-event-db
  :save-tag
- (fn [db [_ tag]]
+ (fn [db [_ recipe-id tag]]
    (let [tag (-> tag
                  .trim
                  .toLowerCase)])
-   (update db :tags (fnil conj #{}) tag)))
+   (update-in db [:recipes recipe-id :tags] (fnil conj #{} tag))))
 
 (re-frame/reg-event-db
  :remove-tag
- (fn [db [_ tag]]
-   (update db :tags (fn [tags]
-                      (vec (remove #{tag} tags))))))
+ (fn [db [_ recipe-id tag]]
+   (update-in db [:recipes recipe-id :tags] (fn [tags]
+                                              (vec (remove #{tag} tags))))))
