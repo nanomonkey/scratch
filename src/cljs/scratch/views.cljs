@@ -71,7 +71,7 @@
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(re-frame/subscribe [:recipe-task-list recipe-id])]
-      [:table
+      [:table#tasks
        [:tr
         (doall
          (for [h 
@@ -117,9 +117,26 @@
      [:div [task-table "r1"]]
      [:div [item-editor]]
      [:div [:button {:on-click #(do
-                                  (.preventDefault %))} "add task"]]]))
+                                  (.preventDefault %))} "+Task"]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (re-frame/dispatch-sync [:initialize]))
     (reagent/render [main-panel] el))
 
+(comment 
+;; https://benincosa.com/?p=3594
+(defn display-names
+  "Displays APIs that match the search string"
+  [search-string]
+    [:div {:class "container-fluid"}
+     [:center
+      (for [person-name names]
+        ;; tricky regular expression to see if the search string matches the name
+        (if (or (re-find (re-pattern (str "(?i)" search-string)) person-name)
+                (= "" search-string))
+          ^{ :key (.indexOf names person-name)}
+            [:div {:class "col-sm-4"}
+            [:div {:class "panel panel-default"}
+              [:div {:class "panel-heading"} person-name]]]))]])
+
+)
