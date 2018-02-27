@@ -23,7 +23,7 @@
    (let [tag (-> tag
                  .trim
                  .toLowerCase)])
-   (update-in db [:recipes recipe-id :tags] (fnil conj #{} tag))))
+   (update-in db [:recipes recipe-id :tags] (fnil conj #{}) tag)))
 
 (re-frame/reg-event-db
  :remove-tag

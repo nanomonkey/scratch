@@ -38,15 +38,15 @@
        [:span
         "Tags: "
         (doall
-         (for [tag @(re-frame/subscribe [:recipe-tags-sorted recipe-id])]
-           [:div {:style {:display :inline-block
-                             :background-color :yellow
-                             :color :blue
-                             :margin-right "8px"}}
+         (for [tag @(re-frame/subscribe [:recipe-tags recipe-id])]
+           [:div#tag {:style {:display :inline-block
+                              :background-color :yellow
+                              :color :blue
+                              :margin-right "8px"}}
             tag
             [:a {:href "#"
                  :style {:margin-left "4px"}
-                 :on-click (fn [e]
+                 :on-click (fn [e] 
                              (.preventDefault e)
                              (re-frame/dispatch [:remove-tag recipe-id tag]))}
              [:sup "x"]]]))]
@@ -83,12 +83,12 @@
            [:td
             [:ul
              (for [e  @(re-frame/subscribe [:task-equipment-line-items task])]
-               [:li e (display-line-item e)])]]
+               [:li  e (display-line-item e)])]]
            [:td 
             [:ul
              (for [i @(re-frame/subscribe [:task-ingredients-line-items task])]
                [:li (display-line-item i)])]]
-           [:td @(re-frame/subscribe [:task-procedure task])]]
+           [:td#task  @(re-frame/subscribe [:task-procedure task])]]
           ))])))  
 
 (defn item-editor []

@@ -57,16 +57,9 @@
    (get-in db [:recipes id :description])))
 
 (re-frame/reg-sub
- :recipe-tags-raw
+ :recipe-tags
  (fn [db [_ id]]
-   (get-in db [:recipe id :tags] [])))
-
-(re-frame/reg-sub
- :recipe-tags-sorted
- (fn [id] (re-frame/subscribe [:recipe-tags-raw id]))
- (fn [tags]
-   (sort tags)))
-
+   (sort (get-in db [:recipes id :tags]))))
 
 (re-frame/reg-sub
  :recipe-task-list
