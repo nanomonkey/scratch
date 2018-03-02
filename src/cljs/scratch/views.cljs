@@ -1,5 +1,5 @@
 (ns scratch.views
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :as rf]
             [reagent.core :as reagent]
             [scratch.subs :as subs]
             [goog.string :as gstring]
@@ -34,11 +34,11 @@
   (let [s (reagent/atom "")
         k (reagent/atom "")]
     (fn []
-      [:div
+      [:div#tags
        [:span
         "Tags: "
         (doall
-         (for [tag @(re-frame/subscribe [:recipe-tags recipe-id])]
+         (for [tag @(rf/subscribe [:recipe-tags recipe-id])]
            [:div#tag {:style {:display :inline-block
                               :background-color :yellow
                               :color :blue
@@ -48,7 +48,7 @@
                  :style {:margin-left "4px"}
                  :on-click (fn [e] 
                              (.preventDefault e)
-                             (re-frame/dispatch [:remove-tag recipe-id tag]))}
+                             (rf/dispatch [:remove-tag recipe-id tag]))}
              [:sup "x"]]]))]
        [:span
         [:input {:type :text
@@ -59,37 +59,38 @@
                               (when (or (= " " (-> e .-key))
                                         (= "Enter" (-> e .-key)))
                                 
-                                (re-frame/dispatch [:save-tag recipe-id (.trim @s)])
+                                (rf/dispatch [:save-tag recipe-id (.trim @s)])
                                 (reset! s "")))}]]])))
 
 (defn display-line-item [line-item]
   (let [qty (:qty line-item)
-        unit (re-frame/subscribe [:unit-abbrev (:unit line-item)])
-        item (re-frame/subscribe [:item-name (:item line-item)])]
+        unit (rf/subscribe [:unit-abbrev (:unit line-item)])
+        item (rf/subscribe [:item-name (:item line-item)])]
     (goog.string/format "%i%s - %s" qty @unit @item)))
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
-    (let [tasks @(re-frame/subscribe [:recipe-task-list recipe-id])]
+    (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
       [:table#tasks
        [:tr
         (doall
          (for [h 
                ["Equipment" "Ingredient" "Procedure"]]
-           [:th h]))] 
-       (doall
-        (for [task tasks]
-          [:tr 
-           [:td
-            [:ul
-             (for [e  @(re-frame/subscribe [:task-equipment-line-items task])]
-               [:li  e (display-line-item e)])]]
-           [:td 
-            [:ul
-             (for [i @(re-frame/subscribe [:task-ingredients-line-items task])]
-               [:li (display-line-item i)])]]
-           [:td#task  @(re-frame/subscribe [:task-procedure task])]]
-          ))])))  
+           [:th h]))]
+       [:tbody
+        (doall
+         (for [task tasks]
+           [:tr 
+            [:td
+             [:ul
+              (for [e  @(rf/subscribe [:task-equipment-line-items task])]
+                [:li {:key (:item e)} (display-line-item e)])]]
+            [:td 
+             [:ul
+              (for [i @(rf/subscribe [:task-ingredients-line-items task])]
+                [:li {:key (:item i)} (display-line-item i)])]]
+            [:td#task  @(rf/subscribe [:task-procedure task])]]
+           ))]])))  
 
 (defn item-editor []
   (let [s (reagent/atom {})]
@@ -98,29 +99,41 @@
       [:input {:type :number :name "qty" :value (:qty @s)}]
       [:select 
        (doall
-        (for [[id unit] @(re-frame/subscribe [:units])]
+        (for [[id unit] @(rf/subscribe [:units])]
           [:option {:value id} (:name unit)]))]
       [:select
        (doall
-        (for [[id item] @ (re-frame/subscribe [:items])]
+        (for [[id item] @ (rf/subscribe [:items])]
           [:option {:value id} (:name item)]))]]]))
 
+(defn create-item []
+  [:form {:on-submit #(do
+                        (.preventDefault %))}
+   [:input {:type :text }]
+   [:input {:type :text }]
+   [:button {:on-click #(do (rf/dispatch [:new-item name description tags])
+                            (.preventDefault %))}
+    "Create Item"]]
+  )
+
 (defn main-panel []
-  (let [name (re-frame/subscribe [:recipe-name "r1"])
-        description (re-frame/subscribe [:recipe-description "r1"])]
+  (let [name (rf/subscribe [:recipe-name "r1"])
+        description (rf/subscribe [:recipe-description "r1"])]
     [:div
      [:h2 [inline-editor @name
-           #(re-frame/dispatch [:update-name "r1" %])]]
+           #(rf/dispatch [:update-name "r1" %])]]
      [:div [inline-editor @description
-            #(re-frame/dispatch [:update-description "r1" %])]]
+            #(rf/dispatch [:update-description "r1" %])]]
      [:div [tag-editor "r1"]]
      [:div [task-table "r1"]]
      [:div [item-editor]]
-     [:div [:button {:on-click #(do
-                                  (.preventDefault %))} "+Task"]]]))
+     [:div [:button {:on-click 
+                     #(do (rf/dispatch [:new-item "pickle" "a pickle description"])
+                                  (.preventDefault %))} "+Pickle"]]
+     [:div (prn-str @(rf/subscribe [:items]))]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
-    (defonce _init (re-frame/dispatch-sync [:initialize]))
+    (defonce _init (rf/dispatch-sync [:initialize]))
     (reagent/render [main-panel] el))
 
 (comment 

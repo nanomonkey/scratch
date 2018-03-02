@@ -1,23 +1,23 @@
 (ns scratch.events
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :as rf]
             [scratch.db :as db]))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  ::initialize-db
  (fn  [_ _]
    db/recipe-db))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :update-name
  (fn [db [_ recipe-id name]]
    (assoc-in db [:recipes recipe-id :name] name)))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :update-description
  (fn [db [_  recipe-id description]]
    (assoc-in db [:recipes recipe-id :description] description)))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :save-tag
  (fn [db [_ recipe-id tag]]
    (let [tag (-> tag
@@ -25,8 +25,43 @@
                  .toLowerCase)])
    (update-in db [:recipes recipe-id :tags] (fnil conj #{}) tag)))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :remove-tag
  (fn [db [_ recipe-id tag]]
    (update-in db [:recipes recipe-id :tags] (fn [tags]
                                               (vec (remove #{tag} tags))))))
+
+(defonce last-temp-id (atom 0))
+
+(rf/reg-cofx
+  :temp-id 
+  (fn [cofx _]
+    (assoc cofx :temp-id (swap! last-temp-id inc))))
+
+
+(rf/reg-event-fx
+ :new-item
+ [(rf/inject-cofx :temp-id)]
+ (fn [cofx [_ name description]]
+   {:db 
+    (update (:db cofx) 
+            :items assoc :id (:temp-id cofx) :name name :description description)}))
+
+(rf/reg-event-fx
+ :new-unit
+ [(rf/inject-cofx :temp-id)]
+ (fn [cofx [_ name abbrev type]]
+   (update (:db cofx) 
+           :units assoc :id (:temp-id cofx) :name name :abbrev abbrev :type type)))
+
+(rf/reg-event-db
+ :add-ingredient-to-task
+ (fn [db [_ task-id item-id qty unit]]
+   ;; check if it's already in the task
+   (if (nil? (get-in db [:tasks task-id :ingredients :qty item-id]))
+     ;; not in the task, add to qty and ingredients
+     (-> db
+         (assoc-in [:tasks task-id :ingredients :qty item-id] qty)
+         (update-in [:tasks :items] (fnil conj []) item-id))
+     ;; in the task, add to existing qty
+     (update-in db [:tasks task-id :ingredients :qty item-id] + qty))))
