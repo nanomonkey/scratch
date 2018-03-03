@@ -5,6 +5,15 @@
             [goog.string :as gstring]
             [goog.string.format]))
 
+(defonce converter (new js/showdown.Converter))
+
+(defn ->html [s]
+  (.makeHtml converter s))
+
+(defn markdown-section [s]
+  [:div
+    {:dangerouslySetInnerHTML {:__html (->html s)}}])
+
 (defn inline-editor [txt on-change]
   (let [s (reagent/atom {})]
     (fn [txt on-change]
@@ -72,11 +81,11 @@
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
       [:table#tasks
-       [:tr
-        (doall
-         (for [h 
-               ["Equipment" "Ingredient" "Procedure"]]
-           [:th h]))]
+       
+       (doall
+        (for [h 
+              ["Equipment" "Ingredients" "Procedure"]]
+          [:th h]))
        [:tbody
         (doall
          (for [task tasks]
@@ -89,10 +98,10 @@
              [:ul
               (for [i @(rf/subscribe [:task-ingredients-line-items task])]
                 [:li {:key (:item i)} (display-line-item i)])]]
-            [:td#task  @(rf/subscribe [:task-procedure task])]]
+            [:td#task  (markdown-section @(rf/subscribe [:task-procedure task]))]]
            ))]])))  
 
-(defn item-editor []
+(defn line-item-editor []
   (let [s (reagent/atom {})]
     [:span 
      [:form {:on-submit #(do (.preventDefault %))}
@@ -106,31 +115,62 @@
         (for [[id item] @ (rf/subscribe [:items])]
           [:option {:value id} (:name item)]))]]]))
 
+
 (defn create-item []
-  [:form {:on-submit #(do
-                        (.preventDefault %))}
-   [:input {:type :text }]
-   [:input {:type :text }]
-   [:button {:on-click #(do (rf/dispatch [:new-item name description tags])
-                            (.preventDefault %))}
-    "Create Item"]]
-  )
+  (let [s (reagent/atom {})]
+    [:form {:on-submit #(do
+                          (.preventDefault %))}
+     [:input {:type :text :name "item-name" :value (:name @s)}]
+     [:input {:type :text :name "item-description" :value (:description @s)}]
+     ;; add tag input
+     [:button {:on-click #(do (rf/dispatch [:new-item @s])
+                              (.preventDefault %))}
+      "Create Item"]]))
+
+(defn header []
+  [:div.header "Made From Scratch"])
+
+(defn topnav []
+  [:div.topnav
+      [:a {:href "#1"} "One"]
+      [:a {:href "#2"} "Two"]])
 
 (defn main-panel []
   (let [name (rf/subscribe [:recipe-name "r1"])
         description (rf/subscribe [:recipe-description "r1"])]
     [:div
-     [:h2 [inline-editor @name
-           #(rf/dispatch [:update-name "r1" %])]]
-     [:div [inline-editor @description
-            #(rf/dispatch [:update-description "r1" %])]]
-     [:div [tag-editor "r1"]]
-     [:div [task-table "r1"]]
-     [:div [item-editor]]
-     [:div [:button {:on-click 
-                     #(do (rf/dispatch [:new-item "pickle" "a pickle description"])
-                                  (.preventDefault %))} "+Pickle"]]
-     [:div (prn-str @(rf/subscribe [:items]))]]))
+     (header)
+     (topnav)
+     [:div.row
+      [:div.column.left "left side"]
+      [:div.column.middle
+       [:h2 [inline-editor @name
+             #(rf/dispatch [:update-name "r1" %])]]
+       [:div [inline-editor @description
+              #(rf/dispatch [:update-description "r1" %])]]
+       [:div [tag-editor "r1"]]
+       [:div [task-table "r1"]]
+       [:div [line-item-editor]]
+       [:div [:button {:on-click 
+                       #(do (rf/dispatch [:new-item "pickle" "a pickle description" []])
+                            (.preventDefault %))} "+Pickle"]]
+       [:div (prn-str @(rf/subscribe [:items]))]]
+      [:div.column.right 
+       [:div.arrow_box "crazy arrow box"]
+       [:div.blue-panel "crazy blue panel"]
+       [:div.white-panel "crazy white panel"]
+       [:div#task
+        [:div.steps-indicator
+         [:div.connector]
+         [:div.connector.complete]
+         [:ol.steps
+          [:li.complete [:strong "strong"] "text"]
+          [:li.active "test"]
+          [:li.active "not complete"]
+          [:li.inactive "inactive"]
+          [:li.warning "warning"]
+          [:li.active "last one"]]]]
+       [:div.help-text "help text"]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))

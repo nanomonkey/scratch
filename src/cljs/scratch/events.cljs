@@ -42,17 +42,25 @@
 (rf/reg-event-fx
  :new-item
  [(rf/inject-cofx :temp-id)]
- (fn [cofx [_ name description]]
+ (fn [cofx [_ name description tags]]
    {:db 
-    (update (:db cofx) 
-            :items assoc :id (:temp-id cofx) :name name :description description)}))
+    (update (:db cofx) :items assoc
+            (str (:temp-id cofx)) {:id (:temp-id cofx) 
+                                   :name name 
+                                   :description description
+                                   :tags tags})}))
 
 (rf/reg-event-fx
  :new-unit
  [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ name abbrev type]]
-   (update (:db cofx) 
-           :units assoc :id (:temp-id cofx) :name name :abbrev abbrev :type type)))
+   (let [temp-id (str (:temp-id cofx))]
+     {:db
+      (update (:db cofx) :units assoc
+              temp-id {:id temp-id 
+                       :name name 
+                       :abbrev abbrev 
+                       :type type})})))
 
 (rf/reg-event-db
  :add-ingredient-to-task

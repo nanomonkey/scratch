@@ -28,7 +28,8 @@
                                :qty {"i4" 1}
                                :units {"i4" "u1"}
                                :scaling {"i4" 1}}
-                 :procedure "-turn stove on medium \n-leave until boiling"
+                 :procedure "- turn stove on medium 
+1. *leave* until boiling"
                  :products {:items ["i4"]
                             :qty {"i4" 6}
                             :units {"i4" "u2"}}}}
