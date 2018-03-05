@@ -42,15 +42,15 @@ body {
 }
 
 .column.left {
-    width: 20%;
+    width: 10%;
 }
 
 .column.middle {
-    width: 50%;
+    width: 55%;
 }
 
 .column.right {
-    width: 20%;
+    width: 30%;
 }
 
 .row:after {
@@ -72,6 +72,7 @@ body {
     border-right: 50px solid #yellow;
     border-bottom: 25px solid transparent;
 }
+
 #tasks td, #tasks th {
     border: 1px solid #ddd;
     padding: 8px;
@@ -85,12 +86,13 @@ body {
     background-color: #008CBA;
     color: white;
 }
+
 #task .steps-indicator{position:relative}
 #task .steps-indicator .connector{
     position:absolute;
     border-left:3px solid #CDCDCD;
     height:97%;
-    left:37px;
+    left:23px;
     top:2px;
 }
 #task .steps-indicator .connector.complete{height:0;border-color:#64c84b}
@@ -103,15 +105,16 @@ body {
 #task .steps-indicator .steps li{
     position:relative;
     line-height:42px;
+    counter-increment: numList;
     margin-bottom:10px
 }
 #task .steps-indicator .steps li:before{
     color:white;
     position:absolute;
-    left:-47px;
-    top: 2px;
+    left:-48px;
+    top: 0px;
     text-align:center;
-    line-height:34px;
+    line-height:38px;
     width:38px;
     height:38px;
     -webkit-border-radius:38px;
@@ -119,12 +122,13 @@ body {
     border-radius:38px;
     border:3px solid #BBB;
     background:white;
-    content:" ";
+    content:counter(numList);
 }
 #task .steps-indicator .steps li.active:before{
     border-color:#BBB;
     background-color:white;
-    color:white
+    font-size: 2rem;
+    color:green
 }
 #task .steps-indicator .steps li.inactive{
     pointer-events:none;
@@ -193,8 +197,6 @@ a{
     color: #1781F1;
     text-decoration: none;
 }
-
-
 
 .arrow_box {
     position: relative;
