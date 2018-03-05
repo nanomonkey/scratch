@@ -98,8 +98,14 @@
              [:ul
               (for [i @(rf/subscribe [:task-ingredients-line-items task])]
                 [:li {:key (:item i)} (display-line-item i)])]]
-            [:td#task  (markdown-section @(rf/subscribe [:task-procedure task]))]]
-           ))]])))  
+            [:td#task  
+             [:div#task
+              [:div.steps-indicator
+               [:div.connector]
+               [:div.connector.complete]
+               [:ol.steps      
+             (for [step @(rf/subscribe [:task-procedure task])]
+               [:li.active (markdown-section step)])]]]]]))]])))  
 
 (defn line-item-editor []
   (let [s (reagent/atom {})]
