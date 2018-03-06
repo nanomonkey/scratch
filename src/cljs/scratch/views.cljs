@@ -77,35 +77,42 @@
         item (rf/subscribe [:item-name (:item line-item)])]
     (goog.string/format "%i%s - %s" qty @unit @item)))
 
+(defn span-items [items]
+  [:span 
+   (for [item items]
+     (display-line-item item))])
+
+(defn list-items [items]
+   [:ul
+    (for [i items]
+      [:li {:key (:item i)} (display-line-item i)])])
+
+(defn display-procedure [task]
+  [:div#task
+   [:div.steps-indicator
+    [:div.connector]
+    [:div.connector.complete]
+    [:ol.steps    
+     (for [step @(rf/subscribe [:task-procedure task])]
+       [:li.active (markdown-section step)])
+     [:li.active "Yields: " (span-items @(rf/subscribe [:task-yields task]))]]]])
+
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
       [:table#tasks
-       
-       (doall
-        (for [h 
-              ["Equipment" "Ingredients" "Procedure"]]
-          [:th h]))
+       [:tr
+        (doall
+         (for [h 
+               ["Equipment" "Ingredients" "Procedure"]]
+           [:th h]))]
        [:tbody
         (doall
          (for [task tasks]
            [:tr 
-            [:td
-             [:ul
-              (for [e  @(rf/subscribe [:task-equipment-line-items task])]
-                [:li {:key (:item e)} (display-line-item e)])]]
-            [:td 
-             [:ul
-              (for [i @(rf/subscribe [:task-ingredients-line-items task])]
-                [:li {:key (:item i)} (display-line-item i)])]]
-            [:td#task  
-             [:div#task
-              [:div.steps-indicator
-               [:div.connector]
-               [:div.connector.complete]
-               [:ol.steps      
-             (for [step @(rf/subscribe [:task-procedure task])]
-               [:li.active (markdown-section step)])]]]]]))]])))  
+            [:td (list-items @(rf/subscribe [:task-equipment-line-items task]))]
+            [:td (list-items @(rf/subscribe [:task-ingredients-line-items task]))]
+            [:td (display-procedure task)]]))]]))) 
 
 (defn line-item-editor []
   (let [s (reagent/atom {})]
@@ -170,8 +177,8 @@
          [:div.connector]
          [:div.connector.complete]
          [:ol.steps
-          [:li.complete [:strong "strong"] "text"]
-          [:li.active "test"]
+          [:li.complete [:strong "strong"] " text"]
+          [:li.active "not complete"]
           [:li.active "not complete"]
           [:li.inactive "inactive"]
           [:li.warning "warning"]

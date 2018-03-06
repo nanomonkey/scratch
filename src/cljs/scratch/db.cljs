@@ -7,31 +7,29 @@
                    :task-list ["t1" "t2"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
-                 :equipment {:items ["i1" "i2"]
-                             :qty {"i1" 1
-                                  "i2" 1}
-                             :units {"i1" "u1"
-                                    "i2" "u1"}}
-                 :ingredients {:items ["i2" "i3"]
-                               :qty {"i2" 1
-                                     "i3" 2}
-                               :units {"i2" "u1"
-                                       "i3" "u2"}}
+                 :equipment {:items ["i1"]
+                             :qty {"i1" 1}
+                             :units {"i1" "u1"}}
+                 :ingredients {:items ["i3"]
+                               :qty {"i3" 2}
+                               :units {"i3" "u2"}}
                  :procedure ["fill pot with water"]
-                 :yields []}
+                 :yields {:items ["i5"]
+                          :qty {"i5" 1}
+                          :units {"i5" "u1"}}}
            "t2" {:id "t2"
                  :name "Bring to Boil"
                  :equipment {:items ["i2"]
                              :qty {"i2" 1}
                              :units {"i2" "u1"}}
-                 :ingredients {:items ["i4"]
-                               :qty {"i4" 1}
-                               :units {"i4" "u1"}
-                               :scaling {"i4" 1}}
+                 :ingredients {:items ["i5"]
+                               :qty {"i5" 1}
+                               :units {"i5" "u1"}
+                               :scaling {"i5" 1}}
                  :procedure ["Turn stove on medium" "Leave until boiling"]
-                 :products {:items ["i4"]
-                            :qty {"i4" 6}
-                            :units {"i4" "u2"}}}}
+                 :yields {:items ["i4"]
+                          :qty {"i4" 6}
+                          :units {"i4" "u2"}}}}
    :items {"i1" {:id "i1"
                  :name "6 Qt. Pot"
                  :description ""
@@ -47,6 +45,10 @@
            "i4" {:id "i4"
                  :name "Boiled Water"
                  :description ""
+                 :tags []}
+           "i5" {:id "i5"
+                 :name "full pot"
+                 :description "pot full of water"
                  :tags []}}
    :units {"u1" {:id "u1"
                  :name "each"

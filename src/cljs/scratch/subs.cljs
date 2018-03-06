@@ -115,3 +115,13 @@
               :item item-id})
            (get-in db [:tasks task-id :equipment :items]))))
 
+(rf/reg-sub
+ :task-yields
+ (fn [db [_ task-id]]
+   (mapv (fn [item-id]
+             {:qty (get-in db [:tasks task-id :yields :qty item-id])
+              :unit (get-in db [:tasks task-id :yields :units item-id])
+              :item item-id})
+           (get-in db [:tasks task-id :yields :items]))))
+
+
