@@ -128,7 +128,7 @@ body {
     border-color:#BBB;
     background-color:white;
     font-size: 2rem;
-    color:green
+    color:#8bbb25
 }
 #task .steps-indicator .steps li.inactive{
     pointer-events:none;
@@ -164,15 +164,18 @@ body {
     *margin-right:.3em;
     content:"\f12a"
 }
+
 #task .steps-indicator .steps li:last-child:before{
     font-family:FontAwesome;
     font-weight:normal;
     font-style:normal;
+    color:black;
     text-decoration:inherit;
     -webkit-font-smoothing:antialiased;
     *margin-right:.3em;
     content:"\f11e"
 }
+
 .washed-out{opacity:0.3;}
 .date{color:red;}
 .white-panel{
