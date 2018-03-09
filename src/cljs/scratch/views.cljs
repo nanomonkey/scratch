@@ -123,29 +123,11 @@
        [:div [tag-editor "r1"]]
        [:div [task-table "r1"]]
        [:div [line-item-editor]]
-       
-       [:div (prn-str @(rf/subscribe [:items]))]]
       
-       [:div.help-text "help text"]]]]))
+       [:div (prn-str @(rf/subscribe [:items]))]]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
     (reagent/render [main-panel] el))
 
-(comment 
-;; https://benincosa.com/?p=3594
-(defn display-names
-  "Displays APIs that match the search string"
-  [search-string]
-    [:div {:class "container-fluid"}
-     [:center
-      (for [person-name names]
-        ;; tricky regular expression to see if the search string matches the name
-        (if (or (re-find (re-pattern (str "(?i)" search-string)) person-name)
-                (= "" search-string))
-          ^{ :key (.indexOf names person-name)}
-            [:div {:class "col-sm-4"}
-            [:div {:class "panel panel-default"}
-              [:div {:class "panel-heading"} person-name]]]))]])
 
-)

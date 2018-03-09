@@ -102,6 +102,7 @@
 [:div.arrow_box "crazy arrow box"]
 [:div.blue-panel "crazy blue panel"]
 [:div.white-panel "crazy white panel"]
+[:div.help-text "help text"]
 [:div#task
  [:div.steps-indicator
   [:div.connector]
@@ -113,4 +114,22 @@
    [:li.inactive "inactive"]
    [:li.warning "warning"]
    [:li.active "last one"]]]]
+)
+
+(comment 
+;; https://benincosa.com/?p=3594
+(defn display-names
+  "Displays APIs that match the search string"
+  [search-string]
+    [:div {:class "container-fluid"}
+     [:center
+      (for [person-name names]
+        ;; tricky regular expression to see if the search string matches the name
+        (if (or (re-find (re-pattern (str "(?i)" search-string)) person-name)
+                (= "" search-string))
+          ^{ :key (.indexOf names person-name)}
+            [:div {:class "col-sm-4"}
+            [:div {:class "panel panel-default"}
+              [:div {:class "panel-heading"} person-name]]]))]])
+
 )
