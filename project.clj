@@ -2,7 +2,10 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.7.0"]
-                 [re-frame "0.10.4"]]
+                 [re-frame "0.10.4"]
+                 [reagent-forms "0.5.36"]
+                 [venantius/accountant "0.2.4"]
+                 [secretary "1.2.3"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
