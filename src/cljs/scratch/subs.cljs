@@ -39,6 +39,14 @@
  (fn [db [_ id]]
    (get-in db [:items id :name])))
 
+(comment
+  (rf/reg-sub
+   :item-source
+   (fn [db]
+     (filter 
+      #(-> % (:name %) (:id %))
+      (:items db)))))
+
 ;;Recipes
 
 (rf/reg-sub
