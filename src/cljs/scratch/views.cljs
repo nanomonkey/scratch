@@ -88,24 +88,10 @@
                               (.preventDefault %))}
       "Create Item"]]))
 
-(defn find-item []
-  [:form
-   [:div {:field :typeahead
-          :id :ta
-          :input-placeholder "pick a friend"
-          :data-source friend-source
-          :input-class "form-control"
-          :list-class "typeahead-list"
-          :item-class "typeahead-item"
-          :highlight-class "highlighted"}]])
 
 (defn add-item [name description tags]
   (rf/dispatch [:new-item name description tags]))
 
-(defn new-item []
-  [:div [:button {:on-click 
-                       #(do (rf/dispatch [:new-item "pickle" "a pickle description" []])
-                            (.preventDefault %))} "+Pickle"]])
 
 (defn main-panel []
   (let [name (rf/subscribe [:recipe-name "r1"])
@@ -123,8 +109,7 @@
        [:div [tag-editor "r1"]]
        [:div [task-table "r1"]]
        [:div [line-item-editor]]
-      
-       [:div (prn-str @(rf/subscribe [:items]))]]]]]))
+       [:div (prn-str @(rf/subscribe [:items]))]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))

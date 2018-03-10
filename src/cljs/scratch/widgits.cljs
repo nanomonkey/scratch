@@ -1,5 +1,6 @@
 (ns scratch.widgets
-  (require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [reagent.core :as reagent]))
 
 ;; Markdown
 (defonce converter (new js/showdown.Converter))
