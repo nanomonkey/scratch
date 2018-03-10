@@ -10,6 +10,14 @@
             [goog.string.format]))
 
 
+(defn header []
+  [:div.header "Made From Scratch"])
+
+(defn topnav []
+  [:div.topnav
+      [:a {:href "#1"} "One"]
+      [:a {:href "#2"} "Two"]])
+
 (defn display-line-item [line-item]
   "unpacks dictionary with :unit :item and :qty into readable string"
   (let [qty (:qty line-item)
@@ -80,14 +88,6 @@
                               (.preventDefault %))}
       "Create Item"]]))
 
-(defn header []
-  [:div.header "Made From Scratch"])
-
-(defn topnav []
-  [:div.topnav
-      [:a {:href "#1"} "One"]
-      [:a {:href "#2"} "Two"]])
-
 (defn find-item []
   [:form
    [:div {:field :typeahead
@@ -105,7 +105,7 @@
 (defn new-item []
   [:div [:button {:on-click 
                        #(do (rf/dispatch [:new-item "pickle" "a pickle description" []])
-                            (.preventDefault %))} "+Item"]])
+                            (.preventDefault %))} "+Pickle"]])
 
 (defn main-panel []
   (let [name (rf/subscribe [:recipe-name "r1"])

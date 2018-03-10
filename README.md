@@ -1,10 +1,12 @@
 # scratch
 
-A [re-frame](https://github.com/Day8/re-frame) application designed to ... well, that part is up to you.
+A Decentralized Recipe tool built on [Secure Scuttlebutt](https://securescuttlebutt.nz), written in Clojure, the [re-frame](https://github.com/Day8/re-frame) framework.
 
 ## Development Mode
 
 ### Run application:
+
+This application can be run in development mode by using the [Leinegen](https://leiningen.org) build tool.
 
 ```
 lein clean

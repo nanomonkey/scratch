@@ -44,6 +44,7 @@
 ;; Tag Editor
 
 (defn tag-editor [recipe-id]
+  "adds a tag to a recipient in the database using the "
   (let [s (reagent/atom "")
         k (reagent/atom "")]
     (fn []
@@ -97,11 +98,12 @@
              :highlight-class "highlighted"}])]))
 
 
-(comment ;;examples of available css
+;; available css
+(comment 
 
-[:div.arrow_box "crazy arrow box"]
-[:div.blue-panel "crazy blue panel"]
-[:div.white-panel "crazy white panel"]
+[:div.arrow_box "text for arrow box"]
+[:div.blue-panel "text for blue panel"]
+[:div.white-panel "text for white panel"]
 [:div.help-text "help text"]
 [:div#task
  [:div.steps-indicator
