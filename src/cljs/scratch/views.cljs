@@ -76,17 +76,19 @@
         (for [[id item] @ (rf/subscribe [:items])]
           [:option {:value id} (:name item)]))]]]))
 
-
 (defn create-item []
   (let [s (reagent/atom {})]
-    [:form {:on-submit #(do
-                          (.preventDefault %))}
-     [:input {:type :text :name "item-name" :value (:name @s)}]
-     [:input {:type :text :name "item-description" :value (:description @s)}]
-     ;; add tag input
-     [:button {:on-click #(do (rf/dispatch [:new-item @s])
-                              (.preventDefault %))}
-      "Create Item"]]))
+    [:div (prn-str @s)
+     [:form {:on-submit #(do
+                           (.preventDefault %))}
+      [:input {:type :text :name "item-name" :value (:name @s)}]
+      [:input {:type :text :name "item-description" :value (:description @s)}]
+      ;; add tag input
+      [:button {:on-click #(do (rf/dispatch [:new-item (:name @s) 
+                                             (:description @s)
+                                             (:tag [])])
+                               (.preventDefault %))}
+       "Create Item"]]]))
 
 
 (defn add-item [name description tags]
@@ -109,7 +111,9 @@
        [:div [tag-editor "r1"]]
        [:div [task-table "r1"]]
        [:div [line-item-editor]]
-       [:div (prn-str @(rf/subscribe [:items]))]]]]))
+       [:div (prn-str @(rf/subscribe [:items]))]]
+      [:div.column.right
+       (create-item)]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
