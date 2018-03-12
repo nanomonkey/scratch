@@ -30,6 +30,13 @@
    (for [item items]
      (display-line-item item))])
 
+(defn define-items [items]
+  [:dl
+   (for [item items]
+     (do
+       [:dt (:name item)]
+       [:dd (:description item)]))])
+
 (defn list-items [items]
    [:ul
     (for [i items]
@@ -42,8 +49,8 @@
     [:div.connector.complete]
     [:ol.steps    
      (for [step @(rf/subscribe [:task-procedure task])]
-       [:li.active (markdown-section step)])
-     [:li.active "Yields: " (span-items @(rf/subscribe [:task-yields task]))]]]])
+       [:li.active (markdown-section step)])]]
+   [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]])
 
 (defn task-table [recipe-id]
   (fn [recipe-id]

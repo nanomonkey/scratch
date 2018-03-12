@@ -121,6 +121,33 @@
 
 (comment 
 ;; https://benincosa.com/?p=3594
+(defn show-home
+  []  
+  ;; First, display banner and search text box.
+  (let [search-string (r/atom "")]
+    (fn []
+      [:div {:class "jumbotron " }
+        [:div {:class "container-fluid"}
+            [:div {:class "row"}]
+              [:div {:class "col-sm-2"}]
+              [:div {:class "col-sm-8"}
+                [:h2 [:center "Fun names" ]]
+                [:p {:class "center"} "Filter names" ]
+              [:div {:class "row"}]
+              [:div {:class "col-sm-2"}]
+              [:div {:class "col-sm-8"}
+                [:input.form-control {
+                  :type "text"
+                  :placeholder "Filter names"
+                  :value @search-string
+                  :on-change #(reset! search-string (-> % .-target .-value))
+                }]
+           ]
+          ]
+      ]   
+    [:div {:class "page-header"}]
+    [display-names @search-string]])))
+
 (defn display-names
   "Displays APIs that match the search string"
   [search-string]

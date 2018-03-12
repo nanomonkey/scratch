@@ -27,9 +27,11 @@
                                :units {"i5" "u1"}
                                :scaling {"i5" 1}}
                  :procedure ["Turn stove on medium" "Leave until boiling"]
-                 :yields {:items ["i4"]
-                          :qty {"i4" 6}
-                          :units {"i4" "u2"}}}}
+                 :yields {:items ["i4" "i5"]
+                          :qty {"i4" 6
+                                "i5" 1}
+                          :units {"i4" "u2"
+                                  "i5" "u2"}}}}
    :items {"i1" {:id "i1"
                  :name "6 Qt. Pot"
                  :description ""

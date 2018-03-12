@@ -165,16 +165,16 @@ body {
     content:"\f12a"
 }
 
-#task .steps-indicator .steps li:last-child:before{
-    font-family:FontAwesome;
-    font-weight:normal;
-    font-style:normal;
-    color:black;
-    text-decoration:inherit;
-    -webkit-font-smoothing:antialiased;
-    *margin-right:.3em;
-    content:"\f11e"
-}
+/* #task .steps-indicator .steps li:last-child:before{ */
+/*     font-family:FontAwesome; */
+/*     font-weight:normal; */
+/*     font-style:normal; */
+/*     color:black; */
+/*     text-decoration:inherit; */
+/*     -webkit-font-smoothing:antialiased; */
+/*     *margin-right:.3em; */
+/*     content:"\f11e" */
+/* } */
 
 .washed-out{opacity:0.3;}
 .date{color:red;}
