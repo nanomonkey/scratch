@@ -1,3 +1,12 @@
 * Re-frame
 ** Dashboards
 [[https://github.com/Day8/re-frame-10x][Re-frame-10x]]
+** Modals
+[[https://github.com/benhowell/re-frame-modal][re-frame modal]]
+
+* IMPLIMENT
+** TODO Add Search lookahead for adding item to task
+- When item isn't found, and (+) button is clicked, open modal to create item
+** TODO Add similar for units 
+- modal in modal?!
+- units may need their own configuration page or be hard coded

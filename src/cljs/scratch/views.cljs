@@ -49,11 +49,12 @@
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
       [:table#tasks
-       [:tr
-        (doall
-         (for [h 
-               ["Equipment" "Ingredients" "Procedure"]]
-           [:th h]))]
+       [:thead
+        [:tr
+         (doall
+          (for [h 
+                ["Equipment" "Ingredients" "Procedure"]]
+            [:th h]))]]
        [:tbody
         (doall
          (for [task tasks]
@@ -66,11 +67,14 @@
   (let [s (reagent/atom {})]
     [:span 
      [:form {:on-submit #(do (.preventDefault %))}
-      [:input {:type :number :name "qty" :value (:qty @s)}]
+      [:label "Quantity"]
+      [:input  {:type :number :name "qty" :value (:qty @s)}]
+      [:label "Unit:"]
       [:select 
        (doall
         (for [[id unit] @(rf/subscribe [:units])]
           [:option {:value id} (:name unit)]))]
+      [:label "Item:"]
       [:select
        (doall
         (for [[id item] @ (rf/subscribe [:items])]
@@ -78,15 +82,25 @@
 
 (defn create-item []
   (let [s (reagent/atom {})]
-    [:div (prn-str @s)
+    [:div.blue-panel (prn-str @s)
      [:form {:on-submit #(do
                            (.preventDefault %))}
-      [:input {:type :text :name "item-name" :value (:name @s)}]
-      [:input {:type :text :name "item-description" :value (:description @s)}]
-      ;; add tag input
+      [:row
+       [:label "Name"]
+       [:input {:type :text 
+                :name "item-name" 
+                :value (:name @s)}]]
+      [:div
+       [:row
+        [:label "Description"]
+        [:input {:type :text 
+                 :name "item-description"}]]]
+      [:row
+       [:label "Tags"]]
+      
       [:button {:on-click #(do (rf/dispatch [:new-item (:name @s) 
                                              (:description @s)
-                                             (:tag [])])
+                                              []])
                                (.preventDefault %))}
        "Create Item"]]]))
 
