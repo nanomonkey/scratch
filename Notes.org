@@ -1,3 +1,5 @@
+Notes 
+
 * Re-frame
 ** Dashboards
 [[https://github.com/Day8/re-frame-10x][Re-frame-10x]]
@@ -10,3 +12,18 @@
 ** TODO Add similar for units 
 - modal in modal?!
 - units may need their own configuration page or be hard coded
+
+* example re-frame code projects
+- https://github.com/dhruvp/angular-phonecat-re-frame/
+- https://github.com/jacekschae/conduit
+- https://github.com/vallard/Reagent-Example/
+
+
+
+Datomic datastructure:
+[e a v t a?]
+entity - 
+attribute 
+value
+transaction
+added?

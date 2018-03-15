@@ -1,4 +1,5 @@
 (ns scratch.db)
+
 (def recipe-db
   {:recipes {"r1" {:id "r1"
                    :name "Stone Soup"
@@ -60,3 +61,8 @@
                  :name "quarts"
                  :abbrev "qts"
                  :type "volume"}}})
+
+
+;; useful fn's for later
+(defn index-by [key-fn coll]
+    (into {} (map (juxt key-fn identity) coll)))

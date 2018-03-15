@@ -1,6 +1,13 @@
 # scratch
 
-A Decentralized Recipe tool built on [Secure Scuttlebutt](https://securescuttlebutt.nz), written in Clojure, the [re-frame](https://github.com/Day8/re-frame) framework.
+A Decentralized Recipe tool built on 
+[Secure Scuttlebutt](https://securescuttlebutt.nz), 
+
+written in Clojure using the following libraries 
+[reagent](https://holmsand.github.io/reagent/) interface for React, which utilizes [Hiccup](https://github.com/weavejester/hiccup) for HTML templating.
+[re-frame](https://github.com/Day8/re-frame) for front end state management.
+Secretary and Accountant for routing.
+
 
 ## Development Mode
 
