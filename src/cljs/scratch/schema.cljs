@@ -3,7 +3,7 @@
 ;; change [org.clojure/clojure "1.9.0"]
 ;; https://clojure.org/guides/spec
 
-(s/def ::id 
+(s/def ::id (s/and string? #(= (count %) 64)))          ;;better hash spec?
 (s/def ::name (s/and string? #(<= 1 (count %) 64)))
 (s/def ::description string?)
 (s/def ::dirty? boolean?)
@@ -13,13 +13,26 @@
 (s/def ::abbrev (s/and string? #(<= 1 (count %) 6)))
 (def unit-types #{"weight" "volume" "distance" "area"})
 (s/def ::type unit-types)
-(s/def ::unit (s/keys :req [::name ::abbrev ::type]))
+(s/def ::unit (s/keys :req [::id ::name ::abbrev ::type]))
 
-(s/def ::item (s/keys :req [::name ::description]
+(s/def ::item (s/keys :req [::id ::name ::description]
                      :opt [::tags]))
 
-(s/def ::task (s/keys :req [::name ::description]
-                     :opt [::tags]))
+(s/def ::items (s/coll-of ::id))
+(s/def ::qty (s/map-of ::id int?))
+(s/def ::units (s/map-op ::id ::id))
+(s/def ::equipment (s/keys* :req [::items ::qty ::units]))
+(s/def ::ingredients (s/keys* :req [::items ::qty ::units]))
+(s/def ::procedure (s/coll-of strings?))
+(s/def ::yields (s/keys* :req [::items ::qty ::units]))
+
+(s/def ::task (s/keys :req [::id ::name]
+                      :opt [::equiptment 
+                            ::ingredients 
+                            ::procedure 
+                            ::yields]))
+
+(s/def ::tasks (s/map-of ::id ::tasks))
 
 (s/def ::task-list (s/coll-of ::id :distinct true))
 (s/def ::recipe (s/keys :req [::name ::description ::task-list]
