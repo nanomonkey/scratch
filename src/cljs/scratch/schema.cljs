@@ -19,7 +19,7 @@
 
 (s/def ::items (s/coll-of ::id))
 (s/def ::qty (s/map-of ::id int?))
-(s/def ::units (s/map-op ::id ::id))
+(s/def ::units (s/map-of ::id ::id))
 (s/def ::equipment (s/keys* :req [::items ::qty ::units]))
 (s/def ::ingredients (s/keys* :req [::items ::qty ::units]))
 (s/def ::procedure (s/coll-of strings?))
