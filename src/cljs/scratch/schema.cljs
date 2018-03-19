@@ -17,13 +17,14 @@
 (s/def ::item (s/keys :req [::id ::name ::description]
                      :opt [::tags]))
 
-(s/def ::items (s/coll-of ::id))
-(s/def ::qty (s/map-of ::id int?))
-(s/def ::units (s/map-of ::id ::id))
-(s/def ::equipment (s/keys* :req [::items ::qty ::units]))
-(s/def ::ingredients (s/keys* :req [::items ::qty ::units]))
+(s/def ::items (s/map-of ::id ::item :distinct true))
+(s/def ::qty (s/map-of ::id int? :distinct true))
+(s/def ::units (s/map-of ::id ::id :distinct true))
+(s/def ::line-items (s/keys* :req [::items ::qty ::units]))
+(s/def ::equipment ::line-items)
+(s/def ::ingredients ::line-items)
 (s/def ::procedure (s/coll-of strings?))
-(s/def ::yields (s/keys* :req [::items ::qty ::units]))
+(s/def ::yields ::line-items)
 
 (s/def ::task (s/keys :req [::id ::name]
                       :opt [::equiptment 
@@ -37,6 +38,7 @@
 (s/def ::recipe (s/keys :req [::name ::description ::task-list]
                         :opt [::tags]))
 
+(s/def ::recipes (s/map-of ::id ::recipe))
 
 ;; Person example, likely won't use
 (def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
