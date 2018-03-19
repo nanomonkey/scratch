@@ -1,9 +1,8 @@
 (ns scratch.schema
   (:require [clojure.spec.alpha :as s]))
-;; change [org.clojure/clojure "1.9.0"]
 ;; https://clojure.org/guides/spec
 
-(s/def ::id (s/and string? #(= (count %) 64)))          ;;better hash spec?
+(s/def ::id (s/and string? #(= (count %) 44)))          ;;better hash spec?
 (s/def ::name (s/and string? #(<= 1 (count %) 64)))
 (s/def ::description string?)
 (s/def ::dirty? boolean?)
@@ -11,7 +10,7 @@
 
 
 (s/def ::abbrev (s/and string? #(<= 1 (count %) 6)))
-(def unit-types #{"weight" "volume" "distance" "area"})
+(def unit-types #{"weight" "volume" "distance" "area"})  ;;revisit...
 (s/def ::type unit-types)
 (s/def ::unit (s/keys :req [::id ::name ::abbrev ::type]))
 
@@ -39,7 +38,7 @@
                         :opt [::tags]))
 
 
-;; Person
+;; Person example, likely won't use
 (def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email-type (s/and string? #(re-matches email-regex %)))
 
