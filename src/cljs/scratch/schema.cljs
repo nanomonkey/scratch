@@ -23,13 +23,13 @@
 (s/def ::line-items (s/keys* :req [::items ::qty ::units]))
 (s/def ::equipment ::line-items)
 (s/def ::ingredients ::line-items)
-(s/def ::procedure (s/coll-of strings?))
+(s/def ::steps (s/coll-of strings?))
 (s/def ::yields ::line-items)
 
 (s/def ::task (s/keys :req [::id ::name]
                       :opt [::equipment 
                             ::ingredients 
-                            ::procedure 
+                            ::steps
                             ::yields]))
 
 (s/def ::tasks (s/map-of ::id ::tasks))

@@ -45,13 +45,13 @@
     (for [i items]
       [:li {:key (:item i)} (display-line-item i)])])
 
-(defn display-procedure [task]
+(defn display-steps [task]
   [:div#task
    [:div.steps-indicator
     [:div.connector]
     [:div.connector.complete]
     [:ol.steps    
-     (for [step @(rf/subscribe [:task-procedure task])]
+     (for [step @(rf/subscribe [:task-steps task])]
        [:li.active (markdown-section step)])]]
    [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]])
 
@@ -63,7 +63,7 @@
         [:tr
          (doall
           (for [h 
-                ["Equipment" "Ingredients" "Procedure"]]
+                ["Equipment" "Ingredients" "Steps"]]
             [:th h]))]]
        [:tbody
         (doall
@@ -71,7 +71,7 @@
            [:tr 
             [:td (list-items @(rf/subscribe [:task-equipment-line-items task]))]
             [:td (list-items @(rf/subscribe [:task-ingredients-line-items task]))]
-            [:td (display-procedure task)]]))]]))) 
+            [:td (display-steps task)]]))]]))) 
 
 (defn line-item-editor []
   (let [s (reagent/atom {})]

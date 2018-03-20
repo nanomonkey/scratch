@@ -14,7 +14,7 @@
                  :ingredients {:items ["i3"]
                                :qty {"i3" 2}
                                :units {"i3" "u2"}}
-                 :procedure ["fill pot with water"]
+                 :steps ["fill pot with water"]
                  :yields {:items ["i5"]
                           :qty {"i5" 1}
                           :units {"i5" "u1"}}}
@@ -27,7 +27,7 @@
                                :qty {"i5" 1}
                                :units {"i5" "u1"}
                                :scaling {"i5" 1}}
-                 :procedure ["Turn stove on medium" "Leave until boiling"]
+                 :steps ["Turn stove on medium" "Leave until boiling"]
                  :yields {:items ["i4" "i5"]
                           :qty {"i4" 6
                                 "i5" 1}
