@@ -5,7 +5,10 @@
             [accountant.core :as accountant]
             [secretary.core :as secretary :refer-macros [defroute]]
             [scratch.subs :as subs]
-            [scratch.widgets :refer [markdown-section inline-editor tag-editor]]
+            [scratch.widgets :refer [markdown-section 
+                                     inline-editor 
+                                     tag-editor
+                                     recipe-search]]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -123,7 +126,7 @@
      (header)
      (topnav)
      [:div.row
-      [:div.column.left "left side"]
+      [:div.column.left [recipe-search]]
       [:div.column.middle
        [:h2 [inline-editor @name
              #(rf/dispatch [:update-name "r1" %])]]

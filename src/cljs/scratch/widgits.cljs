@@ -14,7 +14,6 @@
 
 
 ;; Inline Editor
-
 (defn inline-editor [txt on-change]
   (let [s (reagent/atom {})]
     (fn [txt on-change]
@@ -43,7 +42,6 @@
 
 
 ;; Tag Editor
-
 (defn tag-editor [recipe-id]
   "adds a tag to a recipient in the database using the "
   (let [s (reagent/atom "")
@@ -73,93 +71,57 @@
                               (reset! k (-> e .-key))
                               (when (or (= " " (-> e .-key))
                                         (= "Enter" (-> e .-key)))
-                                
                                 (rf/dispatch [:save-tag recipe-id (.trim @s)])
                                 (reset! s "")))}]]])))
 
 
-;; Work in progress on Item search field
-
-(defn friend-source [text]
-  (filter
-    #(-> % (.toLowerCase %) (.indexOf text) (> -1))
-    ["Alice" "Alan" "Bob" "Beth" "Jim" "Jane" "Kim" "Rob" "Zoe"]))
+(defn display-recipes [search-string]
+  (let [recipes @(rf/subscribe [:recipe-names])]
+    [:div 
+     (prn-str recipes)
+     ]))
 
 (comment
-  (defn item-search []
-    [:div
-     (row
-      [:div {:field           :typeahead
-             :id              :item-search
-             :data-source     @(rf/subscribe :item-source)
-             :input-placeholder "Item"
-             :input-class     "form-control"
-             :list-class      "typeahead-list"
-             :item-class      "typeahead-item"
-             :highlight-class "highlighted"}])]))
-
-
-;; available css
-(comment 
-
-[:div.arrow_box "text for arrow box"]
-[:div.blue-panel "text for blue panel"]
-[:div.white-panel "text for white panel"]
-[:div.help-text "help text"]
-[:div#task
- [:div.steps-indicator
-  [:div.connector]
-  [:div.connector.complete]
-  [:ol.steps
-   [:li.complete [:strong "completed"] " step"]
-   [:li.active "not complete"]
-   [:li.active "not complete"]
-   [:li.inactive "inactive"]
-   [:li.warning "warning"]
-   [:li.active "last one"]]]]
-)
-
-(comment 
-;; https://benincosa.com/?p=3594
-(defn show-home
-  []  
-  ;; First, display banner and search text box.
-  (let [search-string (r/atom "")]
-    (fn []
-      [:div {:class "jumbotron " }
-        [:div {:class "container-fluid"}
-            [:div {:class "row"}]
-              [:div {:class "col-sm-2"}]
-              [:div {:class "col-sm-8"}
-                [:h2 [:center "Fun names" ]]
-                [:p {:class "center"} "Filter names" ]
-              [:div {:class "row"}]
-              [:div {:class "col-sm-2"}]
-              [:div {:class "col-sm-8"}
-                [:input.form-control {
-                  :type "text"
-                  :placeholder "Filter names"
-                  :value @search-string
-                  :on-change #(reset! search-string (-> % .-target .-value))
-                }]
-           ]
-          ]
-      ]   
-    [:div {:class "page-header"}]
-    [display-names @search-string]])))
-
-(defn display-names
-  "Displays APIs that match the search string"
-  [search-string]
-    [:div {:class "container-fluid"}
-     [:center
-      (for [person-name names]
-        ;; tricky regular expression to see if the search string matches the name
-        (if (or (re-find (re-pattern (str "(?i)" search-string)) person-name)
+[:center
+      (for [recipe recipes]
+        ;; regular expression to see if the search string matches the recipe name
+        (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name recipe))
                 (= "" search-string))
-          ^{ :key (.indexOf names person-name)}
-            [:div {:class "col-sm-4"}
-            [:div {:class "panel panel-default"}
-              [:div {:class "panel-heading"} person-name]]]))]])
-
+          ^{ :key (.indexOf recipes recipe)}
+          [:div
+           [:div (:name recipe)]]))]
 )
+
+(defn recipe-search []
+  (let [search-string (reagent/atom "")]
+    (fn []
+      [:div
+       [:p {:class "center"} "Filter recipes" ]
+       [:input.form-control {
+                             :type "text"
+                             :placeholder "Filter names"
+                             :value @search-string
+                             :on-change #(reset! search-string (-> % .-target .-value))}]   
+       [display-recipes @search-string]])))
+
+
+(comment
+  ;; available css
+
+  [:div.arrow_box "text for arrow box"]
+  [:div.blue-panel "text for blue panel"]
+  [:div.white-panel "text for white panel"]
+  [:div.help-text "help text"]
+  [:div#task
+   [:div.steps-indicator
+    [:div.connector]
+    [:div.connector.complete]
+    [:ol.steps
+     [:li.complete [:strong "completed"] " step"]
+     [:li.active "not complete"]
+     [:li.active "not complete"]
+     [:li.inactive "inactive"]
+     [:li.warning "warning"]
+     [:li.active "last one"]]]]
+
+  )

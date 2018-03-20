@@ -27,7 +27,7 @@
 (s/def ::yields ::line-items)
 
 (s/def ::task (s/keys :req [::id ::name]
-                      :opt [::equiptment 
+                      :opt [::equipment 
                             ::ingredients 
                             ::procedure 
                             ::yields]))

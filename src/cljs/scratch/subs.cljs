@@ -39,15 +39,31 @@
  (fn [db [_ id]]
    (get-in db [:items id :name])))
 
-(comment
-  (rf/reg-sub
-   :item-source
-   (fn [db]
-     (filter 
-      #(-> % (:name %) (:id %))
-      (:items db)))))
+(rf/reg-sub
+ :item-source
+ (fn [db]
+   (filter 
+    #(-> % (:name %) (:id %))
+    (:items db))))
 
 ;;Recipes
+
+(rf/reg-sub
+ :recipe-ids
+ (fn [db]
+   (map key (:recipes db))))
+
+(rf/reg-sub
+ :recipe-names
+ (fn [db]
+   (map val (:recipes db))))
+
+(rf/reg-sub
+ :recipes
+(fn [db]
+  (filter
+   #(-> % (:name %) (:id %)
+        (map val (:recipes db))))))
 
 (rf/reg-sub
  :recipe
