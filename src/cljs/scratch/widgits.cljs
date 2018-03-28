@@ -76,21 +76,16 @@
 
 
 (defn display-recipes [search-string]
-  (let [recipes @(rf/subscribe [:recipe-names])]
-    [:div 
-     (prn-str recipes)
-     ]))
+  (let [recipes @(rf/subscribe [:recipe-names])] 
+    [:center
+     (for [recipe recipes]
+       ;; regular expression to see if the search string matches the recipe name
+       (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name recipe))
+               (= "" search-string))
+         ^{ :key (.indexOf recipes recipe)}
+         [:div
+          [:div (:name recipe) (:id recipe)]]))]))
 
-(comment
-[:center
-      (for [recipe recipes]
-        ;; regular expression to see if the search string matches the recipe name
-        (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name recipe))
-                (= "" search-string))
-          ^{ :key (.indexOf recipes recipe)}
-          [:div
-           [:div (:name recipe)]]))]
-)
 
 (defn recipe-search []
   (let [search-string (reagent/atom "")]

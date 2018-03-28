@@ -23,6 +23,7 @@
  (fn [db [_ key]]
    (get-in db [:units key :abbrev])))
 
+
 ;; Items
 (rf/reg-sub
  :items
@@ -46,8 +47,25 @@
     #(-> % (:name %) (:id %))
     (:items db))))
 
-;;Recipes
+(rf/reg-sub  
+ :item-source
+ (fn [db [_ text]]
+   (->> (map val (:items db))
+        (filter #(-> (:name %)
+                     (.toLowerCase)
+                     (.indexOf text)
+                     (> -1)))
+        (mapv #(vector (:name %) (:id %))))))
 
+(rf/reg-sub
+  :item/name-id
+  (fn []
+    (rf/subscribe [:items]))
+  (fn [item-index]
+    (into [] (for [[id item] item-index]
+               [(:name item) id]))))
+
+;;Recipes
 (rf/reg-sub
  :recipe-ids
  (fn [db]
@@ -64,6 +82,16 @@
   (filter
    #(-> % (:name %) (:id %)
         (map val (:recipes db))))))
+
+(rf/reg-sub  
+ :recipe-source
+ (fn [db [_ text]]
+    (->> db
+         (filter #(-> (:name %)
+                      (.toLowerCase)
+                      (.indexOf text)
+                      (> -1)))
+         (mapv #(vector (:name %) (:id %))))))
 
 (rf/reg-sub
  :recipe

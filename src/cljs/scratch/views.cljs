@@ -63,7 +63,7 @@
         [:tr
          (doall
           (for [h 
-                ["Equipment" "Ingredients" "Steps"]]
+                ["Equipment" "Ingredients" "Procedural Steps"]]
             [:th h]))]]
        [:tbody
         (doall
@@ -87,7 +87,7 @@
       [:label "Item:"]
       [:select
        (doall
-        (for [[id item] @ (rf/subscribe [:items])]
+        (for [[id item] @(rf/subscribe [:items])]
           [:option {:value id} (:name item)]))]]]))
 
 (defn create-item []
@@ -107,16 +107,35 @@
                  :name "item-description"}]]]
       [:row
        [:label "Tags"]]
-      
-      [:button {:on-click #(do (rf/dispatch [:new-item (:name @s) 
+      [:button {:on-click #(do (.preventDefault %)
+                               (rf/dispatch [:new-item (:name @s) 
                                              (:description @s)
-                                              []])
-                               (.preventDefault %))}
+                                             []]))}
        "Create Item"]]]))
 
 
 (defn add-item [name description tags]
   (rf/dispatch [:new-item name description tags]))
+
+(defn delete-item
+  [item-id]
+  [:div.garbage-bin 
+     :on-click #(re-frame.core/dispatch [:delete-item item-id])])
+
+(defn item-source [text]
+  (filter
+   #(-> % (.toLowerCase %) (.indexOf text) (> -1))
+   @(rf/subscribe [:item/name-id])))
+
+(defn search-item []
+  [:div {:field :typeahead
+         :id :add-item
+         :input-placeholder "add an item"
+         :data-source item-source
+         :input-class "form-control"
+         :list-class "typeahead-list"
+         :item-class "typeahead-item"
+         :highlight-class "highlighted"}])
 
 
 (defn main-panel []
@@ -137,6 +156,7 @@
        [:div [line-item-editor]]
        [:div (prn-str @(rf/subscribe [:items]))]]
       [:div.column.right
+       [:div [search-item]]  
        (create-item)]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]

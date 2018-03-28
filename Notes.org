@@ -6,12 +6,15 @@ Notes
 ** Modals
 [[https://github.com/benhowell/re-frame-modal][re-frame modal]]
 
+
 * IMPLIMENT
 ** TODO Add Search lookahead for adding item to task
 - When item isn't found, and (+) button is clicked, open modal to create item
+- after modal, add to tasklist with default number and unit (1 each?)
 ** TODO Add similar for units 
-- modal in modal?!
-- units may need their own configuration page or be hard coded
+- Seperate modal, or units may need their own configuration page or be hard coded
+
+** TODO record changes locally in a parametric manner, then update ssb upon user's request.
 
 * example re-frame code projects
 - https://github.com/dhruvp/angular-phonecat-re-frame/
