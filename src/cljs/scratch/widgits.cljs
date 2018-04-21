@@ -1,3 +1,4 @@
+
 (ns scratch.widgets
   (:require [re-frame.core :as rf]
             [reagent.core :as reagent]))
@@ -11,7 +12,6 @@
 (defn markdown-section [s]
   [:div
     {:dangerouslySetInnerHTML {:__html (->html s)}}])
-
 
 ;; Inline Editor
 (defn inline-editor [txt on-change]
@@ -74,6 +74,24 @@
                                 (rf/dispatch [:save-tag recipe-id (.trim @s)])
                                 (reset! s "")))}]]])))
 
+(defn find-or-add [items add-event create-event]
+  "text field that searches through items, if one is found add it, otherwise create a new item with the text provided"
+)
+
+;; Datalist
+(defn data-list [name options]
+  [:div
+   [:label name]
+   [:input {:list name}]
+   [:datalist {:id name}
+    (for [[item id] options]
+      [:option {:value id} item])]])
+
+
+(defn item-selector []
+  (data-list "select-item" @(rf/subscribe [:item/name-id])))
+
+;;Work in progress:
 
 (defn display-recipes [search-string]
   (let [recipes @(rf/subscribe [:recipe-names])] 
@@ -84,7 +102,11 @@
                (= "" search-string))
          ^{ :key (.indexOf recipes recipe)}
          [:div
-          [:div (:name recipe) (:id recipe)]]))]))
+          [:div [:a {:href "#"
+                     :on-click #(do
+                                  (.preventDefault %)
+                                  (rf/dispatch [:load-recipe (:id recipe)]))} 
+                 (:name recipe)]]]))]))
 
 
 (defn recipe-search []
@@ -92,12 +114,15 @@
     (fn []
       [:div
        [:p {:class "center"} "Filter recipes" ]
-       [:input.form-control {
-                             :type "text"
+       [:input.form-control {:type "text"
                              :placeholder "Filter names"
                              :value @search-string
-                             :on-change #(reset! search-string (-> % .-target .-value))}]   
-       [display-recipes @search-string]])))
+                             :on-change #(reset! search-string (-> % .-target .-value))}]
+       [:button {:on-click #(do (.preventDefault %)
+                                (let [recipe-id (rf/dispatch [:new-recipe search-string "" #{} []])]
+                                  (rf/dispatch [:load-recipe recipe-id])))} "+"]
+       (when (< 1 (count @search-string))
+         [display-recipes @search-string])])))
 
 
 (comment

@@ -1,7 +1,6 @@
 (ns scratch.views
   (:require [re-frame.core :as rf]
-            [reagent-forms.core :refer [bind-fields init-field value-of]]
-            [reagent.core :as reagent]
+            [reagent.core :as reagent] 
             [accountant.core :as accountant]
             [secretary.core :as secretary :refer-macros [defroute]]
             [scratch.subs :as subs]
@@ -117,30 +116,34 @@
 (defn add-item [name description tags]
   (rf/dispatch [:new-item name description tags]))
 
-(defn delete-item
-  [item-id]
-  [:div.garbage-bin 
-     :on-click #(re-frame.core/dispatch [:delete-item item-id])])
+(comment
+  (defn delete-item
+    [item-id]
+    [:div.garbage-bin 
+     :on-click #(re-frame.core/dispatch [:delete-item item-id])]))
 
 (defn item-source [text]
   (filter
    #(-> % (.toLowerCase %) (.indexOf text) (> -1))
    @(rf/subscribe [:item/name-id])))
 
-(defn search-item []
-  [:div {:field :typeahead
-         :id :add-item
-         :input-placeholder "add an item"
-         :data-source item-source
-         :input-class "form-control"
-         :list-class "typeahead-list"
-         :item-class "typeahead-item"
-         :highlight-class "highlighted"}])
+(comment
+  (defn search-item []
+    [:div {:field :typeahead
+           :id :add-item
+           :input-placeholder "add an item"
+           :data-source item-source
+           :input-class "form-control"
+           :list-class "typeahead-list"
+           :item-class "typeahead-item"
+           :highlight-class "highlighted"}]))
+
 
 
 (defn main-panel []
-  (let [name (rf/subscribe [:recipe-name "r1"])
-        description (rf/subscribe [:recipe-description "r1"])]
+  (let [recipe-id (rf/subscribe [:loaded-recipe])
+        name (rf/subscribe [:recipe-name @recipe-id])
+        description (rf/subscribe [:recipe-description @recipe-id])]
     [:div
      (header)
      (topnav)
@@ -148,19 +151,19 @@
       [:div.column.left [recipe-search]]
       [:div.column.middle
        [:h2 [inline-editor @name
-             #(rf/dispatch [:update-name "r1" %])]]
+             #(rf/dispatch [:update-name @recipe-id %])]]
        [:div [inline-editor @description
-              #(rf/dispatch [:update-description "r1" %])]]
-       [:div [tag-editor "r1"]]
-       [:div [task-table "r1"]]
-       [:div [line-item-editor]]
-       [:div (prn-str @(rf/subscribe [:items]))]]
+              #(rf/dispatch [:update-description @recipe-id %])]]
+       [:div [tag-editor @recipe-id]]
+       [:div [task-table @recipe-id]]
+       
+      ;; [:div [line-item-editor]]
+      ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
+       ]
       [:div.column.right
-       [:div [search-item]]  
        (create-item)]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
     (reagent/render [main-panel] el))
-
 

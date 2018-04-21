@@ -1,11 +1,18 @@
 (ns scratch.db)
 
 (def recipe-db
-  {:recipes {"r1" {:id "r1"
+  {:loaded-recipe "r1"
+   :temp-id 0
+   :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
                    :description "Soup made by friends"
                    :tags #{"soup"}
-                   :task-list ["t1" "t2"]}}
+                   :task-list ["t1" "t2"]}
+             "r2" {:id "r2"
+                   :name "Another Recipe"
+                   :description "Another description..."
+                   :tags #{"test"}
+                   :task-list ["t2"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :equipment {:items ["i1"]

@@ -2,10 +2,16 @@
   (:require [re-frame.core :as rf]
             [scratch.db :as db]))
 
+
 (rf/reg-event-db
  ::initialize-db
  (fn  [_ _]
    db/recipe-db))
+
+(rf/reg-event-db
+ :load-recipe 
+(fn [db [_ recipe-id]]
+  (assoc-in db [:loaded-recipe] recipe-id)))
 
 (rf/reg-event-db
  :update-name
@@ -38,6 +44,19 @@
   (fn [cofx _]
     (assoc cofx :temp-id (swap! last-temp-id inc))))
 
+(rf/reg-event-fx
+ :new-recipe
+ [(rf/inject-cofx :temp-id)]
+ (fn [cofx [_ name description tags tasks]]
+   {:db
+    (update (:db cofx) :recipe assoc
+            (str (:temp-id cofx)) {:id (:temp-id cofx)
+                                   :name name
+                                   :description description
+                                   :tags tags
+                                   :tasks tasks})}
+   ;return temp-id 
+   (:temp-id cofx)))
 
 (rf/reg-event-fx
  :new-item
