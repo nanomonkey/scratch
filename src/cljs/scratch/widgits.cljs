@@ -46,7 +46,7 @@
   "adds a tag to a recipient in the database using the "
   (let [s (reagent/atom "")
         k (reagent/atom "")]
-    (fn []
+    (fn [recipe-id]
       [:div#tags
        [:span
         "Tags: "

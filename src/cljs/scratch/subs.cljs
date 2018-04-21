@@ -6,11 +6,6 @@
  (fn [db]
    (:loaded-recipe db)))
 
-(rf/reg-sub
- :temp-id
- (fn [db]
-   (:temp-id db))) ;update temp-id here?
-
 ;; Units
 (rf/reg-sub
  :units

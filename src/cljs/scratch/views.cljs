@@ -161,7 +161,7 @@
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
       [:div.column.right
-       (create-item)]]]))
+       [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
