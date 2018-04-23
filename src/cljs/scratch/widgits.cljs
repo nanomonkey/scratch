@@ -42,16 +42,17 @@
 
 
 ;; Tag Editor
-(defn tag-editor [recipe-id]
-  "adds a tag to a recipient in the database using the "
+(defn tag-editor [source delete save id]
+  "adds a tag to a recipient in the database using the
+   subscription, remove and save handlers"
   (let [s (reagent/atom "")
         k (reagent/atom "")]
-    (fn [recipe-id]
+    (fn [source remove save id]
       [:div#tags
        [:span
         "Tags: "
         (doall
-         (for [tag @(rf/subscribe [:recipe-tags recipe-id])]
+         (for [tag @(rf/subscribe [source id])]
            [:div#tag {:style {:display :inline-block
                               :background-color :yellow
                               :color :blue
@@ -61,7 +62,7 @@
                  :style {:margin-left "4px"}
                  :on-click (fn [e] 
                              (.preventDefault e)
-                             (rf/dispatch [:remove-tag recipe-id tag]))}
+                             (rf/dispatch [remove id tag]))}
              [:sup "x"]]]))]
        [:span
         [:input {:type :text
@@ -71,7 +72,7 @@
                               (reset! k (-> e .-key))
                               (when (or (= " " (-> e .-key))
                                         (= "Enter" (-> e .-key)))
-                                (rf/dispatch [:save-tag recipe-id (.trim @s)])
+                                (rf/dispatch [save id (.trim @s)])
                                 (reset! s "")))}]]])))
 
 (defn find-or-add [items add-event create-event]

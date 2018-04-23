@@ -113,14 +113,20 @@
        "Create Item"]]]))
 
 
-(defn add-item [name description tags]
+(defn create-item2 [name description tags]
   (rf/dispatch [:new-item name description tags]))
 
 (comment
-  (defn delete-item
-    [item-id]
+  (defn add-item [task-id item-id]
+    [:button 
+     {:on-click #(do (.preventDefault %)
+                     (rf/dispatch [:task/add-ingredient task-id item-id qty unit]))}]))
+
+(comment
+  (defn remove-item
+    [task-id item-id]
     [:div.garbage-bin 
-     :on-click #(re-frame.core/dispatch [:delete-item item-id])]))
+     :on-click #(re-frame.core/dispatch [:task/remove-item task-id item-id])]))
 
 (defn item-source [text]
   (filter
@@ -154,7 +160,7 @@
              #(rf/dispatch [:update-name @recipe-id %])]]
        [:div [inline-editor @description
               #(rf/dispatch [:update-description @recipe-id %])]]
-       [:div [tag-editor @recipe-id]]
+       [:div [tag-editor :recipe-tags :remove-tag :save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
        
       ;; [:div [line-item-editor]]
