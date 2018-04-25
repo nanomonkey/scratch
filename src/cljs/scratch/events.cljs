@@ -82,7 +82,7 @@
                        :type type})})))
 
 (rf/reg-event-db
- :add-ingredient-to-task
+ :task/add-ingredient
  (fn [db [_ task-id item-id qty unit]]
    ;; check if it's already in the task
    (if (nil? (get-in db [:tasks task-id :ingredients :qty item-id]))
@@ -92,3 +92,8 @@
          (update-in [:tasks :items] (fnil conj []) item-id))
      ;; in the task, add to existing qty
      (update-in db [:tasks task-id :ingredients :qty item-id] + qty))))
+
+(rf/reg-event-db
+ :task/add-step
+ (fn [db [_ task-id step]]
+   (update-in db [:tasks task-id :steps] (fnil conj []) step)))

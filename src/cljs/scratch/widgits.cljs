@@ -75,9 +75,37 @@
                                 (rf/dispatch [save id (.trim @s)])
                                 (reset! s "")))}]]])))
 
-(defn find-or-add [items add-event create-event]
-  "text field that searches through items, if one is found add it, otherwise create a new item with the text provided"
-)
+(defn display-items [search-string source action]
+  (let [items @(rf/subscribe [source])] 
+    [:center
+     (for [item items]
+       ;; regular expression to see if the search string matches the item name
+       (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name item))
+               (= "" search-string))
+         ^{ :key (.indexOf items item)}
+         [:div
+          [:div [:a {:href "#"
+                     :on-click #(do
+                                  (.preventDefault %)
+                                  (rf/dispatch [action (:id item)]))} 
+                 (:name item)]]]))]))
+
+
+(defn item-search [found-event not-found source action]
+  (let [search-string (reagent/atom "")]
+    (fn []
+      [:div
+       [:p {:class "center"} "Filter recipes" ]
+       [:input.form-control {:type "text"
+                             :placeholder "Filter names"
+                             :value @search-string
+                             :on-change #(reset! search-string (-> % .-target .-value))}]
+       [:button {:on-click #(do (.preventDefault %)
+                                (let [id (rf/dispatch [not-found search-string "" #{} []])]
+                                  (rf/dispatch [found-event id])))} "+"]
+       (when (< 1 (count @search-string))
+         [display-items @search-string source action])])))
+
 
 ;; Datalist
 (defn data-list [name options]
@@ -92,8 +120,8 @@
 (defn item-selector []
   (data-list "select-item" @(rf/subscribe [:item/name-id])))
 
-;;Work in progress:
 
+;; Recipe Search
 (defn display-recipes [search-string]
   (let [recipes @(rf/subscribe [:recipe-names])] 
     [:center

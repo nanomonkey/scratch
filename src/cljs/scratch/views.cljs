@@ -7,7 +7,8 @@
             [scratch.widgets :refer [markdown-section 
                                      inline-editor 
                                      tag-editor
-                                     recipe-search]]
+                                     recipe-search
+                                     item-search]]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -44,6 +45,18 @@
     (for [i items]
       [:li {:key (:item i)} (display-line-item i)])])
 
+(defn add-step [task]
+  (let [s (reagent/atom "")]
+    (fn [task]
+      [:form {:on-submit #(do
+                            (.preventDefault %)
+                            (rf/dispatch [:task/add-step task @s])
+                            (reset! s ""))}
+       [:input {:type :text
+                :value @s
+                :on-change #(reset! s (-> % .-target .-value))}]
+       [:button "Add Step"]])))
+
 (defn display-steps [task]
   [:div#task
    [:div.steps-indicator
@@ -52,7 +65,9 @@
     [:ol.steps    
      (for [step @(rf/subscribe [:task-steps task])]
        [:li.active (markdown-section step)])]]
-   [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]])
+   [add-step task]
+   [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]
+   [:div (prn-str @(rf/subscribe [:task-steps task]))]])
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -90,30 +105,35 @@
           [:option {:value id} (:name item)]))]]]))
 
 (defn create-item []
-  (let [s (reagent/atom {})]
-    [:div.blue-panel (prn-str @s)
-     [:form {:on-submit #(do
-                           (.preventDefault %))}
-      [:row
-       [:label "Name"]
-       [:input {:type :text 
-                :name "item-name" 
-                :value (:name @s)}]]
-      [:div
-       [:row
-        [:label "Description"]
-        [:input {:type :text 
-                 :name "item-description"}]]]
-      [:row
-       [:label "Tags"]]
-      [:button {:on-click #(do (.preventDefault %)
-                               (rf/dispatch [:new-item (:name @s) 
-                                             (:description @s)
-                                             []]))}
-       "Create Item"]]]))
+  (let [name (reagent/atom "")
+        description (reagent/atom "")
+        tags (reagent/atom #{})]
+    (fn []
+      [:div.blue-panel (prn-str @name @description)
+       [:form {:on-submit #(do
+                             (.preventDefault %))}
+        [:row
+         [:label "Name"]
+         [:input.form-control {:type "text"
+                               :placeholder "item name"
+                               :value @name
+                               :on-change #(reset! name (-> % .-target .-value))}]]
+        [:div
+         [:row
+          [:label "Description"]
+          [:input.form-control {:type "text"
+                                :placeholder "item description"
+                                :value @description
+                                :on-change #(reset! description (-> % .-target .-value))}]]]
+        [:row
+         [:label "Tags"]]
+        [:button {:on-click #(do (.preventDefault %)
+                                 (rf/dispatch [:new-item @name @description @tags])
+                                 (reset! name "")
+                                 (reset! description ""))}
+         "Create Item"]]])))
 
-
-(defn create-item2 [name description tags]
+(defn add-line-item [name description tags]
   (rf/dispatch [:new-item name description tags]))
 
 (comment
@@ -127,24 +147,6 @@
     [task-id item-id]
     [:div.garbage-bin 
      :on-click #(re-frame.core/dispatch [:task/remove-item task-id item-id])]))
-
-(defn item-source [text]
-  (filter
-   #(-> % (.toLowerCase %) (.indexOf text) (> -1))
-   @(rf/subscribe [:item/name-id])))
-
-(comment
-  (defn search-item []
-    [:div {:field :typeahead
-           :id :add-item
-           :input-placeholder "add an item"
-           :data-source item-source
-           :input-class "form-control"
-           :list-class "typeahead-list"
-           :item-class "typeahead-item"
-           :highlight-class "highlighted"}]))
-
-
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
@@ -167,6 +169,8 @@
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
       [:div.column.right
+       [create-item]
+       [:div (prn-str @ (rf/subscribe [:items]))]
        [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
