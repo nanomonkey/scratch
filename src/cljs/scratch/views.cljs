@@ -66,8 +66,7 @@
      (for [step @(rf/subscribe [:task-steps task])]
        [:li.active (markdown-section step)])]]
    [add-step task]
-   [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]
-   [:div (prn-str @(rf/subscribe [:task-steps task]))]])
+   [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]])
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
