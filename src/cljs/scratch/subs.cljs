@@ -131,12 +131,12 @@
 (rf/reg-sub
  :task
  (fn [db [_ id]]
-   (get-in db [:task id])))
+   (get-in db [:tasks id])))
 
 (rf/reg-sub
  :task-name
  (fn [db [_ id]]
-   (get-in db [:task id :name])))
+   (get-in db [:tasks id :name])))
 
 (rf/reg-sub
  :task-steps

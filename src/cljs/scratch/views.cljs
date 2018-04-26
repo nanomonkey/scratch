@@ -50,7 +50,8 @@
     (fn [task]
       [:form {:on-submit #(do
                             (.preventDefault %)
-                            (rf/dispatch [:task/add-step task @s])
+                            (when (> (count @s) 0)
+                              (rf/dispatch [:task/add-step task @s]))
                             (reset! s ""))}
        [:input {:type :text
                 :value @s
@@ -59,6 +60,7 @@
 
 (defn display-steps [task]
   [:div#task
+   [:h2 @(rf/subscribe [:task-name task])]
    [:div.steps-indicator
     [:div.connector]
     [:div.connector.complete]
@@ -76,7 +78,7 @@
         [:tr
          (doall
           (for [h 
-                ["Equipment" "Ingredients" "Procedural Steps"]]
+                ["Equipment" "Ingredients" "Steps"]]
             [:th h]))]]
        [:tbody
         (doall
