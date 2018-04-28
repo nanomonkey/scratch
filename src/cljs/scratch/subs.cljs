@@ -45,11 +45,10 @@
    (get-in db [:items id :name])))
 
 (rf/reg-sub
- :item-source
+ :item-names
  (fn [db]
-   (filter 
-    #(-> % (:name %) (:id %))
-    (:items db))))
+   (map val (:items db))))
+
 
 (rf/reg-sub  
  :item-source

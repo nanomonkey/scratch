@@ -94,6 +94,18 @@
      (update-in db [:tasks task-id :ingredients :qty item-id] + qty))))
 
 (rf/reg-event-db
+ :task/add-product
+ (fn [db [_ task-id item-id qty unit]]
+   ;; check if it's already in the task
+   (if (nil? (get-in db [:tasks task-id :ingredients :qty item-id]))
+     ;; not in the task, add to qty and ingredients
+     (-> db
+         (assoc-in [:tasks task-id :yields :qty item-id] qty)
+         (update-in [:tasks :yields] (fnil conj []) item-id))
+     ;; in the task, add to existing qty
+     (update-in db [:tasks task-id :yields :qty item-id] + qty))))
+
+(rf/reg-event-db
  :task/add-step
  (fn [db [_ task-id step]]
    (update-in db [:tasks task-id :steps] (fnil conj []) step)))

@@ -91,18 +91,17 @@
                  (:name item)]]]))]))
 
 
-(defn item-search [found-event not-found source action]
+(defn item-search [source action create]
   (let [search-string (reagent/atom "")]
     (fn []
       [:div
-       [:p {:class "center"} "Filter recipes" ]
        [:input.form-control {:type "text"
-                             :placeholder "Filter names"
+                             :placeholder "add item"
                              :value @search-string
                              :on-change #(reset! search-string (-> % .-target .-value))}]
        [:button {:on-click #(do (.preventDefault %)
-                                (let [id (rf/dispatch [not-found search-string "" #{} []])]
-                                  (rf/dispatch [found-event id])))} "+"]
+                                (let [id (rf/dispatch [create search-string "" #{} []])]
+                                  (rf/dispatch [action id])))} "+"]
        (when (< 1 (count @search-string))
          [display-items @search-string source action])])))
 
@@ -122,36 +121,33 @@
 
 
 ;; Recipe Search
-(defn display-recipes [search-string]
-  (let [recipes @(rf/subscribe [:recipe-names])] 
-    [:center
-     (for [recipe recipes]
-       ;; regular expression to see if the search string matches the recipe name
-       (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name recipe))
-               (= "" search-string))
-         ^{ :key (.indexOf recipes recipe)}
-         [:div
-          [:div [:a {:href "#"
-                     :on-click #(do
-                                  (.preventDefault %)
-                                  (rf/dispatch [:load-recipe (:id recipe)]))} 
-                 (:name recipe)]]]))]))
-
-
 (defn recipe-search []
   (let [search-string (reagent/atom "")]
     (fn []
       [:div
-       [:p {:class "center"} "Filter recipes" ]
+       [:p {:class "center"} "Recipes" ]
+       [:button {:on-click #(do (.preventDefault %)
+                                (let [recipe-id (rf/dispatch [:new-recipe search-string "" #{} []])]
+                                  (rf/dispatch [:load-recipe recipe-id])))} "+"]
        [:input.form-control {:type "text"
                              :placeholder "Filter names"
                              :value @search-string
                              :on-change #(reset! search-string (-> % .-target .-value))}]
-       [:button {:on-click #(do (.preventDefault %)
-                                (let [recipe-id (rf/dispatch [:new-recipe search-string "" #{} []])]
-                                  (rf/dispatch [:load-recipe recipe-id])))} "+"]
        (when (< 1 (count @search-string))
-         [display-recipes @search-string])])))
+         (let [recipes @(rf/subscribe [:recipe-names])] 
+           [:center
+            (for [recipe recipes]
+              ;; regular expression to see if the search string matches the recipe name
+              (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
+                      (= "" @search-string))
+                ^{ :key (.indexOf recipes recipe)}
+                [:div
+                 [:div [:a {:href "#"
+                            :on-click #(do
+                                         (.preventDefault %)
+                                         (rf/dispatch [:load-recipe (:id recipe)])
+                                         (reset! search-string ""))} 
+                        (:name recipe)]]]))]))])))
 
 
 (comment
