@@ -12,7 +12,12 @@
                    :name "Another Recipe"
                    :description "Another description..."
                    :tags #{"test"}
-                   :task-list ["t2"]}}
+                   :task-list ["t2"]}
+             "r3" {:id "r3"
+                   :name "Neti Pot solution"
+                   :description ""
+                   :tags #{}
+                   :task-list ["t1" "t2" "t3"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :equipment {:items ["i1"]
@@ -39,6 +44,24 @@
                           :qty {"i4" 6
                                 "i5" 1}
                           :units {"i4" "u2"
+                                  "i5" "u2"}}}
+           "t3" {:id "t3"
+                 :name "Add Salt"
+                 :equipment {:items ["i2"]
+                             :qty {"i2" 1}
+                             :units {"i2" "u1"}}
+                 :ingredients {:items ["i6"]
+                               :qty {"i6" 0.5}
+                               :units {"i6" "u3"}
+                               :scaling {"i6" 1}}
+                 :optional {:items ["i7"]
+                            :qty {"i7" 1}
+                            :units {"i7" "u3"}}
+                 :steps ["Add salt and optional baking soda to boiling water, stir until dissolved." "Cool solution to body temperature."]
+                 :yields {:items ["i4" "i5"]
+                          :qty {"i4" 6
+                                "i5" 1}
+                          :units {"i4" "u2"
                                   "i5" "u2"}}}}
    :items {"i1" {:id "i1"
                  :name "6 Qt. Pot"
@@ -59,6 +82,14 @@
            "i5" {:id "i5"
                  :name "full pot"
                  :description "pot full of water"
+                 :tags []}
+           "i6" {:id "i6"
+                 :name "Kosher Salt"
+                 :description "non-iodized kosher salt"
+                 :tags []}
+           "i7" {:id "i6"
+                 :name "Baking Soda"
+                 :description ""
                  :tags []}}
    :units {"u1" {:id "u1"
                  :name "each"
@@ -67,6 +98,10 @@
            "u2" {:id "u2"
                  :name "quarts"
                  :abbrev "qts"
+                 :type "volume"}
+           "u3" {:id "u3"
+                 :name "teaspoon"
+                 :abbrev "tsp"
                  :type "volume"}}})
 
 

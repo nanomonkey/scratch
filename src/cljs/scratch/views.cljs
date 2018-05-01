@@ -26,7 +26,7 @@
   (let [qty (:qty line-item)
         unit (rf/subscribe [:unit-abbrev (:unit line-item)])
         item (rf/subscribe [:item-name (:item line-item)])]
-    (goog.string/format "%i%s - %s" qty @unit @item)))
+    (goog.string/format "%f %s - %s" qty @unit @item)))
 
 (defn span-items [items]
   [:span 
