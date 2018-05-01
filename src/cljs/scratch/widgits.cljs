@@ -77,6 +77,7 @@
 
 (defn display-items [search-string source action]
   (let [items @(rf/subscribe [source])] 
+    (fn [search])
     [:center
      (for [item items]
        ;; regular expression to see if the search string matches the item name
@@ -87,13 +88,13 @@
           [:div [:a {:href "#"
                      :on-click #(do
                                   (.preventDefault %)
-                                  (rf/dispatch [action (:id item)]))} 
+                                  (apply action (:id item)))} 
                  (:name item)]]]))]))
 
 
 (defn item-search [source action create]
   (let [search-string (reagent/atom "")]
-    (fn []
+    (fn [source action create]
       [:div
        [:input.form-control {:type "text"
                              :placeholder "add item"
@@ -101,7 +102,7 @@
                              :on-change #(reset! search-string (-> % .-target .-value))}]
        [:button {:on-click #(do (.preventDefault %)
                                 (let [id (rf/dispatch [create search-string "" #{} []])]
-                                  (rf/dispatch [action id])))} "+"]
+                                  (apply action id)))} "+"]
        (when (< 1 (count @search-string))
          [display-items @search-string source action])])))
 
@@ -119,6 +120,34 @@
 (defn item-selector []
   (data-list "select-item" @(rf/subscribe [:item/name-id])))
 
+(defn add-product [task]
+  (let [search-string (reagent/atom "")]
+    (fn [task]
+      [:div
+       [:p {:class "center"} "Add Product" ]
+       [:button {:on-click #(doall (.preventDefault %)
+                                (let [item-id @(rf/dispatch [:new-item @search-string "" #{} []])]
+                                  (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
+       [:input.form-control {:type "text"
+                             :placeholder "Filter names"
+                             :value @search-string
+                             :on-change #(reset! search-string (-> % .-target .-value))}]
+       (when (< 1 (count @search-string))
+         (let [items @(rf/subscribe [:item-names])] 
+           [:center
+            (for [item items]
+              ;; regular expression to see if the search string matches the recipe name
+              (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
+                      (= "" @search-string))
+                ^{ :key (.indexOf items item)}
+                [:div
+                 [:div [:a {:href "#"
+                            :on-click #(do
+                                         (.preventDefault %)
+                                         (rf/dispatch 
+                                          [:task/add-product task (:id item) 1 "u1"])
+                                         (reset! search-string ""))} 
+                        (:name item)]]]))]))])))
 
 ;; Recipe Search
 (defn recipe-search []
@@ -152,8 +181,7 @@
 
 (comment
   ;; available css
-
-  [:div.arrow_box "text for arrow box"]
+ [:div.arrow_box "text for arrow box"]
   [:div.blue-panel "text for blue panel"]
   [:div.white-panel "text for white panel"]
   [:div.help-text "help text"]
@@ -168,5 +196,4 @@
      [:li.inactive "inactive"]
      [:li.warning "warning"]
      [:li.active "last one"]]]]
-
   )

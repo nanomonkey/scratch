@@ -8,7 +8,8 @@
                                      inline-editor 
                                      tag-editor
                                      recipe-search
-                                     item-search]]
+                                     item-search
+                                     add-product]]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -69,7 +70,7 @@
        [:li.active (markdown-section step)])]]
    [add-step task]
    [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]
-   [item-search :item-names #(:task/add-product task %) :create-item]])
+   [add-product task]])
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -174,27 +175,8 @@
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
       [:div.column.right
-       [create-item]
        [:div (prn-str @ (rf/subscribe [:items]))]
-       [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]
-       [:div (prn-str @(rf/subscribe [:item-names]))]
-       
-  [:div.arrow_box "text for arrow box"]
-  [:div.blue-panel "text for blue panel"]
-  [:div.white-panel "text for white panel"]
-  [:div.help-text "help text"]
-  [:div#task
-   [:div.steps-indicator
-    [:div.connector]
-    [:div.connector.complete]
-    [:ol.steps
-     [:li.complete [:strong "completed"] " step"]
-     [:li.active "not complete"]
-     [:li.active "not complete"]
-     [:li.inactive "inactive"]
-     [:li.warning "warning"]
-     [:li.active "last one"]]]]
-]]]))
+       [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
