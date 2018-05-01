@@ -171,6 +171,15 @@
            (get-in db [:tasks task-id :equipment :items]))))
 
 (rf/reg-sub
+ :task-optional-line-items
+ (fn [db [_ task-id]]
+   (mapv (fn [item-id]
+             {:qty (get-in db [:tasks task-id :optional :qty item-id])
+              :unit (get-in db [:tasks task-id :optional :units item-id])
+              :item item-id})
+           (get-in db [:tasks task-id :optional :items]))))
+
+(rf/reg-sub
  :task-yields
  (fn [db [_ task-id]]
    (mapv (fn [item-id]

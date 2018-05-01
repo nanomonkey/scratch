@@ -86,7 +86,10 @@
          (for [task tasks]
            [:tr 
             [:td (list-items @(rf/subscribe [:task-equipment-line-items task]))]
-            [:td (list-items @(rf/subscribe [:task-ingredients-line-items task]))]
+            [:td (list-items @(rf/subscribe [:task-ingredients-line-items task]))
+             (let [optional @(rf/subscribe [:task-optional-line-items task])]
+               (when (> (count optional) 0)
+                 [:span [:b "Optional:"] (list-items optional)]))]
             [:td (display-steps task)]]))]]))) 
 
 (defn line-item-editor []
