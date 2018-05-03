@@ -1,5 +1,10 @@
 (ns scratch.subs
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf])
+  (:require-macros [reagent.ratom :refer [reaction]]))
+
+(rf/reg-sub-raw
+ :modal
+ (fn [db _] (reaction (:modal @db))))
 
 (rf/reg-sub
  :loaded-recipe
@@ -175,7 +180,7 @@
  (fn [db [_ task-id]]
    (mapv (fn [item-id]
              {:qty (get-in db [:tasks task-id :optional :qty item-id])
-              :unit (get-in db [:tasks task-id :optional :units item-id])
+              :unit (get-in db [:tasks task-id :optionalrjv :units item-id])
               :item item-id})
            (get-in db [:tasks task-id :optional :items]))))
 

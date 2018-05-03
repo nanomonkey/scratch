@@ -4,6 +4,11 @@
 
 
 (rf/reg-event-db
+ :modal
+ (fn [db [_ data]]
+   (assoc-in db [:modal] data)))
+
+(rf/reg-event-db
  ::initialize-db
  (fn  [_ _]
    db/recipe-db))

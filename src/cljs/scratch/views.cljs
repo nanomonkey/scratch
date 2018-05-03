@@ -9,7 +9,8 @@
                                      tag-editor
                                      recipe-search
                                      item-search
-                                     add-product]]
+                                     add-product
+                                     modal]]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -110,8 +111,8 @@
         (for [[id item] @(rf/subscribe [:items])]
           [:option {:value id} (:name item)]))]]]))
 
-(defn create-item []
-  (let [name (reagent/atom "")
+(defn create-item [name]
+  (let [name (reagent/atom name)
         description (reagent/atom "")
         tags (reagent/atom #{})]
     (fn []
@@ -136,8 +137,16 @@
         [:button {:on-click #(do (.preventDefault %)
                                  (rf/dispatch [:new-item @name @description @tags])
                                  (reset! name "")
-                                 (reset! description ""))}
+                                 (reset! description "")
+                                 (reset! tags #{}))}
          "Create Item"]]])))
+
+(defn create-item-modal-button []
+ [:button
+  {:title "Create New Item"
+   :on-click #(rf/dispatch [:modal {:show? true
+                                 :child [create-item ""]
+                                 :size :small}])} "+"])
 
 (defn add-line-item [name description tags]
   (rf/dispatch [:new-item name description tags]))
@@ -159,6 +168,7 @@
         name (rf/subscribe [:recipe-name @recipe-id])
         description (rf/subscribe [:recipe-description @recipe-id])]
     [:div
+     [modal]
      (header)
      (topnav)
      [:div.row
@@ -170,7 +180,7 @@
               #(rf/dispatch [:update-description @recipe-id %])]]
        [:div [tag-editor :recipe-tags :remove-tag :save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
-       
+       [:div [create-item-modal-button]]
       ;; [:div [line-item-editor]]
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]

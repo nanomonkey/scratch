@@ -179,6 +179,39 @@
                         (:name recipe)]]]))]))])))
 
 
+;; Modals
+(defn modal-panel
+  [{:keys [child size show?]}]
+  [:div {:class "modal-wrapper"}
+   [:div {:class "modal-backdrop"
+          :on-click (fn [event]
+                      (do
+                        (rf/dispatch [:modal {:show? (not show?)
+                                           :child nil
+                                           :size :default}])
+                        (.preventDefault event)
+                        (.stopPropagation event)))}]
+   [:div {:class "modal-child"
+          :style {:width (case size
+                           :extra-small "15%"
+                           :small "30%"
+                           :large "70%"
+                           :extra-large "85%"
+                           "50%")}} child]])
+
+(defn modal []
+  (let [modal (rf/subscribe [:modal])]
+    (fn []
+      [:div
+       (if (:show? @modal)
+         [modal-panel @modal])])))
+
+
+(defn- close-modal []
+  (rf/dispatch [:modal {:show? false :child nil}]))
+
+
+
 (comment
   ;; available css
  [:div.arrow_box "text for arrow box"]
