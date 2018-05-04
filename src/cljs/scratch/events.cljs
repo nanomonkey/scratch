@@ -4,32 +4,34 @@
 
 
 (rf/reg-event-db
- :modal
- (fn [db [_ data]]
-   (assoc-in db [:modal] data)))
-
-(rf/reg-event-db
  ::initialize-db
  (fn  [_ _]
    db/recipe-db))
 
+;; UI elements
 (rf/reg-event-db
  :load-recipe 
 (fn [db [_ recipe-id]]
   (assoc-in db [:loaded-recipe] recipe-id)))
 
 (rf/reg-event-db
- :update-name
+ :modal
+ (fn [db [_ data]]
+   (assoc-in db [:modal] data)))
+
+;; Recipes
+(rf/reg-event-db
+ :recipe/update-name
  (fn [db [_ recipe-id name]]
    (assoc-in db [:recipes recipe-id :name] name)))
 
 (rf/reg-event-db
- :update-description
+ :recipe/update-description
  (fn [db [_  recipe-id description]]
    (assoc-in db [:recipes recipe-id :description] description)))
 
 (rf/reg-event-db
- :save-tag
+ :recipe/save-tag
  (fn [db [_ recipe-id tag]]
    (let [tag (-> tag
                  .trim
@@ -37,7 +39,7 @@
    (update-in db [:recipes recipe-id :tags] (fnil conj #{}) tag)))
 
 (rf/reg-event-db
- :remove-tag
+ :recipe/remove-tag
  (fn [db [_ recipe-id tag]]
    (update-in db [:recipes recipe-id :tags] (fn [tags]
                                               (vec (remove #{tag} tags))))))
@@ -50,7 +52,7 @@
     (assoc cofx :temp-id (swap! last-temp-id inc))))
 
 (rf/reg-event-fx
- :new-recipe
+ :recipe/new
  [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ name description tags tasks]]
    {:db
@@ -64,7 +66,7 @@
    (:temp-id cofx)))
 
 (rf/reg-event-fx
- :new-item
+ :item/new
  [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ name description tags]]
    {:db 
@@ -75,7 +77,7 @@
                                    :tags tags})}))
 
 (rf/reg-event-fx
- :new-unit
+ :unit/new
  [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ name abbrev type]]
    (let [temp-id (str (:temp-id cofx))]
@@ -94,7 +96,7 @@
      ;; not in the task, add to qty and ingredients
      (-> db
          (assoc-in [:tasks task-id :ingredients :qty item-id] qty)
-         (update-in [:tasks :items] (fnil conj []) item-id))
+         (update-in [:tasks task-id :items] (fnil conj []) item-id))
      ;; in the task, add to existing qty
      (update-in db [:tasks task-id :ingredients :qty item-id] + qty))))
 
@@ -102,11 +104,12 @@
  :task/add-product
  (fn [db [_ task-id item-id qty unit]]
    ;; check if it's already in the task
-   (if (nil? (get-in db [:tasks task-id :ingredients :qty item-id]))
-     ;; not in the task, add to qty and ingredients
+   (if (nil? (get-in db [:tasks task-id :yields :qty item-id]))
+     ;; not in the task, add to qty and yields
      (-> db
          (assoc-in [:tasks task-id :yields :qty item-id] qty)
-         (update-in [:tasks :yields] (fnil conj []) item-id))
+         (assoc-in [:tasks task-id :yields :units item-id] unit)
+         (update-in [:tasks task-id :yields :items] (fnil conj []) item-id))
      ;; in the task, add to existing qty
      (update-in db [:tasks task-id :yields :qty item-id] + qty))))
 

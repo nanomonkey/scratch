@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
+;;UI elements
 (rf/reg-sub-raw
  :modal
  (fn [db _] (reaction (:modal @db))))

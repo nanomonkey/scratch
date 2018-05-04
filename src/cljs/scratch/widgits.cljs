@@ -126,7 +126,7 @@
       [:div
        [:p {:class "center"} "Add Product" ]
        [:button {:on-click #(doall (.preventDefault %)
-                                (let [item-id @(rf/dispatch [:new-item @search-string "" #{} []])]
+                                (let [item-id @(rf/dispatch [:item/new @search-string "" #{} []])]
                                   (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
        [:input.form-control {:type "text"
                              :placeholder "Filter names"
@@ -156,7 +156,7 @@
       [:div
        [:p {:class "center"} "Recipes" ]
        [:button {:on-click #(do (.preventDefault %)
-                                (let [recipe-id (rf/dispatch [:new-recipe search-string "" #{} []])]
+                                (let [recipe-id (rf/dispatch [:recipe/new search-string "" #{} []])]
                                   (rf/dispatch [:load-recipe recipe-id])))} "+"]
        [:input.form-control {:type "text"
                              :placeholder "Filter names"

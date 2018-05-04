@@ -135,7 +135,7 @@
         [:row
          [:label "Tags"]]
         [:button {:on-click #(do (.preventDefault %)
-                                 (rf/dispatch [:new-item @name @description @tags])
+                                 (rf/dispatch [:item/new @name @description @tags])
                                  (reset! name "")
                                  (reset! description "")
                                  (reset! tags #{}))}
@@ -149,7 +149,7 @@
                                  :size :small}])} "+"])
 
 (defn add-line-item [name description tags]
-  (rf/dispatch [:new-item name description tags]))
+  (rf/dispatch [:item/new name description tags]))
 
 (comment
   (defn add-item [task-id item-id]
@@ -178,15 +178,19 @@
              #(rf/dispatch [:update-name @recipe-id %])]]
        [:div [inline-editor @description
               #(rf/dispatch [:update-description @recipe-id %])]]
-       [:div [tag-editor :recipe-tags :remove-tag :save-tag @recipe-id]]
+       [:div [tag-editor :recipe-tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
        [:div [create-item-modal-button]]
       ;; [:div [line-item-editor]]
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
       [:div.column.right
-       [:div (prn-str @ (rf/subscribe [:items]))]
-       [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]]]]))
+       [:div (prn-str @(rf/subscribe [:items]))]
+       [:hr]
+       [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]
+       [:hr]
+       [:div (prn-str @(rf/subscribe [:tasks]))]
+       ]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
