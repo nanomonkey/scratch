@@ -57,7 +57,7 @@
  (fn [cofx [_ name description tags tasks]]
    {:db
     (update (:db cofx) :recipe assoc
-            (str (:temp-id cofx)) {:id (:temp-id cofx)
+             (:temp-id cofx) {:id (:temp-id cofx)
                                    :name name
                                    :description description
                                    :tags tags
@@ -71,7 +71,7 @@
  (fn [cofx [_ name description tags]]
    {:db 
     (update (:db cofx) :items assoc
-            (str (:temp-id cofx)) {:id (:temp-id cofx) 
+             (:temp-id cofx) {:id (:temp-id cofx) 
                                    :name name 
                                    :description description
                                    :tags tags})}))
@@ -80,7 +80,7 @@
  :unit/new
  [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ name abbrev type]]
-   (let [temp-id (str (:temp-id cofx))]
+   (let [temp-id (:temp-id cofx)]
      {:db
       (update (:db cofx) :units assoc
               temp-id {:id temp-id 
@@ -93,11 +93,12 @@
  (fn [db [_ task-id item-id qty unit]]
    ;; check if it's already in the task
    (if (nil? (get-in db [:tasks task-id :ingredients :qty item-id]))
-     ;; not in the task, add to qty and ingredients
+     ;; not in the task, add to qty and yields
      (-> db
          (assoc-in [:tasks task-id :ingredients :qty item-id] qty)
-         (update-in [:tasks task-id :items] (fnil conj []) item-id))
-     ;; in the task, add to existing qty
+         (assoc-in [:tasks task-id :ingredients :units item-id] unit)
+         (update-in [:tasks task-id :ingredients :items] (fnil conj []) item-id))
+     ;; in the task, add to existing qty, assume the same unit (?!)
      (update-in db [:tasks task-id :ingredients :qty item-id] + qty))))
 
 (rf/reg-event-db
@@ -114,6 +115,43 @@
      (update-in db [:tasks task-id :yields :qty item-id] + qty))))
 
 (rf/reg-event-db
+ :task/add-equipment
+ (fn [db [_ task-id item-id qty unit]]
+   ;; check if it's already in the task
+   (if (nil? (get-in db [:tasks task-id :equipment :qty item-id]))
+     ;; not in the task, add to qty and yields
+     (-> db
+         (assoc-in [:tasks task-id :equipment :qty item-id] qty)
+         (assoc-in [:tasks task-id :equipment :units item-id] unit)
+         (update-in [:tasks task-id :equipment :items] (fnil conj []) item-id))
+     ;; in the task, add to existing qty
+     (update-in db [:tasks task-id :equipment :qty item-id] + qty))))
+
+(rf/reg-event-db
+ :task/add-optional
+ (fn [db [_ task-id item-id qty unit]]
+   ;; check if it's already in the task
+   (if (nil? (get-in db [:tasks task-id :optional :qty item-id]))
+     ;; not in the task, add to qty and yields
+     (-> db
+         (assoc-in [:tasks task-id :optional :qty item-id] qty)
+         (assoc-in [:tasks task-id :optional :units item-id] unit)
+         (update-in [:tasks task-id :optional :items] (fnil conj []) item-id))
+     ;; in the task, add to existing qty
+     (update-in db [:tasks task-id :optional :qty item-id] + qty))))
+
+(rf/reg-event-db
  :task/add-step
  (fn [db [_ task-id step]]
    (update-in db [:tasks task-id :steps] (fnil conj []) step)))
+
+
+(defn vec-remove
+  "remove elem in coll"
+  [coll pos]
+  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(rf/reg-event-db
+ :task/remove-step
+ (fn [db [_ task-id step-pos]]
+   (update-in db [:tasks task-id :steps] #(vec-remove % step-pos))))

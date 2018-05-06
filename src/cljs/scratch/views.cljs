@@ -60,16 +60,21 @@
                 :on-change #(reset! s (-> % .-target .-value))}]
        [:button "Add Step"]])))
 
+(defn remove-step [task-id step-pos]
+  (fn [task-id step-pos]
+    [:button 
+     {:on-click #(rf/dispatch [:task/remove-step task-id step-pos])} "X"]))
+
 (defn display-steps [task]
   [:div#task
    [:h2 @(rf/subscribe [:task-name task])]
    [:div.steps-indicator
     [:div.connector]
     [:div.connector.complete]
-    [:ol.steps    
+    [:ol.steps  
      (for [step @(rf/subscribe [:task-steps task])]
-       [:li.active (markdown-section step)])]]
-   [add-step task]
+       [:li.active (markdown-section step)])
+     [:li.active [add-step task]]]]
    [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]
    [add-product task]])
 
@@ -144,18 +149,10 @@
 (defn create-item-modal-button []
  [:button
   {:title "Create New Item"
-   :on-click #(rf/dispatch [:modal {:show? true
-                                 :child [create-item ""]
-                                 :size :small}])} "+"])
-
-(defn add-line-item [name description tags]
-  (rf/dispatch [:item/new name description tags]))
-
-(comment
-  (defn add-item [task-id item-id]
-    [:button 
-     {:on-click #(do (.preventDefault %)
-                     (rf/dispatch [:task/add-ingredient task-id item-id qty unit]))}]))
+   :on-click #(do (.preventDefault %)  
+                  (rf/dispatch [:modal {:show? true
+                                        :child [create-item ""]
+                                        :size :small}]))} "+"])
 
 (comment
   (defn remove-item
