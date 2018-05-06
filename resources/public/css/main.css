@@ -4,22 +4,18 @@
 * {
     box-sizing: border-box;
 }
-
 body {
   margin: 0;
 }
-
 .header {
     background-color: #f1f1f1;
     padding: 20px;
     text-align: center;
 }
-
 .topnav {
     overflow: hidden;
     background-color: #333;
 }
-
 .topnav a {
     float: left;
     display: block;
@@ -28,43 +24,33 @@ body {
     padding: 14px 16px;
     text-decoration: none;
 }
-
-
 .topnav a:hover {
     background-color: #ddd;
     color: black;
 }
-
-
 .column {
     float: left;
     padding: 10px;
 }
-
 .column.left {
     width: 10%;
 }
-
 .column.middle {
     width: 55%;
 }
-
 .column.right {
     width: 30%;
 }
-
 .row:after {
     content: "";
     display: table;
     clear: both;
 }
-
 @media (max-width: 600px) {
     .column.side, .column.middle {
         width: 100%;
     }
 }
-
 #tag:before {
     width: 0;
     height: 0;
@@ -72,7 +58,6 @@ body {
     border-right: 50px solid #yellow;
     border-bottom: 25px solid transparent;
 }
-
 #tasks td, #tasks th {
     border: 1px solid #ddd;
     padding: 8px;
@@ -86,7 +71,6 @@ body {
     background-color: #008CBA;
     color: white;
 }
-
 #task .steps-indicator{position:relative}
 #task .steps-indicator .connector{
     position:absolute;
@@ -164,18 +148,16 @@ body {
     *margin-right:.3em;
     content:"\f12a"
 }
-
-/* #task .steps-indicator .steps li:last-child:before{ */
-/*     font-family:FontAwesome; */
-/*     font-weight:normal; */
-/*     font-style:normal; */
-/*     color:black; */
-/*     text-decoration:inherit; */
-/*     -webkit-font-smoothing:antialiased; */
-/*     *margin-right:.3em; */
-/*     content:"\f11e" */
-/* } */
-
+#task .steps-indicator .steps li:last-child:before{
+    font-weight:normal;
+    font-style:normal;
+    font-size: 2rem;
+    color:#8bbb25
+    text-decoration:inherit;
+    -webkit-font-smoothing:antialiased;
+    *margin-right:.3em;
+    content:"+"
+}
 .washed-out{opacity:0.3;}
 .date{color:red;}
 .white-panel{
@@ -200,7 +182,6 @@ a{
     color: #1781F1;
     text-decoration: none;
 }
-
 .arrow_box {
     position: relative;
     background: #88b7d5;
@@ -217,7 +198,6 @@ a{
     position: absolute;
     pointer-events: none;
 }
-
 .arrow_box:after {
     border-color: rgba(136, 183, 213, 0);
     border-right-color: #88b7d5;
@@ -230,10 +210,60 @@ a{
     border-width: 11px;
     margin-top: -11px;
 }
-
 .help-text {
     font-size: 14px;
     font-style: italic;
     color: #888;
+}
+
+/*****************/
+/* modal popovers*/
+/*****************/
+.modal-header {
+  background-color: #f5f5f5;
+}
+.modal-header.panel-heading {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.modal-wrapper {
+  display: flex;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 1040
+}
+.modal-backdrop {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  opacity: 0.6;
+  z-index: 1;
+  -webkit-animation: fade-in 0.2s; /* Safari, Chrome and Opera > 12.1 */
+  -moz-animation: fade-in 0.2s; /* Firefox < 16 */
+  -ms-animation: fade-in 0.2s; /* Internet Explorer */
+  -o-animation: fade-in 0.2s; /* Opera < 12.1 */
+  animation: fade-in 0.2s;
+}
+.modal-child {
+  margin: auto;
+  margin-top: 30px;
+  z-index: 2;
+  -webkit-animation: fade-in-child 0.2s;
+  -moz-animation: fade-in-child 0.2s;
+  -ms-animation: fade-in-child 0.2s;
+  -o-animation: fade-in-child 0.2s;
+  animation: fade-in-child 0.2s;
+}
+@keyframes fade-in {
+  from {opacity: 0;}
+  to   {opacity: 0.6;}
+}
+@keyframes fade-in-child {
+  from {opacity: 0;}
+  to   {opacity: 1;}
 }
 </style>

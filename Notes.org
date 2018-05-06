@@ -16,6 +16,7 @@ Notes
 
 ** TODO record changes locally in a parametric manner, then update ssb upon user's request.
 
+** TODO Look into gantry system for task management
 * example re-frame code projects
 - https://github.com/dhruvp/angular-phonecat-re-frame/
 - https://github.com/jacekschae/conduit

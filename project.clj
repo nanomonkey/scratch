@@ -3,8 +3,6 @@
                  [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.7.0"]
                  [re-frame "0.10.4"]
-                 [reagent-forms "0.5.40"]
-                 [cljsjs/react-select "1.0.0-rc.1" :exclusions [cljsjs/react]]
                  [venantius/accountant "0.2.4"]
                  [secretary "1.2.3"]]
 
