@@ -76,20 +76,20 @@
                                 (reset! s "")))}]]])))
 
 (defn display-items [search-string source action]
-  (let [items @(rf/subscribe [source])] 
-    (fn [search])
-    [:center
-     (for [item items]
-       ;; regular expression to see if the search string matches the item name
-       (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name item))
-               (= "" search-string))
-         ^{ :key (.indexOf items item)}
-         [:div
-          [:div [:a {:href "#"
-                     :on-click #(do
-                                  (.preventDefault %)
-                                  (apply action (:id item)))} 
-                 (:name item)]]]))]))
+  (let [items @(rf/subscribe [source])]
+    (fn [search-string source action]
+      [:center
+       (for [item items]
+         ;; regular expression to see if the search string matches the item name
+         (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name item))
+                 (= "" search-string))
+           ^{ :key (.indexOf items item)}
+           [:div
+            [:div [:a {:href "#"
+                       :on-click #(do
+                                    (.preventDefault %)
+                                    (action (:id item)))} 
+                   (:name item)]]]))])))
 
 
 (defn item-search [source action create]
