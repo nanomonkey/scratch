@@ -79,6 +79,30 @@
   [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task-id]))
    [add-product task-id]])
 
+(defn line-item-editor [task submit]
+  (let [item (reagent/atom "")
+        qty (reagent/atom 1)
+        unit (reagent/atom "")]
+    (fn [task] 
+      [:span
+       [:form {:on-submit #(do (.preventDefault %)
+                               (rf/dispatch [submit task @item @qty @unit]))}
+        [:input  {:type :number 
+                  :name "qty" 
+                  :value @qty
+                  :on-change #(reset! qty (-> % .-target .-value int))}]
+        [:select 
+         {:on-change #(reset! unit (-> % .-target .-value))}
+         (doall
+          (for [[id unit] @(rf/subscribe [:units])]
+            [:option {:value id} (:name unit)]))]
+        [:select
+         {:on-change #(reset! item (-> % .-target .-value))}
+         (doall
+          (for [[id item] @(rf/subscribe [:items])]
+            [:option {:value id} (:name item)]))]
+        [:button "+"]]])))
+
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
@@ -93,37 +117,22 @@
         (doall
          (for [task tasks]
            [:tr 
-            [:td (list-items @(rf/subscribe [:task-equipment-line-items task]))]
+            [:td (list-items @(rf/subscribe [:task-equipment-line-items task]))
+             [line-item-editor task :task/add-equipment]]
             [:td (list-items @(rf/subscribe [:task-ingredients-line-items task]))
+             [line-item-editor task :task/add-ingredient]
              (let [optional @(rf/subscribe [:task-optional-line-items task])]
                (when (> (count optional) 0)
                  [:span [:b "Optional:"] (list-items optional)]))]
             [:td [display-steps task]
              (display-products task)]]))]]))) 
 
-(defn line-item-editor []
-  (let [s (reagent/atom {})]
-    [:span 
-     [:form {:on-submit #(do (.preventDefault %))}
-      [:label "Quantity"]
-      [:input  {:type :number :name "qty" :value (:qty @s)}]
-      [:label "Unit:"]
-      [:select 
-       (doall
-        (for [[id unit] @(rf/subscribe [:units])]
-          [:option {:value id} (:name unit)]))]
-      [:label "Item:"]
-      [:select
-       (doall
-        (for [[id item] @(rf/subscribe [:items])]
-          [:option {:value id} (:name item)]))]]]))
-
 (defn create-item [name]
   (let [name (reagent/atom name)
         description (reagent/atom "")
         tags (reagent/atom #{})]
-    (fn []
-      [:div.blue-panel (prn-str @name @description)
+    (fn [name]
+      [:div
        [:form {:on-submit #(do
                              (.preventDefault %))}
         [:row
@@ -155,9 +164,14 @@
                   (rf/dispatch [:modal {:show? true
                                         :child child
                                         :size :small}]))} "+"])
-(comment
-  (defn add-equipment []
-    :task/add-equipment))
+
+(comment (defn add-equipment [task]
+           (let [item-name (reagent/atom "")
+                 qty (reagent/atom 1)
+                 unit (reagent/atom {})])
+           (fn [task]
+             ;; see line-item-editor above
+             (rf/dispatch [:task/add-equipment task item qty unit]))))
 
 (comment
   (defn remove-item
@@ -179,12 +193,11 @@
        [:div "Create New Item:"[create-modal-button [create-item ""]]]]
       [:div.column.middle
        [:h2 [inline-editor @name
-             #(rf/dispatch [:update-name @recipe-id %])]]
+             #(rf/dispatch [:recipe/update-name @recipe-id %])]]
        [:div [inline-editor @description
-              #(rf/dispatch [:update-description @recipe-id %])]]
+              #(rf/dispatch [:recipe/update-description @recipe-id %])]]
        [:div [tag-editor :recipe-tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
-      ;; [:div [line-item-editor]]
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
       [:div.column.right
@@ -193,6 +206,8 @@
        [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]
        [:hr]
        [:div (prn-str @(rf/subscribe [:tasks]))]
+       [:hr]
+       [:div (prn-str @(rf/subscribe [:units]))]
        ]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
