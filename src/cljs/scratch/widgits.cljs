@@ -55,7 +55,7 @@
            [:input {:type :text 
                     :value (:text @s)
                     :on-change #(swap! s assoc 
-                                     :text (-> % .-target .-value))}]
+l                                     :text (-> % .-target .-value))}]
           [:button "Save"]
           [:button {:on-click #(do
                                  (.preventDefault %)

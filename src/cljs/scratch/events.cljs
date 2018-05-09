@@ -102,6 +102,11 @@
                        :abbrev abbrev 
                        :type type})})))
 
+(rf/reg-event-db 
+ :task/update-name
+ (fn [db [_ task-id name]]
+   (assoc-in db [:tasks task-id :name] name)))
+
 (rf/reg-event-db
  :task/add-ingredient
  (fn [db [_ task-id item-id qty unit]]

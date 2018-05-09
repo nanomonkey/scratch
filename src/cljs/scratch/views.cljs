@@ -62,7 +62,8 @@
 (defn display-steps [task]
   (fn [task]
     [:div#task
-     [:h2 @(rf/subscribe [:task-name task])]
+     [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
+           #(rf/dispatch [:task/update-name task %])]]
      [:div.steps-indicator
       [:div.connector]
       [:div.connector.complete]
@@ -80,6 +81,7 @@
    [add-product task-id]])
 
 (defn line-item-editor [task submit]
+"TODO: add default to select inputs, change item selector to search field"
   (let [item (reagent/atom "")
         qty (reagent/atom 1)
         unit (reagent/atom "")]
