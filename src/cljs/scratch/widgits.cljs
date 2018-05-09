@@ -10,8 +10,8 @@
   (.makeHtml converter s))
 
 (defn markdown-section [s]
-  [:div
-    {:dangerouslySetInnerHTML {:__html (->html s)}}])
+  [:span
+   {:dangerouslySetInnerHTML {:__html (->html s)}}])
 
 ;; Inline Editor
 (defn inline-editor [txt on-change]
@@ -40,6 +40,33 @@
           [:a {:href "#"}
            [:sup "✎"]] txt])])))
 
+
+;; Mark-down editor
+(defn markdown-editor [txt on-change]
+  (let [s (reagent/atom {})]
+    (fn [txt on-change]
+      [:span
+       (if (:editing? @s)
+         [:form {:on-submit #(do
+                               (.preventDefault %)
+                               (swap! s dissoc :editing?)
+                               (when on-change
+                                 (on-change (:text @s))))}
+           [:input {:type :text 
+                    :value (:text @s)
+                    :on-change #(swap! s assoc 
+                                     :text (-> % .-target .-value))}]
+          [:button "Save"]
+          [:button {:on-click #(do
+                                 (.preventDefault %)
+                                 (swap! s dissoc :editing?))}
+           "Cancel"]]
+         [:span
+           {:on-click #(swap! s assoc
+                            :editing? true
+                            :text txt)}
+          [:a {:href "#"}
+           [:sup "✎"]] (markdown-section txt)])])))
 
 ;; Tag Editor
 (defn tag-editor [source delete save id]
@@ -99,7 +126,9 @@
        [:input.form-control {:type "text"
                              :placeholder "add item"
                              :value @search-string
-                             :on-change #(reset! search-string (-> % .-target .-value))}]
+                             :on-change #(reset! search-string (-> % 
+                                                                   .-target 
+                                                                   .-value))}]
        [:button {:on-click #(do (.preventDefault %)
                                 (let [id (rf/dispatch [create search-string "" #{} []])]
                                   (apply action id)))} "+"]
@@ -121,33 +150,34 @@
   (data-list "select-item" @(rf/subscribe [:item/name-id])))
 
 (defn add-product [task]
-  (let [search-string (reagent/atom "")]
+  (let [search-string (reagent/atom "")
+        key (reagent/atom "")]
     (fn [task]
       [:div
-       [:p {:class "center"} "Add Product" ]
-       [:button {:on-click #(doall (.preventDefault %)
-                                (let [item-id @(rf/dispatch [:item/new @search-string "" #{} []])]
-                                  (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
        [:input.form-control {:type "text"
-                             :placeholder "Filter names"
+                             :placeholder "add product"
                              :value @search-string
                              :on-change #(reset! search-string (-> % .-target .-value))}]
+       [:button {:on-click 
+                 #(doall 
+                   (.preventDefault %)
+                   (let [item-id (rf/dispatch [:item/new @search-string "" #{} []])]
+                     (rf/dispatch [:task/add-product task @item-id 1 "u1"])))} "+"]
        (when (< 1 (count @search-string))
          (let [items @(rf/subscribe [:item-names])] 
-           [:center
-            (for [item items]
-              ;; regular expression to see if the search string matches the recipe name
-              (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
-                      (= "" @search-string))
-                ^{ :key (.indexOf items item)}
-                [:div
-                 [:div [:a {:href "#"
-                            :on-click #(do
-                                         (.preventDefault %)
-                                         (rf/dispatch 
-                                          [:task/add-product task (:id item) 1 "u1"])
-                                         (reset! search-string ""))} 
-                        (:name item)]]]))]))])))
+           (for [item items]
+             ;; regular expression to see if the search string matches the recipe name
+             (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
+                     (= "" @search-string))
+               ^{ :key (.indexOf items item)}
+               [:div
+                [:div [:a {:href "#"
+                           :on-click #(do
+                                        (.preventDefault %)
+                                        (rf/dispatch 
+                                         [:task/add-product task (:id item) 1 "u1"])
+                                        (reset! search-string ""))} 
+                       (:name item)]]]))))])))
 
 ;; Recipe Search
 (defn recipe-search []

@@ -57,13 +57,7 @@
                             (reset! s ""))}
        [:input {:type :text
                 :value @s
-                :on-change #(reset! s (-> % .-target .-value))}]
-       [:button "Add Step"]])))
-
-(defn remove-step [task-id step-pos]
-  (fn [task-id step-pos]
-    [:button 
-     {:on-click #(rf/dispatch [:task/remove-step task-id step-pos])} "X"]))
+                :on-change #(reset! s (-> % .-target .-value))}]])))
 
 (defn display-steps [task]
   (fn [task]
@@ -75,13 +69,15 @@
       [:ol.steps  
        (let [steps @(rf/subscribe [:task-steps task])]
          (for [step steps]
-           [:li.active (markdown-section step)
-            [:button 
+           [:li.active [:span.bacon step]
+            [:button.hidden
              {:on-click #(rf/dispatch [:task/remove-step task 
-                                       (.indexOf steps step)])} "x"]]))
-       [:li.active [add-step task]]]]
-     [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task]))]
-     [add-product task]]))
+                                       (.indexOf steps step)])} "X"]]))
+       [:li.active [add-step task]]]]]))
+
+(defn display-products [task-id]
+  [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task-id]))
+   [add-product task-id]])
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -102,7 +98,8 @@
              (let [optional @(rf/subscribe [:task-optional-line-items task])]
                (when (> (count optional) 0)
                  [:span [:b "Optional:"] (list-items optional)]))]
-            [:td [display-steps task]]]))]]))) 
+            [:td [display-steps task]
+             (display-products task)]]))]]))) 
 
 (defn line-item-editor []
   (let [s (reagent/atom {})]

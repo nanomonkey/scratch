@@ -158,6 +158,16 @@ body {
     *margin-right:.3em;
     content:"+"
 }
+.hidden {
+    display: none;
+}
+.bacon:hover + .hidden, .hidden:hover {
+    display: inline-block;
+}
+input:not([type=submit]):not([type=file]) {
+   border: 5px solid white;  
+    background: rgba(255,255,255,0.5);
+}
 .washed-out{opacity:0.3;}
 .date{color:red;}
 .white-panel{
