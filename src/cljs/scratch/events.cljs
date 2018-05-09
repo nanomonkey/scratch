@@ -54,16 +54,15 @@
 (rf/reg-event-fx
  :recipe/new
  [(rf/inject-cofx :temp-id)]
- (fn [cofx [_ name description tags tasks]]
+ (fn [cofx [_ name]]
    {:db
-    (update (:db cofx) :recipe assoc
+    (update (:db cofx) :recipes assoc
              (:temp-id cofx) {:id (:temp-id cofx)
-                                   :name name
-                                   :description description
-                                   :tags tags
-                                   :tasks tasks})}
-   ;return temp-id 
-   (:temp-id cofx)))
+                              :name name
+                              :description ""
+                              :tags #{}
+                              :tasks {}})
+    :dispatch [:load-recipe (:temp-id cofx)]}))
 
 (rf/reg-event-fx
  :item/new

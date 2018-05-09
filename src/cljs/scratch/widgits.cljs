@@ -162,7 +162,7 @@
                  #(doall 
                    (.preventDefault %)
                    (let [item-id (rf/dispatch [:item/new @search-string "" #{} []])]
-                     (rf/dispatch [:task/add-product task @item-id 1 "u1"])))} "+"]
+                     (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
        (when (< 1 (count @search-string))
          (let [items @(rf/subscribe [:item-names])] 
            (for [item items]
@@ -186,12 +186,13 @@
       [:div
        [:p {:class "center"} "Recipes" ]
        [:button {:on-click #(do (.preventDefault %)
-                                (let [recipe-id (rf/dispatch [:recipe/new search-string "" #{} []])]
-                                  (rf/dispatch [:load-recipe recipe-id])))} "+"]
+                                (rf/dispatch [:recipe/new @search-string]))} "+"]
        [:input.form-control {:type "text"
                              :placeholder "Filter names"
                              :value @search-string
-                             :on-change #(reset! search-string (-> % .-target .-value))}]
+                             :on-change #(reset! search-string (-> % 
+                                                                   .-target 
+                                                                   .-value))}]
        (when (< 1 (count @search-string))
          (let [recipes @(rf/subscribe [:recipe-names])] 
            [:center

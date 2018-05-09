@@ -171,7 +171,9 @@
      (header)
      (topnav)
      [:div.row
-      [:div.column.left [recipe-search]]
+      [:div.column.left 
+       [recipe-search]
+       [:div "Create New Item:"[create-item-modal-button]]]
       [:div.column.middle
        [:h2 [inline-editor @name
              #(rf/dispatch [:update-name @recipe-id %])]]
@@ -179,7 +181,6 @@
               #(rf/dispatch [:update-description @recipe-id %])]]
        [:div [tag-editor :recipe-tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
-       [:div [create-item-modal-button]]
       ;; [:div [line-item-editor]]
       ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
