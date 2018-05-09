@@ -148,13 +148,16 @@
                                  (reset! tags #{}))}
          "Create Item"]]])))
 
-(defn create-item-modal-button []
+(defn create-modal-button [child]
  [:button
   {:title "Create New Item"
    :on-click #(do (.preventDefault %)  
                   (rf/dispatch [:modal {:show? true
-                                        :child [create-item ""]
+                                        :child child
                                         :size :small}]))} "+"])
+(comment
+  (defn add-equipment []
+    :task/add-equipment))
 
 (comment
   (defn remove-item
@@ -173,7 +176,7 @@
      [:div.row
       [:div.column.left 
        [recipe-search]
-       [:div "Create New Item:"[create-item-modal-button]]]
+       [:div "Create New Item:"[create-modal-button [create-item ""]]]]
       [:div.column.middle
        [:h2 [inline-editor @name
              #(rf/dispatch [:update-name @recipe-id %])]]
