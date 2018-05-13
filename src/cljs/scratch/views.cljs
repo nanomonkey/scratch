@@ -84,7 +84,8 @@
 "TODO: add default to select inputs, change item selector to search field"
   (let [item (reagent/atom "")
         qty (reagent/atom 1)
-        unit (reagent/atom "")]
+        units @(rf/subscribe [:units])
+        unit (reagent/atom (key (first units)))]
     (fn [task] 
       [:span
        [:form {:on-submit #(do (.preventDefault %)
@@ -96,13 +97,15 @@
         [:select 
          {:on-change #(reset! unit (-> % .-target .-value))}
          (doall
-          (for [[id unit] @(rf/subscribe [:units])]
+          (for [[id unit] units]
             [:option {:value id} (:name unit)]))]
         [:select
          {:on-change #(reset! item (-> % .-target .-value))}
          (doall
           (for [[id item] @(rf/subscribe [:items])]
-            [:option {:value id} (:name item)]))]
+            [:option {:value id}
+             (when (= (:name item) "each") {:selected "selected"})
+             (:name item)]))]
         [:button "+"]]])))
 
 (defn task-table [recipe-id]
@@ -112,16 +115,17 @@
        [:thead
         [:tr
          (doall
-          (for [h 
-                ["Equipment" "Ingredients" "Steps"]]
+          (for [h ["Items" "Steps"]]
             [:th h]))]]
        [:tbody
         (doall
          (for [task tasks]
            [:tr 
-            [:td (list-items @(rf/subscribe [:task-equipment-line-items task]))
-             [line-item-editor task :task/add-equipment]]
-            [:td (list-items @(rf/subscribe [:task-ingredients-line-items task]))
+            [:td [:div [:b "Equipment:"]]
+             (list-items @(rf/subscribe [:task-equipment-line-items task]))
+             [line-item-editor task :task/add-equipment]
+             [:div [:b "Ingredients"]]
+             (list-items @(rf/subscribe [:task-ingredients-line-items task]))
              [line-item-editor task :task/add-ingredient]
              (let [optional @(rf/subscribe [:task-optional-line-items task])]
                (when (> (count optional) 0)
@@ -149,7 +153,8 @@
           [:input.form-control {:type "text"
                                 :placeholder "item description"
                                 :value @description
-                                :on-change #(reset! description (-> % .-target .-value))}]]]
+                                :on-change #(reset! description 
+                                                    (-> % .-target .-value))}]]]
         [:row
          [:label "Tags"]]
         [:button {:on-click #(do (.preventDefault %)
@@ -194,13 +199,12 @@
        [recipe-search]
        [:div "Create New Item:"[create-modal-button [create-item ""]]]]
       [:div.column.middle
-       [:h2 [inline-editor @name
+       [:h1 [inline-editor @name
              #(rf/dispatch [:recipe/update-name @recipe-id %])]]
-       [:div [inline-editor @description
+       [:h2 [inline-editor @description
               #(rf/dispatch [:recipe/update-description @recipe-id %])]]
        [:div [tag-editor :recipe-tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
-      ;; [:div (prn-str @(rf/subscribe [:loaded-recipe]))]
        ]
       [:div.column.right
        [:div (prn-str @(rf/subscribe [:items]))]

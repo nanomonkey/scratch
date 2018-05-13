@@ -33,12 +33,12 @@
                                  (.preventDefault %)
                                  (swap! s dissoc :editing?))}
            "Cancel"]]
-         [:span
-           {:on-click #(swap! s assoc
-                            :editing? true
-                            :text txt)}
-          [:a {:href "#"}
-           [:sup "✎"]] txt])])))
+         [:div [:span.bacon
+                {:on-click #(swap! s assoc
+                                   :editing? true
+                                   :text txt)}
+                txt][:span.hidden [:a {:href "#"}
+                                   [:sup "✎"]]]])])))
 
 
 ;; Mark-down editor
@@ -65,8 +65,8 @@
            {:on-click #(swap! s assoc
                             :editing? true
                             :text txt)}
-          [:a {:href "#"}
-           [:sup "✎"]] (markdown-section txt)])])))
+           [:a {:href "#"}
+            [:sup "✎"]] [:span (markdown-section txt)]])])))
 
 ;; Tag Editor
 (defn tag-editor [source delete save id]
