@@ -81,13 +81,12 @@
    [add-product task-id]])
 
 (defn line-item-editor [task submit]
-"TODO: add default to select inputs, change item selector to search field"
   (let [item (reagent/atom "")
         qty (reagent/atom 1)
         units @(rf/subscribe [:units])
         unit (reagent/atom (key (first units)))]
-    (fn [task] 
-      [:span
+    (fn [task submit] 
+      [:div.blue-panel
        [:form {:on-submit #(do (.preventDefault %)
                                (rf/dispatch [submit task @item @qty @unit]))}
         [:input  {:type :number 
@@ -108,30 +107,13 @@
              (:name item)]))]
         [:button "+"]]])))
 
-(defn task-table [recipe-id]
-  (fn [recipe-id]
-    (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
-      [:table#tasks
-       [:thead
-        [:tr
-         (doall
-          (for [h ["Items" "Steps"]]
-            [:th h]))]]
-       [:tbody
-        (doall
-         (for [task tasks]
-           [:tr 
-            [:td [:div [:b "Equipment:"]]
-             (list-items @(rf/subscribe [:task-equipment-line-items task]))
-             [line-item-editor task :task/add-equipment]
-             [:div [:b "Ingredients"]]
-             (list-items @(rf/subscribe [:task-ingredients-line-items task]))
-             [line-item-editor task :task/add-ingredient]
-             (let [optional @(rf/subscribe [:task-optional-line-items task])]
-               (when (> (count optional) 0)
-                 [:span [:b "Optional:"] (list-items optional)]))]
-            [:td [display-steps task]
-             (display-products task)]]))]]))) 
+(defn create-modal-button [title icon child]
+ [:button
+  {:title title
+   :on-click #(do (.preventDefault %)  
+                  (rf/dispatch [:modal {:show? true
+                                        :child child
+                                        :size :small}]))} icon])
 
 (defn create-item [name]
   (let [name (reagent/atom name)
@@ -164,21 +146,35 @@
                                  (reset! tags #{}))}
          "Create Item"]]])))
 
-(defn create-modal-button [child]
- [:button
-  {:title "Create New Item"
-   :on-click #(do (.preventDefault %)  
-                  (rf/dispatch [:modal {:show? true
-                                        :child child
-                                        :size :small}]))} "+"])
 
-(comment (defn add-equipment [task]
-           (let [item-name (reagent/atom "")
-                 qty (reagent/atom 1)
-                 unit (reagent/atom {})])
-           (fn [task]
-             ;; see line-item-editor above
-             (rf/dispatch [:task/add-equipment task item qty unit]))))
+
+(defn task-table [recipe-id]
+  (fn [recipe-id]
+    (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
+      [:table#tasks
+       [:thead
+        [:tr
+         (doall
+          (for [h ["Items" "Steps"]]
+            [:th h]))]]
+       [:tbody
+        (doall
+         (for [task tasks]
+           [:tr 
+            [:td [:div [:b "Equipment:"] 
+                  [create-modal-button "Add Equipment" "+"
+                   [line-item-editor task :task/add-equipment]]]
+             (list-items @(rf/subscribe [:task-equipment-line-items task]))
+             [:div [:b "Ingredients"]
+              [create-modal-button "Add Ingredient" "+"
+               [line-item-editor task :task/add-ingredient]]]
+             (list-items @(rf/subscribe [:task-ingredients-line-items task]))
+             (let [optional @(rf/subscribe [:task-optional-line-items task])]
+               (when (> (count optional) 0)
+                 [:span [:b "Optional:"] (list-items optional)]))]
+            [:td [display-steps task]
+             (display-products task)]]))]]))) 
+
 
 (comment
   (defn remove-item
@@ -197,7 +193,8 @@
      [:div.row
       [:div.column.left 
        [recipe-search]
-       [:div "Create New Item:"[create-modal-button [create-item ""]]]]
+       ;[:div "Create New Item:"[create-modal-button "New Item" "+" [create-item ""]]]
+       ]
       [:div.column.middle
        [:h1 [inline-editor @name
              #(rf/dispatch [:recipe/update-name @recipe-id %])]]

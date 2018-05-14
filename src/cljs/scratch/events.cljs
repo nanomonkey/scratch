@@ -147,6 +147,14 @@
      (update-in db [:tasks task-id :equipment :qty item-id] + qty))))
 
 (rf/reg-event-db
+ :task/remove-equipment
+ (fn [db [_ task-id item-id]]
+   (-> db
+       (update-in [:tasks task-id :equipment :qty] dissoc item-id)
+       (update-in [:tasks task-id :equipment :units] dissoc item-id)
+       (update-in [:tasks task-id :equipment :items] remove #(=  item-id)))))
+
+(rf/reg-event-db
  :task/add-optional
  (fn [db [_ task-id item-id qty unit]]
    ;; check if it's already in the task
