@@ -121,6 +121,15 @@
      (update-in db [:tasks task-id :ingredients :qty item-id] + qty))))
 
 (rf/reg-event-db
+ :task/remove-ingredient
+ (fn [db [_ task-id item-id]]
+   (-> db
+       (update-in [:tasks task-id :ingredient :qty] dissoc item-id)
+       (update-in [:tasks task-id :ingredient :units] dissoc item-id)
+       (update-in [:tasks task-id :ingredient :items] 
+                  (fn [items] (vec (remove #(= item-id %) items)))))))
+
+(rf/reg-event-db
  :task/add-product
  (fn [db [_ task-id item-id qty unit]]
    ;; check if it's already in the task
@@ -132,6 +141,16 @@
          (update-in [:tasks task-id :yields :items] (fnil conj []) item-id))
      ;; in the task, add to existing qty
      (update-in db [:tasks task-id :yields :qty item-id] + qty))))
+
+(rf/reg-event-db
+ :task/remove-product
+ (fn [db [_ task-id item-id]]
+   (-> db
+       (update-in [:tasks task-id :yields :qty] dissoc item-id)
+       (update-in [:tasks task-id :yields :units] dissoc item-id)
+       (update-in [:tasks task-id :yields :items] 
+                  (fn [items] (vec (remove #(= item-id %) items)))))))
+
 
 (rf/reg-event-db
  :task/add-equipment
@@ -152,7 +171,8 @@
    (-> db
        (update-in [:tasks task-id :equipment :qty] dissoc item-id)
        (update-in [:tasks task-id :equipment :units] dissoc item-id)
-       (update-in [:tasks task-id :equipment :items] remove #(=  item-id)))))
+       (update-in [:tasks task-id :equipment :items] 
+                  (fn [items] (vec (remove #(= item-id %) items)))))))
 
 (rf/reg-event-db
  :task/add-optional

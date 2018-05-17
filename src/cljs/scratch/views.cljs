@@ -31,7 +31,7 @@
     (goog.string/format "%f %s - %s" qty @unit @item)))
 
 (defn span-items [items]
-  [:span 
+  [:span
    (for [item items]
      (display-line-item item))])
 
@@ -42,10 +42,15 @@
        [:dt (:name item)]
        [:dd (:description item)]))])
 
-(defn list-items [items]
-   [:ul
-    (for [i items]
-      [:li {:key (:item i)} (display-line-item i)])])
+(defn list-items [items remove-event task]
+  (fn [items remove-event task]
+    [:ul
+     (for [i items]
+       [:li {:key (:item i)} [:span.bacon (display-line-item i)]
+        [:button.hidden
+         {:title "Remove"
+          :on-click #(do (.preventDefault %)
+                         (rf/dispatch [remove-event task (:item i)]))} "X"]])]))
 
 (defn add-step [task]
   (let [s (reagent/atom "")]
@@ -69,15 +74,15 @@
       [:div.connector.complete]
       [:ol.steps  
        (let [steps @(rf/subscribe [:task-steps task])]
-         (for [step steps]
+         (for [[index step] (map-indexed vector steps)]
            [:li.active [:span.bacon step]
             [:button.hidden
-             {:on-click #(rf/dispatch [:task/remove-step task 
-                                       (.indexOf steps step)])} "X"]]))
+             {:on-click #(rf/dispatch [:task/remove-step task index])} "X"]]))
        [:li.active [add-step task]]]]]))
 
 (defn display-products [task-id]
-  [:div [:strong "Yields: "] (list-items @(rf/subscribe [:task-yields task-id]))
+  [:div [:strong "Yields: "] [list-items @(rf/subscribe [:task-yields task-id])
+                              :task/remove-product task-id]
    [add-product task-id]])
 
 (defn line-item-editor [task submit]
@@ -107,7 +112,7 @@
              (:name item)]))]
         [:button "+"]]])))
 
-(defn create-modal-button [title icon child]
+(defn modal-button [title icon child]
  [:button
   {:title title
    :on-click #(do (.preventDefault %)  
@@ -146,8 +151,6 @@
                                  (reset! tags #{}))}
          "Create Item"]]])))
 
-
-
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
@@ -161,26 +164,31 @@
         (doall
          (for [task tasks]
            [:tr 
-            [:td [:div [:b "Equipment:"] 
-                  [create-modal-button "Add Equipment" "+"
-                   [line-item-editor task :task/add-equipment]]]
-             (list-items @(rf/subscribe [:task-equipment-line-items task]))
-             [:div [:b "Ingredients"]
-              [create-modal-button "Add Ingredient" "+"
+            [:td 
+             [:div [:b "Equipment:"] 
+              [modal-button "Add Equipment" "+"
+               [line-item-editor task :task/add-equipment]]]
+             [list-items @(rf/subscribe [:task-equipment-line-items task])
+              :task/remove-equipment task]
+             [:div [:b "Ingredients:"]
+              [modal-button "Add Ingredient" "+"
                [line-item-editor task :task/add-ingredient]]]
-             (list-items @(rf/subscribe [:task-ingredients-line-items task]))
-             (let [optional @(rf/subscribe [:task-optional-line-items task])]
-               (when (> (count optional) 0)
-                 [:span [:b "Optional:"] (list-items optional)]))]
+             [list-items @(rf/subscribe [:task-ingredients-line-items task])
+              :task/remove-ingredient task]
+             [:div [:b "Optional Items:"]
+              [modal-button "Add Optional Item" "+"
+               [line-item-editor task :task/add-optional]]]
+              [list-items @(rf/subscribe [:task-optional-line-items task])
+               :task/remove-optional task]]
             [:td [display-steps task]
              (display-products task)]]))]]))) 
-
 
 (comment
   (defn remove-item
     [task-id item-id]
     [:div.garbage-bin 
-     :on-click #(re-frame.core/dispatch [:task/remove-item task-id item-id])]))
+     {:on-click #(rf/dispatch [:task/remove-item task-id item-id])}]))
+
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
@@ -193,7 +201,7 @@
      [:div.row
       [:div.column.left 
        [recipe-search]
-       ;[:div "Create New Item:"[create-modal-button "New Item" "+" [create-item ""]]]
+       ;[:div "Create New Item:"[modal-button "New Item" "+" [create-item ""]]]
        ]
       [:div.column.middle
        [:h1 [inline-editor @name
