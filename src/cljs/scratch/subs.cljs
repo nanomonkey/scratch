@@ -181,7 +181,7 @@
  (fn [db [_ task-id]]
    (mapv (fn [item-id]
              {:qty (get-in db [:tasks task-id :optional :qty item-id])
-              :unit (get-in db [:tasks task-id :optionalrjv :units item-id])
+              :unit (get-in db [:tasks task-id :optional :units item-id])
               :item item-id})
            (get-in db [:tasks task-id :optional :items]))))
 

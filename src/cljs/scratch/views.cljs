@@ -30,18 +30,6 @@
         item (rf/subscribe [:item-name (:item line-item)])]
     (goog.string/format "%f %s - %s" qty @unit @item)))
 
-(defn span-items [items]
-  [:span
-   (for [item items]
-     (display-line-item item))])
-
-(defn define-items [items]
-  [:dl
-   (for [item items]
-     (do
-       [:dt (:name item)]
-       [:dd (:description item)]))])
-
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
     [:ul
@@ -86,30 +74,36 @@
    [add-product task-id]])
 
 (defn line-item-editor [task submit]
-  (let [item (reagent/atom "")
+  (let [items @(rf/subscribe [:items])
+        item (reagent/atom (key (first items)))
         qty (reagent/atom 1)
         units @(rf/subscribe [:units])
         unit (reagent/atom (key (first units)))]
     (fn [task submit] 
-      [:div.blue-panel
+      [:div.white-panel (prn-str @item) (prn-str @unit)
        [:form {:on-submit #(do (.preventDefault %)
                                (rf/dispatch [submit task @item @qty @unit]))}
-        [:input  {:type :number 
-                  :name "qty" 
-                  :value @qty
-                  :on-change #(reset! qty (-> % .-target .-value int))}]
-        [:select 
-         {:on-change #(reset! unit (-> % .-target .-value))}
-         (doall
-          (for [[id unit] units]
-            [:option {:value id} (:name unit)]))]
-        [:select
-         {:on-change #(reset! item (-> % .-target .-value))}
-         (doall
-          (for [[id item] @(rf/subscribe [:items])]
-            [:option {:value id}
-             (when (= (:name item) "each") {:selected "selected"})
-             (:name item)]))]
+        [:div.row
+         [:label "Quantity:"]
+         [:input  {:type :number 
+                   :name "qty" 
+                   :value @qty
+                   :on-change #(reset! qty (-> % .-target .-value int))}]]
+        [:div.row
+         [:label "Unit:"]
+         [:select 
+          {:on-change #(reset! unit (-> % .-target .-value))}
+          (doall
+           (for [[id unit] units]
+             [:option {:value id} (:name unit)]))]]
+        [:div.row
+         [:label "Item:"]
+         [:select
+          {:on-change #(reset! item (-> % .-target .-value))}
+          (doall
+           (for [[id item] items]
+             [:option {:value id}
+              (:name item)]))]]
         [:button "+"]]])))
 
 (defn modal-button [title icon child]
@@ -182,13 +176,6 @@
                :task/remove-optional task]]
             [:td [display-steps task]
              (display-products task)]]))]]))) 
-
-(comment
-  (defn remove-item
-    [task-id item-id]
-    [:div.garbage-bin 
-     {:on-click #(rf/dispatch [:task/remove-item task-id item-id])}]))
-
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
