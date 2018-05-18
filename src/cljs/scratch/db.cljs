@@ -20,6 +20,9 @@
                    :task-list ["t1" "t2" "t3"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
+                 :time {:min 4
+                        :max 8
+                        :units "min"}
                  :equipment {:items ["i1"]
                              :qty {"i1" 1}
                              :units {"i1" "u1"}}

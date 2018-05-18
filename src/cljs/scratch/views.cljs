@@ -10,7 +10,8 @@
                                      recipe-search
                                      item-search
                                      add-product
-                                     modal]]
+                                     modal
+                                     modal-button]]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -20,8 +21,9 @@
 
 (defn topnav []
   [:div.topnav
-      [:a {:href "#1"} "One"]
-      [:a {:href "#2"} "Two"]])
+   [recipe-search]
+   [:a {:href "#1"} "One"]
+   [:a {:href "#2"} "Two"]])
 
 (defn display-line-item [line-item]
   "unpacks dictionary with :unit :item and :qty into readable string"
@@ -34,7 +36,7 @@
   (fn [items remove-event task]
     [:ul
      (for [i items]
-       [:li {:key (:item i)} [:span.bacon (display-line-item i)]
+       [:li {:key (:item i)} [:span.removable (display-line-item i)]
         [:button.hidden
          {:title "Remove"
           :on-click #(do (.preventDefault %)
@@ -63,14 +65,15 @@
       [:ol.steps  
        (let [steps @(rf/subscribe [:task-steps task])]
          (for [[index step] (map-indexed vector steps)]
-           [:li.active [:span.bacon step]
+           [:li.active [:span.removable step]
             [:button.hidden
              {:on-click #(rf/dispatch [:task/remove-step task index])} "X"]]))
        [:li.active [add-step task]]]]]))
 
 (defn display-products [task-id]
-  [:div [:strong "Yields: "] [list-items @(rf/subscribe [:task-yields task-id])
-                              :task/remove-product task-id]
+  [:div [:strong "Yields: "] 
+   [list-items @(rf/subscribe [:task-yields task-id])
+    :task/remove-product task-id]
    [add-product task-id]])
 
 (defn line-item-editor [task submit]
@@ -80,14 +83,14 @@
         units @(rf/subscribe [:units])
         unit (reagent/atom (key (first units)))]
     (fn [task submit] 
-      [:div.white-panel (prn-str @item) (prn-str @unit)
+      [:div.white-panel
        [:form {:on-submit #(do (.preventDefault %)
                                (rf/dispatch [submit task @item @qty @unit]))}
         [:div.row
          [:label "Quantity:"]
          [:input  {:type :number 
-                   :name "qty" 
                    :value @qty
+                   :width "6"
                    :on-change #(reset! qty (-> % .-target .-value int))}]]
         [:div.row
          [:label "Unit:"]
@@ -106,13 +109,6 @@
               (:name item)]))]]
         [:button "+"]]])))
 
-(defn modal-button [title icon child]
- [:button
-  {:title title
-   :on-click #(do (.preventDefault %)  
-                  (rf/dispatch [:modal {:show? true
-                                        :child child
-                                        :size :small}]))} icon])
 
 (defn create-item [name]
   (let [name (reagent/atom name)
@@ -159,18 +155,18 @@
          (for [task tasks]
            [:tr 
             [:td 
-             [:div [:b "Equipment:"] 
-              [modal-button "Add Equipment" "+"
+             [:div
+              [modal-button "Add Equipment" "Equipment:"
                [line-item-editor task :task/add-equipment]]]
              [list-items @(rf/subscribe [:task-equipment-line-items task])
               :task/remove-equipment task]
-             [:div [:b "Ingredients:"]
-              [modal-button "Add Ingredient" "+"
+             [:div
+              [modal-button "Add Ingredient" "Ingredients:"
                [line-item-editor task :task/add-ingredient]]]
              [list-items @(rf/subscribe [:task-ingredients-line-items task])
               :task/remove-ingredient task]
-             [:div [:b "Optional Items:"]
-              [modal-button "Add Optional Item" "+"
+             [:div
+              [modal-button "Add Optional Item" "Optional Items:"
                [line-item-editor task :task/add-optional]]]
               [list-items @(rf/subscribe [:task-optional-line-items task])
                :task/remove-optional task]]

@@ -124,9 +124,9 @@
  :task/remove-ingredient
  (fn [db [_ task-id item-id]]
    (-> db
-       (update-in [:tasks task-id :ingredient :qty] dissoc item-id)
-       (update-in [:tasks task-id :ingredient :units] dissoc item-id)
-       (update-in [:tasks task-id :ingredient :items] 
+       (update-in [:tasks task-id :ingredients :qty] dissoc item-id)
+       (update-in [:tasks task-id :ingredients :units] dissoc item-id)
+       (update-in [:tasks task-id :ingredients :items] 
                   (fn [items] (vec (remove #(= item-id %) items)))))))
 
 (rf/reg-event-db
@@ -186,6 +186,16 @@
          (update-in [:tasks task-id :optional :items] (fnil conj []) item-id))
      ;; in the task, add to existing qty
      (update-in db [:tasks task-id :optional :qty item-id] + qty))))
+
+(rf/reg-event-db
+ :task/remove-optional
+ (fn [db [_ task-id item-id]]
+   (-> db
+       (update-in [:tasks task-id :optional :qty] dissoc item-id)
+       (update-in [:tasks task-id :optional :units] dissoc item-id)
+       (update-in [:tasks task-id :optional :items] 
+                  (fn [items] (vec (remove #(= item-id %) items)))))))
+
 
 (rf/reg-event-db
  :task/add-step

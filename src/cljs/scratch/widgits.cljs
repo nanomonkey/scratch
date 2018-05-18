@@ -33,7 +33,7 @@
                                  (.preventDefault %)
                                  (swap! s dissoc :editing?))}
            "Cancel"]]
-         [:div [:span.bacon
+         [:div [:span.removable
                 {:on-click #(swap! s assoc
                                    :editing? true
                                    :text txt)}
@@ -147,48 +147,49 @@
 
 
 (defn item-selector []
+  "data-lists don't work in Safari..."
   (data-list "select-item" @(rf/subscribe [:item/name-id])))
 
 (defn add-product [task]
   (let [search-string (reagent/atom "")
-        key (reagent/atom "")]
+        key (reagent/atom "")
+        items @(rf/subscribe [:item-names])]
     (fn [task]
       [:div
        [:input.form-control {:type "text"
                              :placeholder "add product"
                              :value @search-string
-                             :on-change #(reset! search-string (-> % .-target .-value))}]
+                             :on-change #(reset! search-string 
+                                                 (-> % .-target .-value))}]
        [:button {:on-click 
                  #(doall 
                    (.preventDefault %)
                    (let [item-id (rf/dispatch [:item/new @search-string "" #{} []])]
                      (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
-       (when (< 1 (count @search-string))
-         (let [items @(rf/subscribe [:item-names])] 
-           (for [item items]
-             ;; regular expression to see if the search string matches the recipe name
-             (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
-                     (= "" @search-string))
-               ^{ :key (.indexOf items item)}
-               [:div
-                [:div [:a {:href "#"
-                           :on-click #(do
-                                        (.preventDefault %)
-                                        (rf/dispatch 
-                                         [:task/add-product task (:id item) 1 "u1"])
-                                        (reset! search-string ""))} 
-                       (:name item)]]]))))])))
+       (when (< 1 (count @search-string)) 
+         (for [item items]
+           ;; regular expression to see if the search string matches the name
+           (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
+                   (= "" @search-string))
+             ^{ :key (.indexOf items item)}
+             [:div
+              [:div [:a {:href "#"
+                         :on-click #(do
+                                      (.preventDefault %)
+                                      (rf/dispatch 
+                                       [:task/add-product task (:id item) 1 "u1"])
+                                      (reset! search-string ""))} 
+                     (:name item)]]])))])))
 
 ;; Recipe Search
 (defn recipe-search []
   (let [search-string (reagent/atom "")]
     (fn []
       [:div
-       [:p {:class "center"} "Recipes" ]
        [:button {:on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/new @search-string]))} "+"]
        [:input.form-control {:type "text"
-                             :placeholder "Filter names"
+                             :placeholder "Load Recipe"
                              :value @search-string
                              :on-change #(reset! search-string (-> % 
                                                                    .-target 
@@ -241,7 +242,13 @@
 (defn- close-modal []
   (rf/dispatch [:modal {:show? false :child nil}]))
 
-
+(defn modal-button [title icon child]
+ [:button
+  {:title title
+   :on-click #(do (.preventDefault %)  
+                  (rf/dispatch [:modal {:show? true
+                                        :child child
+                                        :size :small}]))} icon])
 
 (comment
   ;; available css

@@ -17,6 +17,7 @@ Notes
 ** TODO record changes locally in a parametric manner, then update ssb upon user's request.
 
 ** TODO Look into gantry system for task management
+** TODO Gant Chart view of Recipe based on Task time duration
 * example re-frame code projects
 - https://github.com/dhruvp/angular-phonecat-re-frame/
 - https://github.com/jacekschae/conduit
@@ -34,3 +35,20 @@ added?
 
 * Reagent
 - [[https://github.com/reagent-project/reagent-cookbook][Reagent Cookbook]]
+* How to describe
+** Recipes
+- Procedural knowledge about the tasks to reproduce a final product.  
+** Task
+- A group of steps that are to be done in sequential order with one group of Equipment to transform a group of Ingredients into a final Product.
+** Ingredients
+- Items that are consumed by a task
+** Products
+- Items created by a task
+** Equipment
+- Items used but not consummed by a task
+** Duration
+- time a task takes to complete
+
+* Dealing with Units
+** JS library
+- https://github.com/ben-ng/convert-units
