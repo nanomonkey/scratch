@@ -11,7 +11,8 @@
                                      item-search
                                      add-product
                                      modal
-                                     modal-button]]
+                                     modal-button
+                                     full-modal]]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -19,11 +20,13 @@
 (defn header []
   [:div.header "Made From Scratch"])
 
-(defn topnav []
+(defn topnav-old []
   [:div.topnav
-   [recipe-search]
    [:a {:href "#1"} "One"]
    [:a {:href "#2"} "Two"]])
+
+(defn topnav []
+  [recipe-search])
 
 (defn display-line-item [line-item]
   "unpacks dictionary with :unit :item and :qty into readable string"
@@ -65,7 +68,7 @@
       [:ol.steps  
        (let [steps @(rf/subscribe [:task-steps task])]
          (for [[index step] (map-indexed vector steps)]
-           [:li.active [:span.removable step]
+           [:li.active {:draggable true} [:span.removable step]
             [:button.hidden
              {:on-click #(rf/dispatch [:task/remove-step task index])} "X"]]))
        [:li.active [add-step task]]]]]))
@@ -90,7 +93,7 @@
          [:label "Quantity:"]
          [:input  {:type :number 
                    :value @qty
-                   :width "6"
+                   :size "4"
                    :on-change #(reset! qty (-> % .-target .-value int))}]]
         [:div.row
          [:label "Unit:"]
@@ -107,7 +110,7 @@
            (for [[id item] items]
              [:option {:value id}
               (:name item)]))]]
-        [:button "+"]]])))
+        [:button "+Item"]]])))
 
 
 (defn create-item [name]
@@ -141,6 +144,13 @@
                                  (reset! tags #{}))}
          "Create Item"]]])))
 
+(defn add-task [recipe-id]
+  (let [name (reagent/atom "test")]
+    (fn [recipe-id]
+      [:button {:on-click #(do (.preventDefault %)
+                               (rf/dispatch [:recipe/new-task recipe-id @name]))}
+       "+ Task"])))
+
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
@@ -166,12 +176,13 @@
              [list-items @(rf/subscribe [:task-ingredients-line-items task])
               :task/remove-ingredient task]
              [:div
-              [modal-button "Add Optional Item" "Optional Items:"
+              [modal-button "Add Optional Item" "Optional:"
                [line-item-editor task :task/add-optional]]]
               [list-items @(rf/subscribe [:task-optional-line-items task])
                :task/remove-optional task]]
             [:td [display-steps task]
-             (display-products task)]]))]]))) 
+             (display-products task)]]))
+        [:tr [add-task recipe-id]]]]))) 
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
@@ -183,7 +194,7 @@
      (topnav)
      [:div.row
       [:div.column.left 
-       [recipe-search]
+       ;;[recipe-search]
        ;[:div "Create New Item:"[modal-button "New Item" "+" [create-item ""]]]
        ]
       [:div.column.middle

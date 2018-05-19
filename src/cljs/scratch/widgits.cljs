@@ -1,4 +1,3 @@
-
 (ns scratch.widgets
   (:require [re-frame.core :as rf]
             [reagent.core :as reagent]))
@@ -28,11 +27,11 @@
                     :value (:text @s)
                     :on-change #(swap! s assoc 
                                      :text (-> % .-target .-value))}]
-          [:button "Save"]
+          [:button "✓"]
           [:button {:on-click #(do
                                  (.preventDefault %)
                                  (swap! s dissoc :editing?))}
-           "Cancel"]]
+           "X"]]
          [:div [:span.removable
                 {:on-click #(swap! s assoc
                                    :editing? true
@@ -185,30 +184,31 @@
 (defn recipe-search []
   (let [search-string (reagent/atom "")]
     (fn []
-      [:div
-       [:button {:on-click #(do (.preventDefault %)
-                                (rf/dispatch [:recipe/new @search-string]))} "+"]
-       [:input.form-control {:type "text"
-                             :placeholder "Load Recipe"
-                             :value @search-string
-                             :on-change #(reset! search-string (-> % 
-                                                                   .-target 
-                                                                   .-value))}]
-       (when (< 1 (count @search-string))
-         (let [recipes @(rf/subscribe [:recipe-names])] 
-           [:center
-            (for [recipe recipes]
-              ;; regular expression to see if the search string matches the recipe name
-              (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
-                      (= "" @search-string))
-                ^{ :key (.indexOf recipes recipe)}
-                [:div
-                 [:div [:a {:href "#"
+      [:nav 
+       [:ul
+        [:li
+         [:button {:on-click #(do (.preventDefault %)
+                                  (rf/dispatch [:recipe/new @search-string])
+                                  (reset! search-string ""))} "+"]
+         [:input.form-control {:type "text"
+                               :placeholder "Load Recipe"
+                               :value @search-string
+                               :on-change #(reset! search-string (-> % 
+                                                                     .-target 
+                                                                     .-value))}]
+         (when (< 1 (count @search-string))
+           (let [recipes @(rf/subscribe [:recipe-names])] 
+             [:ul
+              (for [recipe recipes]
+                (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
+                        (= "" @search-string))
+                  ^{ :key (.indexOf recipes recipe)}
+                  [:li [:a {:href "#"
                             :on-click #(do
                                          (.preventDefault %)
                                          (rf/dispatch [:load-recipe (:id recipe)])
                                          (reset! search-string ""))} 
-                        (:name recipe)]]]))]))])))
+                        (:name recipe)]]))]))]]])))
 
 
 ;; Modals
@@ -249,6 +249,17 @@
                   (rf/dispatch [:modal {:show? true
                                         :child child
                                         :size :small}]))} icon])
+
+(defn full-modal [title body footer]
+  [:div {:class "modal-content"}
+   [:div {:class "modal-header"}
+    [:button {:type "button" :title "Cancel"
+              :class "close"
+              :on-click #(close-modal)}
+     [:i {:class "material-icons"} "close"]]
+    [:h4 {:class "modal-title"} title]]
+   [:div {:class "modal-body"} footer]
+   [:div {:class "modal-footer"} footer]])
 
 (comment
   ;; available css

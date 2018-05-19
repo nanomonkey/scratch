@@ -19,6 +19,9 @@
  (fn [db [_ data]]
    (assoc-in db [:modal] data)))
 
+(rf/reg-fx
+  :dispatch
+  rf/dispatch)
 
 (defonce last-temp-id (atom 0))
 
@@ -55,16 +58,18 @@
 (rf/reg-event-db
  :recipe/add-task
  (fn [db [_ recipe-id task-id]]
-   (update-in db [:recipes recipe-id :task-list] (fnil conj [] task-id))))
+   (update-in db [:recipes recipe-id :task-list] (fnil conj []) task-id)))
 
 (rf/reg-event-fx
  :recipe/new-task
+ [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ recipe name]]
-   {:db
-    (update (:db cofx) :tasks assoc
-            (:temp-id cofx) {:id (:temp-id cofx)
-                             :name name})
-    :dispatch [:recipe/add-task recipe (:temp-id cofx)]}))
+   (let [id (:temp-id cofx)]
+     {:db
+      (update (:db cofx) :tasks assoc
+              (:temp-id cofx) {:id (:temp-id cofx)
+                               :name name})
+      :dispatch [:recipe/add-task recipe id]})))
 
 (rf/reg-event-fx
  :recipe/new
@@ -74,9 +79,9 @@
     (update (:db cofx) :recipes assoc
             (:temp-id cofx) {:id (:temp-id cofx)
                              :name name
-                             :description ""
+                             :description "  "
                              :tags #{}
-                             :tasks {}})
+                             :task-list []})
     :dispatch [:load-recipe (:temp-id cofx)]}))
 
 (rf/reg-event-fx
