@@ -68,7 +68,9 @@
       [:ol.steps  
        (let [steps @(rf/subscribe [:task-steps task])]
          (for [[index step] (map-indexed vector steps)]
-           [:li.active {:draggable true} [:span.removable step]
+           [:li.active {:draggable true} [inline-editor step 
+                                          #(rf/dispatch 
+                                            [:task/update-step task % index])]
             [:button.hidden
              {:on-click #(rf/dispatch [:task/remove-step task index])} "X"]]))
        [:li.active [add-step task]]]]]))
@@ -145,7 +147,7 @@
          "Create Item"]]])))
 
 (defn add-task [recipe-id]
-  (let [name (reagent/atom "test")]
+  (let [name (reagent/atom "new task")]
     (fn [recipe-id]
       [:button {:on-click #(do (.preventDefault %)
                                (rf/dispatch [:recipe/new-task recipe-id @name]))}

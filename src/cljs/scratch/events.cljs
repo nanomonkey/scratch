@@ -19,10 +19,6 @@
  (fn [db [_ data]]
    (assoc-in db [:modal] data)))
 
-(rf/reg-fx
-  :dispatch
-  rf/dispatch)
-
 (defonce last-temp-id (atom 0))
 
 (rf/reg-cofx
@@ -209,9 +205,19 @@
 
 
 (defn vec-remove
-  "remove elem in coll"
+  "remove element at pos in vector"
   [coll pos]
   (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(defn vec-replace
+  "replace element in a vector with new-item"
+  [coll new-item pos]
+  (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
+
+(rf/reg-event-db
+ :task/update-step
+ (fn [db [_ task-id text step-pos]]
+   (update-in db [:tasks task-id :steps] #(vec-replace % text step-pos))))
 
 (rf/reg-event-db
  :task/remove-step
