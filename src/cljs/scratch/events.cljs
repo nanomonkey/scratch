@@ -75,7 +75,7 @@
     (update (:db cofx) :recipes assoc
             (:temp-id cofx) {:id (:temp-id cofx)
                              :name name
-                             :description "  "
+                             :description "..."
                              :tags #{}
                              :task-list []})
     :dispatch [:load-recipe (:temp-id cofx)]}))
@@ -197,20 +197,24 @@
        (update-in [:tasks task-id :optional :items] 
                   (fn [items] (vec (remove #(= item-id %) items)))))))
 
-
 (rf/reg-event-db
  :task/add-step
  (fn [db [_ task-id step]]
    (update-in db [:tasks task-id :steps] (fnil conj []) step)))
 
+(rf/reg-event-db 
+ :task/update-steps
+ (fn [db [_ task-id steps]]
+   (update-in db [:tasks task-id :steps] steps)))
+
 
 (defn vec-remove
-  "remove element at pos in vector"
+  "remove element at pos(ition) in vector"
   [coll pos]
   (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
 
 (defn vec-replace
-  "replace element in a vector with new-item"
+  "replace element at pos(ition) in a vector with new-item"
   [coll new-item pos]
   (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
 

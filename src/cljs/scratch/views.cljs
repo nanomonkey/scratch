@@ -26,7 +26,13 @@
    [:a {:href "#2"} "Two"]])
 
 (defn topnav []
-  [recipe-search])
+  [:nav  [:ul [:li [recipe-search]]
+          [:li
+           [:a {:href "inventory"} "Inventory"]]
+          [:li
+           [:a {:href "items"} "Items"]]
+          [:li
+           [:a {:href "units"} "Units"]]]])
 
 (defn display-line-item [line-item]
   "unpacks dictionary with :unit :item and :qty into readable string"
@@ -37,9 +43,9 @@
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
-    [:ul
+    [:ul.items
      (for [i items]
-       [:li {:key (:item i)} [:span.removable (display-line-item i)]
+       [:li {:key (:item i)} [:span.removable (display-line-item i )]
         [:button.hidden
          {:title "Remove"
           :on-click #(do (.preventDefault %)
@@ -53,27 +59,48 @@
                             (when (> (count @s) 0)
                               (rf/dispatch [:task/add-step task @s]))
                             (reset! s ""))}
-       [:input {:type :text
+       [:input {:type :textarea
                 :value @s
                 :on-change #(reset! s (-> % .-target .-value))}]])))
 
+
+(defn put-before [items pos item]
+  (let [items (remove #{item} items)
+        head (take pos items)
+        tail (drop pos items)]
+    (concat head [item] tail)))
+
 (defn display-steps [task]
-  (fn [task]
-    [:div#task
-     [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
-           #(rf/dispatch [:task/update-name task %])]]
-     [:div.steps-indicator
-      [:div.connector]
-      [:div.connector.complete]
-      [:ol.steps  
-       (let [steps @(rf/subscribe [:task-steps task])]
-         (for [[index step] (map-indexed vector steps)]
-           [:li.active {:draggable true} [inline-editor step 
-                                          #(rf/dispatch 
-                                            [:task/update-step task % index])]
-            [:button.hidden
-             {:on-click #(rf/dispatch [:task/remove-step task index])} "X"]]))
-       [:li.active [add-step task]]]]]))
+  (let [steps @(rf/subscribe [:task-steps task])
+        s (reagent/atom {:order (range (count steps))})]
+    (fn []
+      [:div#task
+       [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
+             {:on-change #(rf/dispatch [:task/update-name task %])}]]
+       [:div.steps-indicator
+        [:div.connector]
+        [:div.connector.complete]
+        [:ol.steps  
+         (for [[i pos] (map vector (:order @s) (range))]
+           [:li.active {:key i
+                        :style {:border (when (= i (:drag-index @s))
+                                          "1px dotted orange")}
+                        :draggable true
+                        :on-drag-start #(swap! s assoc :drag-index i)
+                        :on-drag-over (fn [e]
+                                        (.preventDefault e)
+                                        (swap! s assoc :drag-over pos)
+                                        (swap! s update :order put-before pos (:drag-index @s)))
+                        :on-drag-leave #(swap! s assoc :drag-over :nothing)
+                        :on-drag-end (fn []
+                                       (swap! s dissoc :drag-over :drag-index)
+                                       (rf/dispatch 
+                                        [:task/update-all-steps task [vec (map steps (:order @s))]]))}
+            [inline-editor (get steps i) {:on-change #(rf/dispatch 
+                                                       [:task/update-step task % pos])
+                                          :on-remove #(rf/dispatch 
+                                                       [:task/remove-step task pos])}]])
+         [:li.active [add-step task]]]]])))
 
 (defn display-products [task-id]
   [:div [:strong "Yields: "] 

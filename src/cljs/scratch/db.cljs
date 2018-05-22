@@ -15,7 +15,7 @@
                    :task-list ["t2"]}
              "r3" {:id "r3"
                    :name "Neti Pot solution"
-                   :description ""
+                   :description "..."
                    :tags #{}
                    :task-list ["t1" "t2" "t3"]}}
    :tasks {"t1" {:id "t1"

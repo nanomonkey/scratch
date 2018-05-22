@@ -13,7 +13,7 @@
    {:dangerouslySetInnerHTML {:__html (->html s)}}])
 
 ;; Inline Editor
-(defn inline-editor [txt on-change]
+(defn inline-editor [txt {:keys [on-change on-remove]}]
   (let [s (reagent/atom {})]
     (fn [txt on-change]
       [:span
@@ -22,7 +22,10 @@
                                (.preventDefault %)
                                (swap! s dissoc :editing?)
                                (when on-change
-                                 (on-change (:text @s))))}
+                                 (on-change (:text @s))))
+                 :on-blur #(do
+                             (.preventDefault %)
+                             (swap! s dissoc :editing?))}
            [:input {:type :text 
                     :value (:text @s)
                     :on-change #(swap! s assoc 
@@ -32,12 +35,20 @@
                                  (.preventDefault %)
                                  (swap! s dissoc :editing?))}
            "X"]]
-         [:div [:span.removable
+         [:span [:span.removable
                 {:on-click #(swap! s assoc
                                    :editing? true
                                    :text txt)}
-                txt][:span.hidden [:a {:href "#"}
-                                   [:sup "✎"]]]])])))
+                 txt] [:span.hidden 
+                       [:button {:title "Edit"
+                                 :on-click #(swap! s assoc
+                                                   :editing? true
+                                                   :text txt)} "✎" ]
+                       (when on-remove
+                         [:button {:title "Remove" 
+                                   :on-click #(do
+                                                (.preventDefault %)
+                                                (on-remove))} "X"])]])])))
 
 
 ;; Mark-down editor
@@ -101,6 +112,9 @@
                                 (rf/dispatch [save id (.trim @s)])
                                 (reset! s "")))}]]])))
 
+(defn filter-tag [list tag]
+  (filter (comp #(= tag) :tags) list))
+
 (defn display-items [search-string source action]
   (let [items @(rf/subscribe [source])]
     (fn [search-string source action]
@@ -152,7 +166,10 @@
 (defn add-product [task]
   (let [search-string (reagent/atom "")
         key (reagent/atom "")
-        items @(rf/subscribe [:item-names])]
+        items @(rf/subscribe [:item-names])
+        qty (reagent/atom 1)
+        units @(rf/subscribe [:units])
+        unit (reagent/atom "")]
     (fn [task]
       [:div
        [:input.form-control {:type "text"
@@ -183,32 +200,30 @@
 ;; Recipe Search
 (defn recipe-search []
   (let [search-string (reagent/atom "")]
-    (fn []
-      [:nav 
-       [:ul
-        [:li
-         [:button {:on-click #(do (.preventDefault %)
-                                  (rf/dispatch [:recipe/new @search-string])
-                                  (reset! search-string ""))} "+"]
-         [:input.form-control {:type "text"
-                               :placeholder "Load Recipe"
-                               :value @search-string
-                               :on-change #(reset! search-string (-> % 
-                                                                     .-target 
-                                                                     .-value))}]
-         (when (< 1 (count @search-string))
-           (let [recipes @(rf/subscribe [:recipe-names])] 
-             [:ul
-              (for [recipe recipes]
-                (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
-                        (= "" @search-string))
-                  ^{ :key (.indexOf recipes recipe)}
-                  [:li [:a {:href "#"
-                            :on-click #(do
-                                         (.preventDefault %)
-                                         (rf/dispatch [:load-recipe (:id recipe)])
-                                         (reset! search-string ""))} 
-                        (:name recipe)]]))]))]]])))
+    (fn [] 
+      [:span
+       [:input.search {:type "text"
+                       :placeholder "Load Recipe"
+                       :value @search-string
+                       :on-change #(reset! search-string (-> % 
+                                                             .-target 
+                                                             .-value))}]
+       [:button {:on-click #(do (.preventDefault %)
+                                (rf/dispatch [:recipe/new @search-string])
+                                (reset! search-string ""))} "+"]
+       (when (< 1 (count @search-string))
+         (let [recipes @(rf/subscribe [:recipe-names])] 
+           [:ul
+            (for [recipe recipes]
+              (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
+                      (= "" @search-string))
+                ^{ :key (.indexOf recipes recipe)}
+                [:li [:a {:href "#"
+                          :on-click #(do
+                                       (.preventDefault %)
+                                       (rf/dispatch [:load-recipe (:id recipe)])
+                                       (reset! search-string ""))} 
+                      (:name recipe)]]))]))])))
 
 
 ;; Modals
