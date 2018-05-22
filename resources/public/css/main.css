@@ -18,6 +18,12 @@ body {
 	font-weight: 400;
 }
 
+h1, h2, h3 {
+    color: #317eac !important;
+    margin-bottom: 0.25em;
+    margin-top: 0.75em;
+}
+
 .header {
     background-color: #f1f1f1;
     padding: 20px;
@@ -36,29 +42,34 @@ body {
     text-decoration: none;
 }
 .topnav a:hover {
-    background-color: #ddd;
+    background-color:  #ddd;
     color: black;
 }
 
 /* Navigation Search */
 nav ul ul {
-    display: none;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #008CBA;
+    color: white;
+    display: block; //none;
 }
 
 nav ul li:hover > ul {
     display: block;
 }
 nav ul {
-    background: #efefef; 
+    background: #008CBA;//#efefef; 
     /*background: linear-gradient(top, #efefef 0%, #bbbbbb 100%);  
     background: -moz-linear-gradient(top, #efefef 0%, #bbbbbb 100%); 
     background: -webkit-linear-gradient(top, #efefef 0%,#bbbbbb 100%); 
-    box-shadow: 0px 0px 9px rgba(0,0,0,0.15);
-    padding: 0 20px;
-    border-radius: 10px;  */
+    box-shadow: 0px 0px 9px rgba(0,0,0,0.15); */
+    padding: 8px 8px 8px 8px;
+    //border-radius: 6px; 
     list-style: none;
     position: relative;
-    display: inline-table;
+   // display: inline-table;
 }
 nav ul:after {
     content: ""; clear: both; display: block;
@@ -67,35 +78,37 @@ nav ul li {
 	float: left;
 }
 nav ul li:hover {
-    background: #4b545f;
-    background: linear-gradient(top, #4f5964 0%, #5f6975 40%);
-    background: -moz-linear-gradient(top, #4f5964 0%, #5f6975 40%);
-    background: -webkit-linear-gradient(top, #4f5964 0%,#5f6975 40%);
+    background:  #4b545f;
+    //background: linear-gradient(top, #4f5964 0%, #5f6975 40%);
+    //background: -moz-linear-gradient(top, #4f5964 0%, #5f6975 40%);
+    //background: -webkit-linear-gradient(top, #4f5964 0%,#5f6975 40%);
 }
 nav ul li:hover a {
     color: #fff;
 }
 
 nav ul li a {
-    display: block; padding: 25px 40px;
+    display: block;
+    //padding: 25px 40px;
     color: #757575; text-decoration: none;
 }
 nav ul ul {
-    background: #5f6975; border-radius: 0px; padding: 0;
+    background: pink; // #5f6975; 
+    border-radius: 0px; padding: 0;
     position: absolute; top: 100%;
 }
 nav ul ul li {
     float: none; 
-    border-top: 1px solid #6b727c;
-    border-bottom: 1px solid #575f6a;
+    //border-top: 1px solid #6b727c;
+    //border-bottom: 1px solid #575f6a;
     position: relative;
 }
 nav ul ul li a {
-    padding: 15px 40px;
+    //padding: 15px 40px;
     color: #fff;
 }	
 nav ul ul li a:hover {
-    background: #4b545f;
+    background: orange;
 }
 nav ul ul ul {
     position: absolute; left: 100%; top:0;
@@ -245,12 +258,14 @@ nav ul ul ul {
     visibility: visible
 }
 
+/*
 input:not([type=submit]):not([type=file]):not(type=number) {
     font-size: 16px;
    border: 1px solid white;
    border-bottom: 1px solid green;
    //background: rgba(245,245,245,0.5);
 }
+*/
 input[type=number]{
   size: "4";
   width: 80px;
@@ -258,6 +273,29 @@ input[type=number]{
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
+
+input.search [type=text] {
+    width: 100%;
+    box-sizing: border-box;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+    background-image: url('icons/searchicon.png');
+    background-position: 10px 10px; 
+    background-repeat: no-repeat;
+    padding: 12px 20px 12px 40px;
+}
+/***************/
+/* item-lists */
+/**************/
+ul.items {
+    list-style-type: none;
+    margin: 0;
+    padding: 0 0 10px 10px;
+}
+
+/* Panels */
 .washed-out{opacity:0.3;}
 .date{color:red;}
 .white-panel{
@@ -323,13 +361,17 @@ a{
 
 button {
     font-size: 16px;
-    color: #fff;
-    background-color: #7AB720;
+    font-weight: 600;
+    color: #38761d; //#fff;
+    background-color: #eee; //#7AB720;
     border: none;
+    //border-color: white;
+    //border-width: 1px;
 }
 button:hover,
 button.hover {
-    background-color: #346392;
+    background-color:#38761d; //#346392;
+    color: #fff;
 }
 button:active,
 button.active {

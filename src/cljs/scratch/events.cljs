@@ -203,7 +203,7 @@
    (update-in db [:tasks task-id :steps] (fnil conj []) step)))
 
 (rf/reg-event-db 
- :task/update-steps
+ :task/update-all-steps
  (fn [db [_ task-id steps]]
    (update-in db [:tasks task-id :steps] steps)))
 
