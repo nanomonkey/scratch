@@ -69,14 +69,11 @@
         head (take pos items)
         tail (drop pos items)]
     (concat head [item] tail)))
-
-(defn display-steps [task]
-  (let [steps @(rf/subscribe [:task-steps task])
-        s (reagent/atom {:order (range (count steps))})]
-    (fn []
-      [:div#task
-       [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
-             {:on-change #(rf/dispatch [:task/update-name task %])}]]
+         
+(defn display-steps [task steps]
+  (let [s (reagent/atom {:order (range (count steps))})]
+    (fn [task steps]
+      [:div (prn-str steps)
        [:div.steps-indicator
         [:div.connector]
         [:div.connector.complete]
@@ -96,10 +93,15 @@
                                        (swap! s dissoc :drag-over :drag-index)
                                        (rf/dispatch 
                                         [:task/update-all-steps task [vec (map steps (:order @s))]]))}
-            [inline-editor (get steps i) {:on-change #(rf/dispatch 
+            [inline-editor (get steps i) {:on-update #(rf/dispatch 
                                                        [:task/update-step task % pos])
-                                          :on-remove #(rf/dispatch 
-                                                       [:task/remove-step task pos])}]])
+                                          :on-remove (fn [] 
+                                                       (rf/dispatch 
+                                                        [:task/remove-step task pos]))}]
+            [:button.hidden {:title "Remove" 
+                             :on-click #(do
+                                          (.preventDefault %)
+                                          (rf/dispatch [:task/remove-step task pos]))} "X"]])
          [:li.active [add-step task]]]]])))
 
 (defn display-products [task-id]
@@ -209,7 +211,10 @@
                [line-item-editor task :task/add-optional]]]
               [list-items @(rf/subscribe [:task-optional-line-items task])
                :task/remove-optional task]]
-            [:td [display-steps task]
+            [:td#task
+             [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
+                   {:on-update #(rf/dispatch [:task/update-name task %])}]]
+             [display-steps task @(rf/subscribe [:task-steps task])]
              (display-products task)]]))
         [:tr [add-task recipe-id]]]]))) 
 

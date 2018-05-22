@@ -13,7 +13,7 @@
    {:dangerouslySetInnerHTML {:__html (->html s)}}])
 
 ;; Inline Editor
-(defn inline-editor [txt {:keys [on-change on-remove]}]
+(defn inline-editor [txt {:keys [on-update on-remove]}]
   (let [s (reagent/atom {})]
     (fn [txt on-change]
       [:span
@@ -21,8 +21,8 @@
          [:form {:on-submit #(do
                                (.preventDefault %)
                                (swap! s dissoc :editing?)
-                               (when on-change
-                                 (on-change (:text @s))))
+                               (when on-update
+                                 (on-update (:text @s))))
                  :on-blur #(do
                              (.preventDefault %)
                              (swap! s dissoc :editing?))}
@@ -79,7 +79,7 @@
             [:sup "✎"]] [:span (markdown-section txt)]])])))
 
 ;; Tag Editor
-(defn tag-editor [source delete save id]
+(defn tag-editor [source remove save id]
   "adds a tag to a recipient in the database using the
    subscription, remove and save handlers"
   (let [s (reagent/atom "")
