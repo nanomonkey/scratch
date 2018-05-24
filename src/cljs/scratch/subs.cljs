@@ -145,8 +145,8 @@
 
 (rf/reg-sub
  :task-steps
- (fn [db [_ id]]
-   (get-in db [:tasks id :steps])))
+ (fn [db [_ task-id]]
+   (get-in db [:tasks task-id :steps])))
 
 (rf/reg-sub
  :task-equipment

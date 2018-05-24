@@ -205,7 +205,7 @@
 (rf/reg-event-db 
  :task/update-all-steps
  (fn [db [_ task-id steps]]
-   (update-in db [:tasks task-id :steps] steps)))
+   (assoc-in db [:tasks task-id :steps] steps)))
 
 
 (defn vec-remove
@@ -219,7 +219,7 @@
   (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
 
 (rf/reg-event-db
- :task/update-step
+ :task/replace-step
  (fn [db [_ task-id text step-pos]]
    (update-in db [:tasks task-id :steps] #(vec-replace % text step-pos))))
 

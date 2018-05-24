@@ -1,6 +1,6 @@
 (ns scratch.views
   (:require [re-frame.core :as rf]
-            [reagent.core :as reagent] 
+            [reagent.core :as r] 
             [accountant.core :as accountant]
             [secretary.core :as secretary :refer-macros [defroute]]
             [scratch.subs :as subs]
@@ -52,7 +52,7 @@
                          (rf/dispatch [remove-event task (:item i)]))} "X"]])]))
 
 (defn add-step [task]
-  (let [s (reagent/atom "")]
+  (let [s (r/atom "")]
     (fn [task]
       [:form {:on-submit #(do
                             (.preventDefault %)
@@ -63,45 +63,48 @@
                 :value @s
                 :on-change #(reset! s (-> % .-target .-value))}]])))
 
-
 (defn put-before [items pos item]
   (let [items (remove #{item} items)
         head (take pos items)
         tail (drop pos items)]
     (concat head [item] tail)))
-         
-(defn display-steps [task steps]
-  (let [s (reagent/atom {:order (range (count steps))})]
-    (fn [task steps]
-      [:div (prn-str steps)
+
+(defn display-steps [task]
+  (let [steps (rf/subscribe [:task-steps task])
+        s (r/atom {:order (range (count @steps))})]
+    (fn [task]
+      [:div (prn-str @s) (prn-str @steps)
        [:div.steps-indicator
         [:div.connector]
         [:div.connector.complete]
-        [:ol.steps  
-         (for [[i pos] (map vector (:order @s) (range))]
-           [:li.active {:key i
-                        :style {:border (when (= i (:drag-index @s))
-                                          "1px dotted orange")}
-                        :draggable true
-                        :on-drag-start #(swap! s assoc :drag-index i)
-                        :on-drag-over (fn [e]
-                                        (.preventDefault e)
-                                        (swap! s assoc :drag-over pos)
-                                        (swap! s update :order put-before pos (:drag-index @s)))
-                        :on-drag-leave #(swap! s assoc :drag-over :nothing)
-                        :on-drag-end (fn []
-                                       (swap! s dissoc :drag-over :drag-index)
-                                       (rf/dispatch 
-                                        [:task/update-all-steps task [vec (map steps (:order @s))]]))}
-            [inline-editor (get steps i) {:on-update #(rf/dispatch 
-                                                       [:task/update-step task % pos])
-                                          :on-remove (fn [] 
-                                                       (rf/dispatch 
-                                                        [:task/remove-step task pos]))}]
-            [:button.hidden {:title "Remove" 
-                             :on-click #(do
-                                          (.preventDefault %)
-                                          (rf/dispatch [:task/remove-step task pos]))} "X"]])
+        [:ol.steps 
+         (doall
+          (for [[i pos] (map vector (:order @s) (range))]
+            [:li.active {:key i
+                         :style {:border (when (= i (:drag-index @s))
+                                           "1px dotted orange")}
+                         :draggable true
+                         :on-drag-start #(swap! s assoc :drag-index i)
+                         :on-drag-over (fn [e]
+                                         (.preventDefault e)
+                                         (swap! s assoc :drag-over pos)
+                                         (swap! s update :order 
+                                                put-before pos (:drag-index @s)))
+                         :on-drag-leave #(swap! s assoc :drag-over :nothing)
+                         :on-drag-end (fn []
+                                        (swap! s dissoc :drag-over :drag-index)
+                                        (rf/dispatch 
+                                         [:task/update-all-steps task 
+                                          (vec (map @steps (:order @s)))])
+                                        (reset! s {:order (range (count @steps))}))}
+             [inline-editor (get @steps i) {:on-update 
+                                            #(do (rf/dispatch 
+                                                  [:task/replace-step task % pos])
+                                                 (reset! s {:order (range (count @steps))}))
+                                            :on-remove 
+                                            #(do (rf/dispatch 
+                                                  [:task/remove-step task pos])
+                                                 (reset! s {:order (range (count @steps))}))}]]))
          [:li.active [add-step task]]]]])))
 
 (defn display-products [task-id]
@@ -112,10 +115,10 @@
 
 (defn line-item-editor [task submit]
   (let [items @(rf/subscribe [:items])
-        item (reagent/atom (key (first items)))
-        qty (reagent/atom 1)
+        item (r/atom (key (first items)))
+        qty (r/atom 1)
         units @(rf/subscribe [:units])
-        unit (reagent/atom (key (first units)))]
+        unit (r/atom (key (first units)))]
     (fn [task submit] 
       [:div.white-panel
        [:form {:on-submit #(do (.preventDefault %)
@@ -132,7 +135,7 @@
           {:on-change #(reset! unit (-> % .-target .-value))}
           (doall
            (for [[id unit] units]
-             [:option {:value id} (:name unit)]))]]
+             [:option {:key id :value id} (:name unit)]))]]
         [:div.row
          [:label "Item:"]
          [:select
@@ -145,9 +148,9 @@
 
 
 (defn create-item [name]
-  (let [name (reagent/atom name)
-        description (reagent/atom "")
-        tags (reagent/atom #{})]
+  (let [name (r/atom name)
+        description (r/atom "")
+        tags (r/atom #{})]
     (fn [name]
       [:div
        [:form {:on-submit #(do
@@ -176,37 +179,34 @@
          "Create Item"]]])))
 
 (defn add-task [recipe-id]
-  (let [name (reagent/atom "new task")]
+  (let [name (r/atom "new task")]
     (fn [recipe-id]
-      [:button {:on-click #(do (.preventDefault %)
-                               (rf/dispatch [:recipe/new-task recipe-id @name]))}
-       "+ Task"])))
+      [:div [:button {:on-click #(do (.preventDefault %)
+                                     (rf/dispatch [:recipe/new-task recipe-id @name]))}
+             "+ Task"]])))
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
       [:table#tasks
        [:thead
-        [:tr
-         (doall
-          (for [h ["Items" "Steps"]]
-            [:th h]))]]
+        [:tr [:th "Items"] [:th "Steps"]]]
        [:tbody
         (doall
          (for [task tasks]
-           [:tr 
+           [:tr ^{:key (:id task)} 
             [:td 
-             [:div
+             [:div ^{:key (str (:id task) "equipment")}
               [modal-button "Add Equipment" "Equipment:"
                [line-item-editor task :task/add-equipment]]]
              [list-items @(rf/subscribe [:task-equipment-line-items task])
               :task/remove-equipment task]
-             [:div
+             [:div ^{:key (str (:id task) "ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
                [line-item-editor task :task/add-ingredient]]]
              [list-items @(rf/subscribe [:task-ingredients-line-items task])
               :task/remove-ingredient task]
-             [:div
+             [:div ^{:key (str (:id task) "optional")}
               [modal-button "Add Optional Item" "Optional:"
                [line-item-editor task :task/add-optional]]]
               [list-items @(rf/subscribe [:task-optional-line-items task])
@@ -214,9 +214,9 @@
             [:td#task
              [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
-             [display-steps task @(rf/subscribe [:task-steps task])]
+             [display-steps task]
              (display-products task)]]))
-        [:tr [add-task recipe-id]]]]))) 
+        [:tr [:td [add-task recipe-id]]]]]))) 
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
@@ -224,7 +224,6 @@
         description (rf/subscribe [:recipe-description @recipe-id])]
     [:div
      [modal]
-     (header)
      (topnav)
      [:div.row
       [:div.column.left 
@@ -232,10 +231,10 @@
        ;[:div "Create New Item:"[modal-button "New Item" "+" [create-item ""]]]
        ]
       [:div.column.middle
-       [:h1 [inline-editor @name
-             #(rf/dispatch [:recipe/update-name @recipe-id %])]]
-       [:h2 [inline-editor @description
-              #(rf/dispatch [:recipe/update-description @recipe-id %])]]
+       [:h1 [inline-editor @name 
+             {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
+       [:h2 [inline-editor @description 
+             {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])}]]
        [:div [tag-editor :recipe-tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
        ]
@@ -251,5 +250,5 @@
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
-    (reagent/render [main-panel] el))
+    (r/render [main-panel] el))
 

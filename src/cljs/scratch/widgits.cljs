@@ -1,6 +1,6 @@
 (ns scratch.widgets
   (:require [re-frame.core :as rf]
-            [reagent.core :as reagent]))
+            [reagent.core :as r]))
 
 ;; Markdown
 (defonce converter (new js/showdown.Converter))
@@ -14,8 +14,8 @@
 
 ;; Inline Editor
 (defn inline-editor [txt {:keys [on-update on-remove]}]
-  (let [s (reagent/atom {})]
-    (fn [txt on-change]
+  (let [s (r/atom {})]
+    (fn [txt event-handlers]
       [:span
        (if (:editing? @s)
          [:form {:on-submit #(do
@@ -46,51 +46,23 @@
                                                    :text txt)} "✎" ]
                        (when on-remove
                          [:button {:title "Remove" 
-                                   :on-click #(do
-                                                (.preventDefault %)
-                                                (on-remove))} "X"])]])])))
-
-
-;; Mark-down editor
-(defn markdown-editor [txt on-change]
-  (let [s (reagent/atom {})]
-    (fn [txt on-change]
-      [:span
-       (if (:editing? @s)
-         [:form {:on-submit #(do
-                               (.preventDefault %)
-                               (swap! s dissoc :editing?)
-                               (when on-change
-                                 (on-change (:text @s))))}
-           [:input {:type :text 
-                    :value (:text @s)
-                    :on-change #(swap! s assoc 
-                                     :text (-> % .-target .-value))}]
-          [:button "Save"]
-          [:button {:on-click #(do
-                                 (.preventDefault %)
-                                 (swap! s dissoc :editing?))}
-           "Cancel"]]
-         [:span
-           {:on-click #(swap! s assoc
-                            :editing? true
-                            :text txt)}
-           [:a {:href "#"}
-            [:sup "✎"]] [:span (markdown-section txt)]])])))
+                                   :on-click (fn [] 
+                                               (on-remove))} "X"])]])])))
 
 ;; Tag Editor
 (defn tag-editor [source remove save id]
   "adds a tag to a recipient in the database using the
    subscription, remove and save handlers"
-  (let [s (reagent/atom "")
-        k (reagent/atom "")]
+  (let [s (r/atom "")
+        k (r/atom "")]
     (fn [source remove save id]
       [:div#tags
        [:span
         "Tags: "
         (doall
          (for [tag @(rf/subscribe [source id])]
-           [:div#tag {:style {:display :inline-block
+           [:div#tag {:key tag
+                      :style {:display :inline-block
                               :background-color :yellow
                               :color :blue
                               :margin-right "8px"}}
@@ -133,7 +105,7 @@
 
 
 (defn item-search [source action create]
-  (let [search-string (reagent/atom "")]
+  (let [search-string (r/atom "")]
     (fn [source action create]
       [:div
        [:input.form-control {:type "text"
@@ -164,12 +136,12 @@
   (data-list "select-item" @(rf/subscribe [:item/name-id])))
 
 (defn add-product [task]
-  (let [search-string (reagent/atom "")
-        key (reagent/atom "")
+  (let [search-string (r/atom "")
+        key (r/atom "")
         items @(rf/subscribe [:item-names])
-        qty (reagent/atom 1)
+        qty (r/atom 1)
         units @(rf/subscribe [:units])
-        unit (reagent/atom "")]
+        unit (r/atom "")]
     (fn [task]
       [:div
        [:input.form-control {:type "text"
@@ -199,7 +171,7 @@
 
 ;; Recipe Search
 (defn recipe-search []
-  (let [search-string (reagent/atom "")]
+  (let [search-string (r/atom "")]
     (fn [] 
       [:span
        [:input.search {:type "text"
