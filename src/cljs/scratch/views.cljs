@@ -51,14 +51,15 @@
           :on-click #(do (.preventDefault %)
                          (rf/dispatch [remove-event task (:item i)]))} "X"]])]))
 
-(defn add-step [task]
+(defn add-step [task {:keys [on-add]}]
   (let [s (r/atom "")]
     (fn [task]
       [:form {:on-submit #(do
                             (.preventDefault %)
                             (when (> (count @s) 0)
                               (rf/dispatch [:task/add-step task @s]))
-                            (reset! s ""))}
+                            (reset! s "")
+                            (on-add))}
        [:input {:type :textarea
                 :value @s
                 :on-change #(reset! s (-> % .-target .-value))}]])))
@@ -73,6 +74,8 @@
   (let [steps (rf/subscribe [:task-steps task])
         s (r/atom {:order (range (count @steps))})]
     (fn [task]
+      (when (:changed @s)
+        (reset! s {:order (range (count @steps))}))
       [:div (prn-str @s) (prn-str @steps)
        [:div.steps-indicator
         [:div.connector]
@@ -96,7 +99,7 @@
                                         (rf/dispatch 
                                          [:task/update-all-steps task 
                                           (vec (map @steps (:order @s)))])
-                                        (reset! s {:order (range (count @steps))}))}
+                                        (swap! s assoc :changed true))}
              [inline-editor (get @steps i) {:on-update 
                                             #(do (rf/dispatch 
                                                   [:task/replace-step task % pos])
@@ -104,8 +107,8 @@
                                             :on-remove 
                                             #(do (rf/dispatch 
                                                   [:task/remove-step task pos])
-                                                 (reset! s {:order (range (count @steps))}))}]]))
-         [:li.active [add-step task]]]]])))
+                                                 (swap! s assoc :changed true))}]]))
+         [:li.active [add-step task {:on-add #(swap! s assoc :changed true)}]]]]])))
 
 (defn display-products [task-id]
   [:div [:strong "Yields: "] 
