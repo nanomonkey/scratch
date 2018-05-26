@@ -87,39 +87,51 @@
 (defn filter-tag [list tag]
   (filter (comp #(= tag) :tags) list))
 
-(defn display-items [search-string source action]
-  (let [items @(rf/subscribe [source])]
-    (fn [search-string source action]
-      [:center
-       (for [item items]
-         ;; regular expression to see if the search string matches the item name
-         (if (or (re-find (re-pattern (str "(?i)" search-string)) (:name item))
-                 (= "" search-string))
-           ^{ :key (.indexOf items item)}
-           [:div
-            [:div [:a {:href "#"
-                       :on-click #(do
-                                    (.preventDefault %)
-                                    (action (:id item)))} 
-                   (:name item)]]]))])))
+(comment [item-search {:items (rf/subscribe [:item-source %])
+                       :placeholder "Add item"
+                       :create (rf/dispatch [:item/new @search-string "..." #{} []])
+                       :find-by-name (rf/subscribe [:item/name-id @search-string])
+                       :add-new (rf/dispatch [:task/add-product % 1 "u1"])}])
 
-
-(defn item-search [source action create]
+(defn item-search [{:keys [items placeholder create find-by-name add-new]}]
   (let [search-string (r/atom "")]
-    (fn [source action create]
+    (fn [props]
       [:div
        [:input.form-control {:type "text"
-                             :placeholder "add item"
+                             :placeholder placeholder
                              :value @search-string
-                             :on-change #(reset! search-string (-> % 
-                                                                   .-target 
-                                                                   .-value))}]
-       [:button {:on-click #(do (.preventDefault %)
-                                (let [id (rf/dispatch [create search-string "" #{} []])]
-                                  (apply action id)))} "+"]
+                             :on-change #(reset! search-string 
+                                                 (-> % .-target .-value))}]
        (when (< 1 (count @search-string))
-         [display-items @search-string source action])])))
-
+         [:button {:style {:position "absolute"
+                           :left "-22px"
+                           :border "none"}
+                   :on-click #(doall
+                               (.preventDefault %)
+                               (reset! search-string ""))} "X"]
+         [:button {:on-click 
+                   #(do 
+                     (.preventDefault %)
+                     (create @search-string)
+                     (if-let [item-id (find-by-name @search-string)]
+                       (do
+                         (add-new item-id)
+                         (reset! @search-string ""))
+                       "item not created"))} "+"]
+         [:div#options-container
+          [:div#options
+           (for [item @items]
+             ;; regular expression to see if the search string matches the name
+             (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
+                     (= "" @search-string)) 
+               [:div#option {:key (:id item)}
+                [:a {:href "#"
+                     :on-click 
+                     #(do
+                        (.preventDefault %)
+                        (add-new (:id item))
+                        (reset! search-string ""))} 
+                 (:name item)]]))]])])))
 
 ;; Datalist
 (defn data-list [name options]
@@ -136,12 +148,7 @@
   (data-list "select-item" @(rf/subscribe [:item/name-id])))
 
 (defn add-product [task]
-  (let [search-string (r/atom "")
-        key (r/atom "")
-        items @(rf/subscribe [:item-names])
-        qty (r/atom 1)
-        units @(rf/subscribe [:units])
-        unit (r/atom "")]
+  (let [search-string (r/atom "")]
     (fn [task]
       [:div
        [:input.form-control {:type "text"
@@ -155,19 +162,21 @@
                    (let [item-id (rf/dispatch [:item/new @search-string "" #{} []])]
                      (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
        (when (< 1 (count @search-string)) 
-         (for [item items]
-           ;; regular expression to see if the search string matches the name
-           (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
-                   (= "" @search-string))
-             ^{ :key (.indexOf items item)}
-             [:div
-              [:div [:a {:href "#"
-                         :on-click #(do
-                                      (.preventDefault %)
-                                      (rf/dispatch 
-                                       [:task/add-product task (:id item) 1 "u1"])
-                                      (reset! search-string ""))} 
-                     (:name item)]]])))])))
+         [:div#options-container
+          [:div#options
+           (for [item @(rf/subscribe [:item-names])]
+             ;; regular expression to see if the search string matches the name
+             (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
+                     (= "" @search-string)) 
+               [:div#option {:key (:id item)}
+                [:a {:href "#"
+                     :on-click 
+                     #(do
+                        (.preventDefault %)
+                        (rf/dispatch 
+                         [:task/add-product task (:id item) 1 "u1"])
+                        (reset! search-string ""))} 
+                 (:name item)]]))]])])))
 
 ;; Recipe Search
 (defn recipe-search []
@@ -238,15 +247,15 @@
                                         :size :small}]))} icon])
 
 (defn full-modal [title body footer]
-  [:div {:class "modal-content"}
-   [:div {:class "modal-header"}
+  [:div.modal-content
+   [:div.modal-header
     [:button {:type "button" :title "Cancel"
               :class "close"
               :on-click #(close-modal)}
-     [:i {:class "material-icons"} "close"]]
-    [:h4 {:class "modal-title"} title]]
-   [:div {:class "modal-body"} footer]
-   [:div {:class "modal-footer"} footer]])
+     [:i.material-icons "close"]]
+    [:h4.modal-title title]]
+   [:div.modal-body body]
+   [:div.modal-footer footer]])
 
 (comment
   ;; available css

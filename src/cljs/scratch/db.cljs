@@ -90,7 +90,7 @@
                  :name "Kosher Salt"
                  :description "non-iodized kosher salt"
                  :tags []}
-           "i7" {:id "i6"
+           "i7" {:id "i7"
                  :name "Baking Soda"
                  :description ""
                  :tags []}}

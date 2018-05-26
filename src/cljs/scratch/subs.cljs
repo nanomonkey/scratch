@@ -55,7 +55,6 @@
  (fn [db]
    (map val (:items db))))
 
-
 (rf/reg-sub  
  :item-source
  (fn [db [_ text]]
