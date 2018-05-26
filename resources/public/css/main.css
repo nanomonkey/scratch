@@ -29,22 +29,6 @@ h1, h2, h3 {
     padding: 20px;
     text-align: center;
 }
-.topnav {
-    overflow: hidden;
-    background-color: #333;
-}
-.topnav a {
-    float: left;
-    display: block;
-    color: #f2f2f2;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
-}
-.topnav a:hover {
-    background-color:  #ddd;
-    color: black;
-}
 
 /* Navigation Search */
 nav ul ul {
@@ -54,10 +38,11 @@ nav ul ul {
     background-color: #008CBA;
     color: white;
     display: block; //none;
+    z-index: 100;
 }
-
 nav ul li:hover > ul {
     display: block;
+    margin: 8px 16px;
 }
 nav ul {
     background: #008CBA;//#efefef; 
@@ -69,7 +54,7 @@ nav ul {
     //border-radius: 6px; 
     list-style: none;
     position: relative;
-   // display: inline-table;
+   //display: inline-table;
 }
 nav ul:after {
     content: ""; clear: both; display: block;
@@ -89,8 +74,9 @@ nav ul li:hover a {
 
 nav ul li a {
     display: block;
-    //padding: 25px 40px;
-    color: #757575; text-decoration: none;
+    padding: 8px 16px;
+    color: white;
+    //color: #757575; text-decoration: none;
 }
 nav ul ul {
     background: pink; // #5f6975; 
@@ -99,12 +85,12 @@ nav ul ul {
 }
 nav ul ul li {
     float: none; 
-    //border-top: 1px solid #6b727c;
+    border-top: 1px solid white; //#6b727c;
     //border-bottom: 1px solid #575f6a;
     position: relative;
 }
 nav ul ul li a {
-    //padding: 15px 40px;
+    padding: 8px 8px;
     color: #fff;
 }	
 nav ul ul li a:hover {
@@ -112,6 +98,21 @@ nav ul ul li a:hover {
 }
 nav ul ul ul {
     position: absolute; left: 100%; top:0;
+}
+/* Item Search */
+#options-container {
+    position: relative;
+}
+#options {
+    z-index: 99 !important;
+    width: 160px;
+    position: fixed;
+    background-color: white;
+    opacity: 1;
+    border: 1px light-blue;
+}
+#option:hover, #options:focus{
+    background-color: yellow;
 }
 
 /* Layout */
@@ -273,7 +274,6 @@ input[type=number]{
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
-
 input.search [type=text] {
     width: 100%;
     box-sizing: border-box;

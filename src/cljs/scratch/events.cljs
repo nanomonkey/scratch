@@ -152,7 +152,6 @@
        (update-in [:tasks task-id :yields :items] 
                   (fn [items] (vec (remove #(= item-id %) items)))))))
 
-
 (rf/reg-event-db
  :task/add-equipment
  (fn [db [_ task-id item-id qty unit]]
@@ -206,7 +205,6 @@
  :task/update-all-steps
  (fn [db [_ task-id steps]]
    (assoc-in db [:tasks task-id :steps] steps)))
-
 
 (defn vec-remove
   "remove element at pos(ition) in vector"
