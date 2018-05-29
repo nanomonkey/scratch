@@ -38,7 +38,7 @@ nav ul ul {
     background-color: #008CBA;
     color: white;
     display: block; //none;
-    z-index: 100;
+    z-index: 99;
 }
 nav ul li:hover > ul {
     display: block;
@@ -63,7 +63,7 @@ nav ul li {
 	float: left;
 }
 nav ul li:hover {
-    background:  #4b545f;
+    background:  #008CBA; //#4b545f;
     //background: linear-gradient(top, #4f5964 0%, #5f6975 40%);
     //background: -moz-linear-gradient(top, #4f5964 0%, #5f6975 40%);
     //background: -webkit-linear-gradient(top, #4f5964 0%,#5f6975 40%);
@@ -105,11 +105,12 @@ nav ul ul ul {
 }
 #options {
     z-index: 99 !important;
+    tabindex: "0";
     width: 160px;
     position: fixed;
     background-color: white;
     opacity: 1;
-    border: 1px light-blue;
+    border: 1px #CDCDCD;
 }
 #option:hover, #options:focus{
     background-color: yellow;
@@ -254,9 +255,24 @@ nav ul ul ul {
    //display: none;
    visibility: hidden
 }
-.removable:hover + .hidden, .hidden:hover {
+
+a.removable:hover + .hidden, .hidden:hover {
+    tabindex: "0";
     display: inline-block;
     visibility: visible
+}
+a.edit{
+    color: #4d4d4d;
+}
+a.edit:hover + .trash {
+    opacity: 1;
+}
+
+a.trash, a.trash:visited {
+    opacity: 0;
+}
+a.trash:hover, a.trash:focus, a.trash:active {
+    opacity: 1;
 }
 
 /*
@@ -274,7 +290,7 @@ input[type=number]{
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
-input.search [type=text] {
+input.search [type=textarea] {
     width: 100%;
     box-sizing: border-box;
     border: 2px solid #ccc;
