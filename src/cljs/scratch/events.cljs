@@ -24,7 +24,7 @@
 (rf/reg-cofx
   :temp-id 
   (fn [cofx _]
-    (assoc cofx :temp-id (swap! last-temp-id inc))))
+    (assoc cofx :temp-id (str (swap! last-temp-id inc)))))
 
 ;; Recipes
 (rf/reg-event-db

@@ -1,6 +1,7 @@
 (ns scratch.widgets
   (:require [re-frame.core :as rf]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [goog.string.format]))
 
 ;; Markdown
 (defonce converter (new js/showdown.Converter))
@@ -22,10 +23,7 @@
                                (.preventDefault %)
                                (swap! s dissoc :editing?)
                                (when on-update
-                                 (on-update (:text @s))))
-                 :on-blur #(do
-                             (.preventDefault %)
-                             (swap! s dissoc :editing?))}
+                                 (on-update (:text @s))))}
            [:input {:type :text 
                     :value (:text @s)
                     :on-change #(swap! s assoc 
@@ -33,21 +31,30 @@
           [:button "✓"]
           [:button {:on-click #(do
                                  (.preventDefault %)
-                                 (swap! s dissoc :editing?))}
+                                 (swap! s dissoc :editing?))
+                    :on-blur #(do
+                             (.preventDefault %)
+                             (swap! s dissoc :editing?))}
            "X"]]
          [:span [:span.removable
                 {:on-click #(swap! s assoc
                                    :editing? true
                                    :text txt)}
-                 txt] [:span.hidden 
-                       [:button {:title "Edit"
-                                 :on-click #(swap! s assoc
-                                                   :editing? true
-                                                   :text txt)} "✎" ]
-                       (when on-remove
-                         [:button {:title "Remove" 
-                                   :on-click (fn [] 
-                                               (on-remove))} "X"])]])])))
+                 [:a.edit {:href "#"
+                           :style {:margin-left "4px"
+                                   :alt-text "edit"}
+                           :on-click (fn [e]
+                                       (.preventDefault e)
+                                       #(swap! s assoc
+                                               :editing? true
+                                               :text txt))}
+                 txt]
+                 (when on-remove
+                   [:a.trash {:href "#"
+                              :on-click (fn [e]
+                                          (.preventDefault e)
+                                          (on-remove))
+                              :style {:font-size "small"}} "🗑"])]])])))
 
 ;; Tag Editor
 (defn tag-editor [source remove save id]
@@ -84,46 +91,40 @@
                                 (rf/dispatch [save id (.trim @s)])
                                 (reset! s "")))}]]])))
 
-(defn filter-tag [list tag]
-  (filter (comp #(= tag) :tags) list))
+(defn has-tag? [col tag]
+  (filter #(contains? (:tags %) tag) col))
 
-(comment [item-search {:items (rf/subscribe [:item-source %])
-                       :placeholder "Add item"
-                       :create (rf/dispatch [:item/new @search-string "..." #{} []])
-                       :find-by-name (rf/subscribe [:item/name-id @search-string])
-                       :add-new (rf/dispatch [:task/add-product % 1 "u1"])}])
 
 (defn item-search [{:keys [items placeholder create find-by-name add-new]}]
   (let [search-string (r/atom "")]
     (fn [props]
       [:div
-       [:input.form-control {:type "text"
-                             :placeholder placeholder
-                             :value @search-string
-                             :on-change #(reset! search-string 
-                                                 (-> % .-target .-value))}]
+       [:input.search {:type "text"
+                       :placeholder placeholder
+                       :value @search-string
+                       :on-change #(reset! search-string 
+                                           (-> % .-target .-value))}]
+       [:button {:style {:position "relative"
+                         :left "-22px"
+                         :border "none"
+                         :font-size "8"
+                         :background-color "white"}
+                 :on-click #(doall
+                             (.preventDefault %)
+                             (reset! search-string ""))} "X"]
+       [:button {:on-click 
+                 #(do 
+                    (.preventDefault %)
+                    (create @search-string)
+                    (if-let [item-id (find-by-name @search-string)]
+                      (add-new item-id))
+                    (reset! @search-string ""))} "+"]
        (when (< 1 (count @search-string))
-         [:button {:style {:position "absolute"
-                           :left "-22px"
-                           :border "none"}
-                   :on-click #(doall
-                               (.preventDefault %)
-                               (reset! search-string ""))} "X"]
-         [:button {:on-click 
-                   #(do 
-                     (.preventDefault %)
-                     (create @search-string)
-                     (if-let [item-id (find-by-name @search-string)]
-                       (do
-                         (add-new item-id)
-                         (reset! @search-string ""))
-                       "item not created"))} "+"]
          [:div#options-container
           [:div#options
-           (for [item @items]
+           (for [item @(rf/subscribe [:item-names])]
              ;; regular expression to see if the search string matches the name
-             (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
-                     (= "" @search-string)) 
+             (if (re-find (re-pattern (str "(?i)" @search-string)) (:name item))     
                [:div#option {:key (:id item)}
                 [:a {:href "#"
                      :on-click 
@@ -132,6 +133,21 @@
                         (add-new (:id item))
                         (reset! search-string ""))} 
                  (:name item)]]))]])])))
+
+(defn display-line-item [line-item]
+  "unpacks dictionary with :unit :item and :qty into readable string"
+  (let [qty (:qty line-item)
+        unit (rf/subscribe [:unit-abbrev (:unit line-item)])
+        item (rf/subscribe [:item-name (:item line-item)])]
+    (goog.string/format "%f %s - %s" qty @unit @item)))
+
+
+;; Durations of time
+(defn display-duration [duration]
+  [:time {:datetime  (str "PT" duration)}])
+
+(defn encode-duration [h m s]
+  (goog.string/format "%dH %dM %fS" h m s))
 
 ;; Datalist
 (defn data-list [name options]

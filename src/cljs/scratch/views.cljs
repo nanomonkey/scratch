@@ -12,9 +12,9 @@
                                      add-product
                                      modal
                                      modal-button
-                                     full-modal]]
-            [goog.string :as gstring]
-            [goog.string.format]))
+                                     full-modal 
+                                     display-line-item]]
+            [goog.string :as gstring]))
 
 
 (defn header []
@@ -34,12 +34,6 @@
           [:li
            [:a {:href "units"} "Units"]]]])
 
-(defn display-line-item [line-item]
-  "unpacks dictionary with :unit :item and :qty into readable string"
-  (let [qty (:qty line-item)
-        unit (rf/subscribe [:unit-abbrev (:unit line-item)])
-        item (rf/subscribe [:item-name (:item line-item)])]
-    (goog.string/format "%f %s - %s" qty @unit @item)))
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -214,6 +208,7 @@
             [:td#task
              [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
+             
              [display-steps task]
              (display-products task)]]))
         [:tr [:td [add-task recipe-id]]]]]))) 
