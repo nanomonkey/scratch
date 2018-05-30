@@ -20,11 +20,6 @@
 (defn header []
   [:div.header "Made From Scratch"])
 
-(defn topnav-old []
-  [:div.topnav
-   [:a {:href "#1"} "One"]
-   [:a {:href "#2"} "Two"]])
-
 (defn topnav []
   [:nav  [:ul [:li [recipe-search]]
           [:li
@@ -33,7 +28,6 @@
            [:a {:href "items"} "Items"]]
           [:li
            [:a {:href "units"} "Units"]]]])
-
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -108,6 +102,17 @@
     :task/remove-product task-id]
    [add-product task-id]])
 
+(defn ->rational [string]
+  string)
+
+(defn rational-input []
+  (let [rational (r/atom "")]
+    (fn []
+      [:input.rational {:type :text
+                        :value @rational
+                        :on-change #(reset! rational (-> % .-target .-value))}])
+    [:span (->rational @rational)]))
+
 (defn line-item-editor [task submit]
   (let [items @(rf/subscribe [:items])
         item (r/atom (key (first items)))
@@ -117,12 +122,16 @@
     (fn [task submit] 
       [:div.white-panel
        [:form {:on-submit #(do (.preventDefault %)
-                               (rf/dispatch [submit task @item @qty @unit]))}
+                               (rf/dispatch [submit task @item @qty @unit])
+                               (rf/dispatch [:modal {:show? false
+                                                     :child nil
+                                                     :size :default}]))}
         [:div.row
          [:label "Quantity:"]
-         [:input  {:type :number 
+         [:input  {:type :number
+                   :auto-focus true
                    :value @qty
-                   :size "4"
+                   :style {:size "4"}
                    :on-change #(reset! qty (-> % .-target .-value int))}]]
         [:div.row
          [:label "Unit:"]
@@ -139,7 +148,7 @@
            (for [[id item] items]
              [:option {:value id}
               (:name item)]))]]
-        [:button "+Item"]]])))
+        [:button "+ Item"]]])))
 
 (defn create-item [name]
   (let [name (r/atom name)
@@ -151,14 +160,14 @@
                              (.preventDefault %))}
         [:row
          [:label "Name"]
-         [:input.form-control {:type "text"
+         [:input {:type "text"
                                :placeholder "item name"
                                :value @name
                                :on-change #(reset! name (-> % .-target .-value))}]]
         [:div
          [:row
           [:label "Description"]
-          [:input.form-control {:type "text"
+          [:input {:type "text"
                                 :placeholder "item description"
                                 :value @description
                                 :on-change #(reset! description 
@@ -184,34 +193,40 @@
     (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
       [:table#tasks
        [:thead
-        [:tr [:th "Items"] [:th "Steps"]]]
+        [:tr ^{:key "header"}
+         [:th "Items"] [:th "Steps"]]]
        [:tbody
         (doall
          (for [task tasks]
            [:tr ^{:key (:id task)} 
-            [:td 
+            [:td ^{:key (str (:id task) "items")}
              [:div ^{:key (str (:id task) "equipment")}
               [modal-button "Add Equipment" "Equipment:"
-               [line-item-editor task :task/add-equipment]]]
+               [line-item-editor task :task/add-equipment]
+               "equipment-qty"]]
              [list-items @(rf/subscribe [:task-equipment-line-items task])
               :task/remove-equipment task]
              [:div ^{:key (str (:id task) "ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
-               [line-item-editor task :task/add-ingredient]]]
+               [line-item-editor task :task/add-ingredient]
+               "ingredient-qty"]]
              [list-items @(rf/subscribe [:task-ingredients-line-items task])
               :task/remove-ingredient task]
              [:div ^{:key (str (:id task) "optional")}
               [modal-button "Add Optional Item" "Optional:"
-               [line-item-editor task :task/add-optional]]]
+               [line-item-editor task :task/add-optional]
+               "optional-qty"]]
               [list-items @(rf/subscribe [:task-optional-line-items task])
                :task/remove-optional task]]
-            [:td#task
+            [:td#task ^{:key (str (:id task) "steps")}
              [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
              
              [display-steps task]
              (display-products task)]]))
-        [:tr [:td [add-task recipe-id]]]]]))) 
+        [:tr ^{:key "Add_Task_row"}
+         [:td ^{:key "Add_Task"}
+          [add-task recipe-id]]]]]))) 
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
@@ -223,7 +238,7 @@
      [:div.row
       [:div.column.left 
        ;;[recipe-search]
-       ;[:div "Create New Item:"[modal-button "New Item" "+" [create-item ""]]]
+       ;;[:div "Create New Item:"[modal-button "New Item" "+" [create-item ""]]]
        ]
       [:div.column.middle
        [:h1 [inline-editor @name 

@@ -40,7 +40,7 @@
                 {:on-click #(swap! s assoc
                                    :editing? true
                                    :text txt)}
-                 [:a.edit {:href "#"
+                 [:span {
                            :style {:margin-left "4px"
                                    :alt-text "edit"}
                            :on-click (fn [e]
@@ -99,7 +99,7 @@
   (let [search-string (r/atom "")]
     (fn [props]
       [:div
-       [:input.search {:type "text"
+       [:input.search {:type "search"
                        :placeholder placeholder
                        :value @search-string
                        :on-change #(reset! search-string 
@@ -167,11 +167,11 @@
   (let [search-string (r/atom "")]
     (fn [task]
       [:div
-       [:input.form-control {:type "text"
-                             :placeholder "add product"
-                             :value @search-string
-                             :on-change #(reset! search-string 
-                                                 (-> % .-target .-value))}]
+       [:input {:type "search"
+                :placeholder "add product"
+                :value @search-string
+                :on-change #(reset! search-string 
+                                    (-> % .-target .-value))}]
        [:button {:on-click 
                  #(doall 
                    (.preventDefault %)
@@ -199,7 +199,7 @@
   (let [search-string (r/atom "")]
     (fn [] 
       [:span
-       [:input.search {:type "text"
+       [:input.search {:type "search"
                        :placeholder "Load Recipe"
                        :value @search-string
                        :on-change #(reset! search-string (-> % 
@@ -231,8 +231,8 @@
           :on-click (fn [event]
                       (do
                         (rf/dispatch [:modal {:show? (not show?)
-                                           :child nil
-                                           :size :default}])
+                                              :child nil
+                                              :size :default}])
                         (.preventDefault event)
                         (.stopPropagation event)))}]
    [:div {:class "modal-child"
@@ -254,8 +254,8 @@
 (defn- close-modal []
   (rf/dispatch [:modal {:show? false :child nil}]))
 
-(defn modal-button [title icon child]
- [:button
+(defn modal-button [title icon child first-focus]
+ [:button.wide
   {:title title
    :on-click #(do (.preventDefault %)  
                   (rf/dispatch [:modal {:show? true
