@@ -35,6 +35,7 @@
                           :units {"i5" "u1"}}}
            "t2" {:id "t2"
                  :name "Bring to Boil"
+                 :duration "M12S45"
                  :equipment {:items ["i2"]
                              :qty {"i2" 1}
                              :units {"i2" "u1"}}

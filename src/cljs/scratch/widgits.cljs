@@ -40,7 +40,7 @@
                 {:on-click #(swap! s assoc
                                    :editing? true
                                    :text txt)}
-                 [:span {
+                 [:a.edit {:href "#"
                            :style {:margin-left "4px"
                                    :alt-text "edit"}
                            :on-click (fn [e]
@@ -57,6 +57,15 @@
                               :style {:font-size "small"}} "🗑"])]])])))
 
 ;; Tag Editor
+(defn tag-icon []  
+  [:svg {:class "icon icon-tags" 
+         :xmlns "http://www.w3.org/2000/svg" 
+         :width "15" 
+         :height "14" 
+         :viewBox "0 0 30 28" 
+         :aria-hidden "true"}
+   [:path {:d "M7 7c0-1.109-.891-2-2-2s-2 .891-2 2 .891 2 2 2 2-.891 2-2zm16.672 9c0 .531-.219 1.047-.578 1.406l-7.672 7.688c-.375.359-.891.578-1.422.578s-1.047-.219-1.406-.578L1.422 13.906C.625 13.125 0 11.609 0 10.5V4c0-1.094.906-2 2-2h6.5c1.109 0 2.625.625 3.422 1.422l11.172 11.156c.359.375.578.891.578 1.422zm6 0c0 .531-.219 1.047-.578 1.406l-7.672 7.688a2.08 2.08 0 0 1-1.422.578c-.812 0-1.219-.375-1.75-.922l7.344-7.344c.359-.359.578-.875.578-1.406s-.219-1.047-.578-1.422L14.422 3.422C13.625 2.625 12.11 2 11 2h3.5c1.109 0 2.625.625 3.422 1.422l11.172 11.156c.359.375.578.891.578 1.422z"}]])
+
 (defn tag-editor [source remove save id]
   "adds a tag to a recipient in the database using the
    subscription, remove and save handlers"
@@ -64,6 +73,7 @@
         k (r/atom "")]
     (fn [source remove save id]
       [:div#tags
+      [tag-icon]
        [:span
         "Tags: "
         (doall
@@ -122,7 +132,7 @@
        (when (< 1 (count @search-string))
          [:div#options-container
           [:div#options
-           (for [item @(rf/subscribe [:item-names])]
+           (for [item @(rf/subscribe [:item/names])]
              ;; regular expression to see if the search string matches the name
              (if (re-find (re-pattern (str "(?i)" @search-string)) (:name item))     
                [:div#option {:key (:id item)}
@@ -137,14 +147,14 @@
 (defn display-line-item [line-item]
   "unpacks dictionary with :unit :item and :qty into readable string"
   (let [qty (:qty line-item)
-        unit (rf/subscribe [:unit-abbrev (:unit line-item)])
-        item (rf/subscribe [:item-name (:item line-item)])]
+        unit (rf/subscribe [:unit/abbrev (:unit line-item)])
+        item (rf/subscribe [:item/name (:item line-item)])]
     (goog.string/format "%f %s - %s" qty @unit @item)))
 
 
 ;; Durations of time
 (defn display-duration [duration]
-  [:time {:datetime  (str "PT" duration)}])
+  [:time {:datetime (str "PT" duration)} duration])
 
 (defn encode-duration [h m s]
   (goog.string/format "%dH %dM %fS" h m s))
@@ -161,7 +171,7 @@
 
 (defn item-selector []
   "data-lists don't work in Safari..."
-  (data-list "select-item" @(rf/subscribe [:item/name-id])))
+  (data-list "select-item" @(rf/subscribe [:item/source])))
 
 (defn add-product [task]
   (let [search-string (r/atom "")]
@@ -173,14 +183,15 @@
                 :on-change #(reset! search-string 
                                     (-> % .-target .-value))}]
        [:button {:on-click 
-                 #(doall 
+                 #(do
                    (.preventDefault %)
-                   (let [item-id (rf/dispatch [:item/new @search-string "" #{} []])]
+                   (rf/dispatch [:item/new @search-string "" #{} []])
+                   (if-let [item-id @(rf/subscribe [:item/id-by-name @search-string])]
                      (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
        (when (< 1 (count @search-string)) 
          [:div#options-container
           [:div#options
-           (for [item @(rf/subscribe [:item-names])]
+           (for [item @(rf/subscribe [:item/names])]
              ;; regular expression to see if the search string matches the name
              (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
                      (= "" @search-string)) 
@@ -209,7 +220,7 @@
                                 (rf/dispatch [:recipe/new @search-string])
                                 (reset! search-string ""))} "+"]
        (when (< 1 (count @search-string))
-         (let [recipes @(rf/subscribe [:recipe-names])] 
+         (let [recipes @(rf/subscribe [:recipe/names])] 
            [:ul
             (for [recipe recipes]
               (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))

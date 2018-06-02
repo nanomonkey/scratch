@@ -24,12 +24,12 @@
    (get-in db [:unit key])))
 
 (rf/reg-sub
- :unit-name
+ :unit/name
  (fn [db [_ key]]
    (get-in db [:units key :name])))
 
 (rf/reg-sub
- :unit-abbrev
+ :unit/abbrev
  (fn [db [_ key]]
    (get-in db [:units key :abbrev])))
 
@@ -46,17 +46,17 @@
    (get-in db [:items id])))
 
 (rf/reg-sub
- :item-name
+ :item/name
  (fn [db [_ id]]
    (get-in db [:items id :name])))
 
 (rf/reg-sub
- :item-names
+ :item/names
  (fn [db]
    (map val (:items db))))
 
 (rf/reg-sub  
- :item-source
+ :item/search
  (fn [db [_ text]]
    (->> (map val (:items db))
         (filter #(-> (:name %)
@@ -67,6 +67,20 @@
 
 (rf/reg-sub
   :item/name-id
+  @(rf/subscribe [:items])
+  (fn [item-index]
+    (into {} (for [[id item] item-index]
+                    [(:name item) id]))))
+
+(rf/reg-sub
+  :item/id-from-name
+  (fn [txt]
+    (rf/subscribe [:item/name-id]))
+  (fn [txt item-index]
+    (txt item-index)))
+
+(rf/reg-sub
+  :item/source
   (fn []
     (rf/subscribe [:items]))
   (fn [item-index]
@@ -75,12 +89,12 @@
 
 ;;Recipes
 (rf/reg-sub
- :recipe-ids
+ :recipe/ids
  (fn [db]
    (map key (:recipes db))))
 
 (rf/reg-sub
- :recipe-names
+ :recipe/names
  (fn [db]
    (map val (:recipes db))))
 
@@ -92,7 +106,7 @@
         (map val (:recipes db))))))
 
 (rf/reg-sub  
- :recipe-source
+ :recipe/source
  (fn [db [_ text]]
     (->> db
          (filter #(-> (:name %)
@@ -107,22 +121,22 @@
    (get-in db [:recipes id])))
 
 (rf/reg-sub
-  :recipe-name
+  :recipe/name
   (fn [db [_ id]]
     (get-in db [:recipes id :name])))
 
 (rf/reg-sub
- :recipe-description
+ :recipe/description
  (fn [db [_ id]]
    (get-in db [:recipes id :description])))
 
 (rf/reg-sub
- :recipe-tags
+ :recipe/tags
  (fn [db [_ id]]
    (sort (get-in db [:recipes id :tags]))))
 
 (rf/reg-sub
- :recipe-task-list
+ :recipe/task-list
  (fn [db [_ id]]
    (get-in db [:recipes id :task-list])))
 
@@ -138,27 +152,32 @@
    (get-in db [:tasks id])))
 
 (rf/reg-sub
- :task-name
+ :task/name
  (fn [db [_ id]]
    (get-in db [:tasks id :name])))
 
 (rf/reg-sub
- :task-steps
+ :task/duration
+ (fn [db [_ id]]
+   (get-in db [:tasks id :duration])))
+
+(rf/reg-sub
+ :task/steps
  (fn [db [_ task-id]]
    (get-in db [:tasks task-id :steps])))
 
 (rf/reg-sub
- :task-equipment
+ :task/equipment
 (fn [db [_ id]]
   (get-in db [:tasks id :equipment])))
 
 (rf/reg-sub
-  :task-ingredients-items
+  :task/ingredients-items
   (fn [db [_ task-id]]
     (get-in db [:tasks task-id :ingredients :items])))
 
 (rf/reg-sub
- :task-ingredients-line-items
+ :task/ingredients-line-items
  (fn [db [_ task-id]]
    (mapv (fn [item-id]
              {:qty (get-in db [:tasks task-id :ingredients :qty item-id])
@@ -167,7 +186,7 @@
            (get-in db [:tasks task-id :ingredients :items]))))
 
 (rf/reg-sub
- :task-equipment-line-items
+ :task/equipment-line-items
  (fn [db [_ task-id]]
    (mapv (fn [item-id]
              {:qty (get-in db [:tasks task-id :equipment :qty item-id])
@@ -176,7 +195,7 @@
            (get-in db [:tasks task-id :equipment :items]))))
 
 (rf/reg-sub
- :task-optional-line-items
+ :task/optional-line-items
  (fn [db [_ task-id]]
    (mapv (fn [item-id]
              {:qty (get-in db [:tasks task-id :optional :qty item-id])
@@ -185,7 +204,7 @@
            (get-in db [:tasks task-id :optional :items]))))
 
 (rf/reg-sub
- :task-yields
+ :task/yields
  (fn [db [_ task-id]]
    (mapv (fn [item-id]
              {:qty (get-in db [:tasks task-id :yields :qty item-id])

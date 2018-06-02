@@ -13,7 +13,8 @@
                                      modal
                                      modal-button
                                      full-modal 
-                                     display-line-item]]
+                                     display-line-item
+                                     display-duration]]
             [goog.string :as gstring]))
 
 
@@ -22,12 +23,9 @@
 
 (defn topnav []
   [:nav  [:ul [:li [recipe-search]]
-          [:li
-           [:a {:href "inventory"} "Inventory"]]
-          [:li
-           [:a {:href "items"} "Items"]]
-          [:li
-           [:a {:href "units"} "Units"]]]])
+          [:li [:a {:href "inventory"} "Inventory"]]
+          [:li [:a {:href "items"} "Items"]]
+          [:li [:a {:href "units"} "Units"]]]])
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -59,7 +57,7 @@
     (concat head [item] tail)))
 
 (defn display-steps [task]
-  (let [steps (rf/subscribe [:task-steps task])
+  (let [steps (rf/subscribe [:task/steps task])
         s (r/atom {:order (range (count @steps))})]
     (fn [task]
       (when (:changed @s) (reset! s {:order (range (count @steps))}))
@@ -98,7 +96,7 @@
 
 (defn display-products [task-id]
   [:div [:strong "Yields: "] 
-   [list-items @(rf/subscribe [:task-yields task-id])
+   [list-items @(rf/subscribe [:task/yields task-id])
     :task/remove-product task-id]
    [add-product task-id]])
 
@@ -188,9 +186,22 @@
                                      (rf/dispatch [:recipe/new-task recipe-id @name]))}
              "+ Task"]])))
 
+(defn task-duration [task]
+  (if-let [duration (rf/subscribe [:task/duration task])]
+    [:button {:style {:border-radius "10"}}
+     [:svg {:class "icon icon-clock" 
+            :style {:left "-2px"
+                    :top "12px"}
+            :width "12"
+            :height "14" 
+            :viewBox "0 0 24 28" 
+            :aria-hidden "true"}
+      [:path {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]]
+     (display-duration @duration)]))
+
 (defn task-table [recipe-id]
   (fn [recipe-id]
-    (let [tasks @(rf/subscribe [:recipe-task-list recipe-id])]
+    (let [tasks @(rf/subscribe [:recipe/task-list recipe-id])]
       [:table#tasks
        [:thead
         [:tr ^{:key "header"}
@@ -204,34 +215,82 @@
               [modal-button "Add Equipment" "Equipment:"
                [line-item-editor task :task/add-equipment]
                "equipment-qty"]]
-             [list-items @(rf/subscribe [:task-equipment-line-items task])
+             [list-items @(rf/subscribe [:task/equipment-line-items task])
               :task/remove-equipment task]
              [:div ^{:key (str (:id task) "ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
                [line-item-editor task :task/add-ingredient]
                "ingredient-qty"]]
-             [list-items @(rf/subscribe [:task-ingredients-line-items task])
+             [list-items @(rf/subscribe [:task/ingredients-line-items task])
               :task/remove-ingredient task]
              [:div ^{:key (str (:id task) "optional")}
               [modal-button "Add Optional Item" "Optional:"
                [line-item-editor task :task/add-optional]
                "optional-qty"]]
-              [list-items @(rf/subscribe [:task-optional-line-items task])
+              [list-items @(rf/subscribe [:task/optional-line-items task])
                :task/remove-optional task]]
             [:td#task ^{:key (str (:id task) "steps")}
-             [:h2 [inline-editor @(rf/subscribe [:task-name task]) 
+             [:h2 [inline-editor @(rf/subscribe [:task/name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
-             
+             [task-duration task]
              [display-steps task]
              (display-products task)]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
 
+
+(defn parse-rational [string]
+  "parses string into components of rational number if applicable"
+  (let [[orig whole numer denom numer2 denom2 float int]
+        (re-matches #"(\d+)\s+(\d+)/(\d+)|(\d+)/(\d+)|(\d+[.]\d+)|(\d+)" string)]
+    (cond whole {:whole whole :numer numer :denom denom}
+          num2 {:numer num2 :denom den2}
+          float {:qty float}
+          int {:qty int}
+          :else (str "Unable to parse " string))))
+
+(defn display-rational [{:keys [whole numer denom]
+                         :as qty}]
+  (cond whole (format "%i %i/%i" whole numer denom)
+        numer (format "%i/%i" numer denom)
+        else: (str qty)))
+
+
+(defn line-items [task submit]
+  (let [item-string (r/atom "")
+        item (r/atom (key (first items)))
+        qty (r/atom {})
+        units @(rf/subscribe [:units])
+        unit (r/atom (key (first units)))]
+    (fn [] 
+      [:div.white-panel
+       [:form {:on-submit #(do (.preventDefault %)
+                               (rf/dispatch [submit task @item @qty @unit])
+                               (rf/dispatch [:modal {:show? false
+                                                     :child nil
+                                                     :size :default}]))}
+        
+        [:input  {:type :text
+                  :auto-focus true
+                  :value (display-rational @qty)
+                  :on-change #(reset! qty (-> % .-target .-value parse-rational))}]
+        [item-search {:items @(rf/subscribe [:units])
+                      :placeholder "unit"
+                      :create nil
+                      :find-by-name nil
+                      :add-new nil}]
+        [item-search {:items @(rf/subscribe [:item/source])
+                      :placeholder "item"
+                      :create (fn [] nil)
+                      :find-by-name (rf/subscribe [:item/search @item-string])
+                      :add-new nil}]
+        [:button "+"]]])))
+
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
-        name (rf/subscribe [:recipe-name @recipe-id])
-        description (rf/subscribe [:recipe-description @recipe-id])]
+        name (rf/subscribe [:recipe/name @recipe-id])
+        description (rf/subscribe [:recipe/description @recipe-id])]
     [:div
      [modal]
      (topnav)
@@ -245,7 +304,7 @@
              {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
        [:h2 [inline-editor @description 
              {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])}]]
-       [:div [tag-editor :recipe-tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
+       [:div [tag-editor :recipe/tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
        [:div [task-table @recipe-id]]
        ]
       [:div.column.right
@@ -256,6 +315,15 @@
        [:div (prn-str @(rf/subscribe [:tasks]))]
        [:hr]
        [:div (prn-str @(rf/subscribe [:units]))]
+       [rational-parser "1 1/2"]
+       [rational-parser "1"]
+       [rational-parser "1.5"]
+       [rational-parser "2222 56/3"]
+       [rational-parser "2/3"]
+       [rational-parser "0.6"]
+       [rational-parser " 1/2"]
+       [rational-parser "0.2/2"]
+       [rational-parser "one"]
        ]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
