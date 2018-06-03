@@ -155,10 +155,9 @@
           int {:qty int}
           :else (str "Unable to parse " string))))
 
-(defn display-rational [{:keys [whole numer denom]
-                         :as qty}]
-  (cond whole (goog.string.format "%i %i/%i" whole numer denom)
-        numer (goog.string.format "%i/%i" numer denom)
+(defn display-rational [{:keys [whole numer denom] :as qty}]
+  (cond whole [:span whole [:sup numer] "/" [:sub denom]] 
+        numer [:span [:sup numer] "/" [:sub denom]] 
         :else (str qty)))
 
 (defn display-line-item [line-item]
@@ -166,7 +165,8 @@
   (let [qty (:qty line-item)
         unit (rf/subscribe [:unit/abbrev (:unit line-item)])
         item (rf/subscribe [:item/name (:item line-item)])]
-    (goog.string/format "%s %s - %s" (display-rational qty) @unit @item)))
+    [:span (display-rational qty)
+     (goog.string/format " %s - %s" @unit @item)]))
 
 
 ;; Durations of time
@@ -175,6 +175,11 @@
 
 (defn encode-duration [h m s]
   (goog.string/format "%dH %dM %fS" h m s))
+
+(defn edit-time []
+  (let [time (r/atom {})]
+    (fn []
+      )))
 
 ;; Datalist
 (defn data-list [name options]

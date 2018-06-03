@@ -55,7 +55,7 @@
                              :qty {"i2" 1}
                              :units {"i2" "u1"}}
                  :ingredients {:items ["i6"]
-                               :qty {"i6" {:numer 1 :denom 2}}
+                               :qty {"i6" {:whole 1 :numer 1 :denom 2}}
                                :units {"i6" "u3"}
                                :scaling {"i6" 1}}
                  :optional {:items ["i7"]
