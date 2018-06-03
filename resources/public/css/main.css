@@ -152,14 +152,7 @@ nav ul ul ul {
     }
 }
 
-//TODO: set triangle before tag to make look more tag like
-.tag:before {
-    width: 0;
-    height: 0;
-    border-top: 25px solid transparent;
-    border-right: 50px solid #yellow;
-    border-bottom: 25px solid transparent;
-}
+/* Task Steps layout */
 #tasks td, #tasks th {
     border: 1px solid #ddd;
     padding: 8px;
@@ -186,7 +179,7 @@ nav ul ul ul {
     list-style:none;
     counter-reset:numList;
     padding-left:50px;
-    margin-top:3rem
+    margin-top:1rem
 }
 #task .steps-indicator .steps li{
     position:relative;
@@ -285,12 +278,13 @@ a.trash:hover, a.trash:focus, a.trash:active {
     opacity: 1;
 }
 
-
+/*
 input:not([type=submit]):not([type=file]):not(type=number) {
     font-size: 16px;
     border: 1px solid white;
     border-bottom: 1px solid green;
 }
+*/
 input[type=number]{
   size: "4";
   width: 80px;
@@ -302,7 +296,7 @@ input[type=search] {
     border-radius: 1px;
     font-size: 22px;
     background-color: white;
-    background-image: url('~/icons/searchicon.png');
+    background-image: url('../icons/searchicon.png');
     background-position: 10px 10px; 
     background-repeat: no-repeat;
     padding: 12px 20px 12px 40px;

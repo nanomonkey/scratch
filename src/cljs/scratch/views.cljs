@@ -14,7 +14,9 @@
                                      modal-button
                                      full-modal 
                                      display-line-item
-                                     display-duration]]
+                                     display-duration
+                                     display-rational
+                                     parse-rational]]
             [goog.string :as gstring]))
 
 
@@ -186,17 +188,20 @@
                                      (rf/dispatch [:recipe/new-task recipe-id @name]))}
              "+ Task"]])))
 
+(defn svg-clock []
+  [:svg {:class "icon icon-clock" 
+         :style {:left "-2px"
+                 :top "12px"}
+         :width "12"
+         :height "14" 
+         :viewBox "0 0 24 28" 
+         :aria-hidden "true"}
+   [:path {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]])
+
 (defn task-duration [task]
   (if-let [duration (rf/subscribe [:task/duration task])]
-    [:button {:style {:border-radius "10"}}
-     [:svg {:class "icon icon-clock" 
-            :style {:left "-2px"
-                    :top "12px"}
-            :width "12"
-            :height "14" 
-            :viewBox "0 0 24 28" 
-            :aria-hidden "true"}
-      [:path {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]]
+    [:button {:style {:border-radius 10}}
+     [svg-clock]
      (display-duration @duration)]))
 
 (defn task-table [recipe-id]
@@ -240,29 +245,11 @@
           [add-task recipe-id]]]]]))) 
 
 
-(defn parse-rational [string]
-  "parses string into components of rational number if applicable"
-  (let [[orig whole numer denom numer2 denom2 float int]
-        (re-matches #"(\d+)\s+(\d+)/(\d+)|(\d+)/(\d+)|(\d+[.]\d+)|(\d+)" string)]
-    (cond whole {:whole whole :numer numer :denom denom}
-          num2 {:numer num2 :denom den2}
-          float {:qty float}
-          int {:qty int}
-          :else (str "Unable to parse " string))))
-
-(defn display-rational [{:keys [whole numer denom]
-                         :as qty}]
-  (cond whole (format "%i %i/%i" whole numer denom)
-        numer (format "%i/%i" numer denom)
-        else: (str qty)))
-
-
 (defn line-items [task submit]
   (let [item-string (r/atom "")
-        item (r/atom (key (first items)))
-        qty (r/atom {})
-        units @(rf/subscribe [:units])
-        unit (r/atom (key (first units)))]
+        item (r/atom "")
+        qty (r/atom {}) 
+        unit (r/atom "")]
     (fn [] 
       [:div.white-panel
        [:form {:on-submit #(do (.preventDefault %)
@@ -270,7 +257,6 @@
                                (rf/dispatch [:modal {:show? false
                                                      :child nil
                                                      :size :default}]))}
-        
         [:input  {:type :text
                   :auto-focus true
                   :value (display-rational @qty)
@@ -314,17 +300,7 @@
        [:hr]
        [:div (prn-str @(rf/subscribe [:tasks]))]
        [:hr]
-       [:div (prn-str @(rf/subscribe [:units]))]
-       [rational-parser "1 1/2"]
-       [rational-parser "1"]
-       [rational-parser "1.5"]
-       [rational-parser "2222 56/3"]
-       [rational-parser "2/3"]
-       [rational-parser "0.6"]
-       [rational-parser " 1/2"]
-       [rational-parser "0.2/2"]
-       [rational-parser "one"]
-       ]]]))
+       [:div (prn-str @(rf/subscribe [:units]))]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))

@@ -67,7 +67,8 @@
 
 (rf/reg-sub
   :item/name-id
-  @(rf/subscribe [:items])
+  (fn []
+    @(rf/subscribe [:items]))
   (fn [item-index]
     (into {} (for [[id item] item-index]
                     [(:name item) id]))))

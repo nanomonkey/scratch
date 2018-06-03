@@ -144,12 +144,29 @@
                         (reset! search-string ""))} 
                  (:name item)]]))]])])))
 
+
+(defn parse-rational [string]
+  "parses string into components of rational number if applicable"
+  (let [[orig whole numer denom numer2 denom2 float int]
+        (re-matches #"(\d+)\s+(\d+)/(\d+)|(\d+)/(\d+)|(\d+[.]\d+)|(\d+)" string)]
+    (cond whole {:whole whole :numer numer :denom denom}
+          numer2 {:numer numer2 :denom denom2}
+          float {:qty float}
+          int {:qty int}
+          :else (str "Unable to parse " string))))
+
+(defn display-rational [{:keys [whole numer denom]
+                         :as qty}]
+  (cond whole (goog.string.format "%i %i/%i" whole numer denom)
+        numer (goog.string.format "%i/%i" numer denom)
+        :else (str qty)))
+
 (defn display-line-item [line-item]
   "unpacks dictionary with :unit :item and :qty into readable string"
   (let [qty (:qty line-item)
         unit (rf/subscribe [:unit/abbrev (:unit line-item)])
         item (rf/subscribe [:item/name (:item line-item)])]
-    (goog.string/format "%f %s - %s" qty @unit @item)))
+    (goog.string/format "%s %s - %s" (display-rational qty) @unit @item)))
 
 
 ;; Durations of time
@@ -168,7 +185,6 @@
     (for [[item id] options]
       [:option {:value id} item])]])
 
-
 (defn item-selector []
   "data-lists don't work in Safari..."
   (data-list "select-item" @(rf/subscribe [:item/source])))
@@ -186,7 +202,8 @@
                  #(do
                    (.preventDefault %)
                    (rf/dispatch [:item/new @search-string "" #{} []])
-                   (if-let [item-id @(rf/subscribe [:item/id-by-name @search-string])]
+                   (if-let [item-id @(rf/subscribe [:item/id-from-name 
+                                                    @search-string])]
                      (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
        (when (< 1 (count @search-string)) 
          [:div#options-container
