@@ -33,6 +33,14 @@
  (fn [db [_ key]]
    (get-in db [:units key :abbrev])))
 
+(rf/reg-sub
+  :unit/source
+  (fn []
+    (rf/subscribe [:units]))
+  (fn [unit-index]
+    (into [] (for [[id unit] unit-index]
+               [(:name unit) id]))))
+
 
 ;; Items
 (rf/reg-sub

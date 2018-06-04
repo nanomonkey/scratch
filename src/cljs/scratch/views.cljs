@@ -102,16 +102,17 @@
     :task/remove-product task-id]
    [add-product task-id]])
 
-(defn ->rational [string]
-  string)
 
-(defn rational-input []
-  (let [rational (r/atom "")]
-    (fn []
+(defn rational-input [text]
+  (let [rational (r/atom {})]
+    (fn [text]
       [:input.rational {:type :text
                         :value @rational
-                        :on-change #(reset! rational (-> % .-target .-value))}])
-    [:span (->rational @rational)]))
+                        :on-change #(reset! rational (-> % 
+                                                         .-target 
+                                                         .-value 
+                                                         parse-rational))}])
+    [:span (display-rational @rational)]))
 
 (defn line-item-editor [task submit]
   (let [items @(rf/subscribe [:items])
@@ -245,32 +246,31 @@
           [add-task recipe-id]]]]]))) 
 
 
-(defn line-items [task submit]
-  (let [item-string (r/atom "")
-        item (r/atom "")
-        qty (r/atom {}) 
+(defn line-items []
+  (let [item (r/atom "")
+        qty-text (r/atom "") 
+        qty-value (r/atom {})
         unit (r/atom "")]
     (fn [] 
-      [:div.white-panel
+      [:div.white-panel (prn-str @qty-value @unit @item)
        [:form {:on-submit #(do (.preventDefault %)
-                               (rf/dispatch [submit task @item @qty @unit])
+                               ;(rf/dispatch [submit task @item @qty @unit])
                                (rf/dispatch [:modal {:show? false
                                                      :child nil
                                                      :size :default}]))}
         [:input  {:type :text
                   :auto-focus true
-                  :value (display-rational @qty)
-                  :on-change #(reset! qty (-> % .-target .-value parse-rational))}]
-        [item-search {:items @(rf/subscribe [:units])
-                      :placeholder "unit"
+                  :value @qty-text
+                  :on-change #(do 
+                                (reset! qty-text (-> % .-target .-value))
+                                (reset! qty-value (parse-rational @qty-text)))}]
+        [item-search {:placeholder "unit"
+                      :source  (rf/subscribe [:unit/source])
+                      :add #(reset! unit %)}]
+        [item-search {:placeholder "item"
                       :create nil
-                      :find-by-name nil
-                      :add-new nil}]
-        [item-search {:items @(rf/subscribe [:item/source])
-                      :placeholder "item"
-                      :create (fn [] nil)
-                      :find-by-name (rf/subscribe [:item/search @item-string])
-                      :add-new nil}]
+                      :source (rf/subscribe [:item/source])
+                      :add #(reset! item %)}]
         [:button "+"]]])))
 
 (defn main-panel []
@@ -294,13 +294,10 @@
        [:div [task-table @recipe-id]]
        ]
       [:div.column.right
-       [:div (prn-str @(rf/subscribe [:items]))]
+       [:div [rational-input]]
        [:hr]
-       [:div (prn-str @(rf/subscribe [:recipe @recipe-id]))]
-       [:hr]
-       [:div (prn-str @(rf/subscribe [:tasks]))]
-       [:hr]
-       [:div (prn-str @(rf/subscribe [:units]))]]]]))
+       [line-items]
+       [:div (prn-str @(rf/subscribe [:item/source]))]]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))

@@ -105,7 +105,7 @@
   (filter #(contains? (:tags %) tag) col))
 
 
-(defn item-search [{:keys [items placeholder create find-by-name add-new]}]
+(defn item-search [{:keys [placeholder source add create find-by-name]}]
   (let [search-string (r/atom "")]
     (fn [props]
       [:div
@@ -114,35 +114,28 @@
                        :value @search-string
                        :on-change #(reset! search-string 
                                            (-> % .-target .-value))}]
-       [:button {:style {:position "relative"
-                         :left "-22px"
-                         :border "none"
-                         :font-size "8"
-                         :background-color "white"}
-                 :on-click #(doall
-                             (.preventDefault %)
-                             (reset! search-string ""))} "X"]
-       [:button {:on-click 
-                 #(do 
-                    (.preventDefault %)
-                    (create @search-string)
-                    (if-let [item-id (find-by-name @search-string)]
-                      (add-new item-id))
-                    (reset! @search-string ""))} "+"]
+       (when create
+         [:button {:on-click 
+                   #(do 
+                      (.preventDefault %)
+                      (create @search-string)
+                      (if-let [item-id (find-by-name @search-string)]
+                        (add item-id))
+                      (reset! @search-string ""))} "+"])
        (when (< 1 (count @search-string))
          [:div#options-container
           [:div#options
-           (for [item @(rf/subscribe [:item/names])]
+           (for [[name id] @source]
              ;; regular expression to see if the search string matches the name
-             (if (re-find (re-pattern (str "(?i)" @search-string)) (:name item))     
-               [:div#option {:key (:id item)}
+             (if (re-find (re-pattern (str "(?i)" @search-string)) name)     
+               [:div#option {:key id}
                 [:a {:href "#"
                      :on-click 
                      #(do
                         (.preventDefault %)
-                        (add-new (:id item))
+                        (add id)
                         (reset! search-string ""))} 
-                 (:name item)]]))]])])))
+                 name]]))]])])))
 
 
 (defn parse-rational [string]
