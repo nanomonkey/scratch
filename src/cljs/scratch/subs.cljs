@@ -25,8 +25,8 @@
 
 (rf/reg-sub
  :unit/name
- (fn [db [_ key]]
-   (get-in db [:units key :name])))
+ (fn [db [_ id]]
+   (get-in db [:units id :name])))
 
 (rf/reg-sub
  :unit/abbrev

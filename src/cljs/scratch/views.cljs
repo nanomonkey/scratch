@@ -264,14 +264,18 @@
                   :on-change #(do 
                                 (reset! qty-text (-> % .-target .-value))
                                 (reset! qty-value (parse-rational @qty-text)))}]
-        [item-search {:placeholder "unit"
-                      :source  (rf/subscribe [:unit/source])
-                      :add #(reset! unit %)}]
-        [item-search {:placeholder "item"
-                      :create nil
-                      :source (rf/subscribe [:item/source])
-                      :add #(reset! item %)}]
-        [:button "+"]]])))
+        (if (= @unit "")
+          [item-search {:placeholder "unit"
+                        :source  (rf/subscribe [:unit/source])
+                        :add #(reset! unit %)}]
+          [:span @(rf/subscribe [:unit/name @unit])])
+        (if (= @item "")
+          [item-search {:placeholder "item"
+                        :create nil
+                        :source (rf/subscribe [:item/source])
+                        :add #(reset! item %)}]
+          [:span @(rf/subscribe [:item/name @item])])
+        [:button "+ Line Item"]]])))
 
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
