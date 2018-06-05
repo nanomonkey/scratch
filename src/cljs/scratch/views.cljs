@@ -63,7 +63,7 @@
   (let [steps (rf/subscribe [:task/steps task])
         s (r/atom {:order (range (count @steps))})]
     (fn [task]
-      (when (:changed @s) (reset! s {:order (range (count @steps))}))
+      (when (:changed? @s) (reset! s {:order (range (count @steps))}))
       [:div.steps-indicator
        [:div.connector]
        [:div.connector.complete]
@@ -86,7 +86,7 @@
                                        (rf/dispatch 
                                         [:task/update-all-steps task 
                                          (vec (map @steps (:order @s)))])
-                                       (swap! s assoc :changed true))}
+                                       (swap! s assoc :changed? true))}
             [inline-editor (get @steps i) {:on-update 
                                            #(do (rf/dispatch 
                                                  [:task/replace-step task % pos])
@@ -94,8 +94,8 @@
                                            :on-remove 
                                            #(do (rf/dispatch 
                                                  [:task/remove-step task pos])
-                                                (swap! s assoc :changed true))}]]))
-        [:li.active [add-step task {:on-add #(swap! s assoc :changed true)}]]]])))
+                                                (swap! s assoc :changed? true))}]]))
+        [:li.active [add-step task {:on-add #(swap! s assoc :changed? true)}]]]])))
 
 (defn display-products [task-id]
   [:div [:strong "Yields: "] 

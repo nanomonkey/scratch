@@ -33,28 +33,25 @@
                                  (.preventDefault %)
                                  (swap! s dissoc :editing?))
                     :on-blur #(do
-                             (.preventDefault %)
-                             (swap! s dissoc :editing?))}
+                                (.preventDefault %)
+                                (swap! s dissoc :editing?))}
            "X"]]
-         [:span [:span.removable
-                {:on-click #(swap! s assoc
-                                   :editing? true
-                                   :text txt)}
-                 [:a.edit {:href "#"
-                           :style {:margin-left "4px"
-                                   :alt-text "edit"}
-                           :on-click (fn [e]
-                                       (.preventDefault e)
-                                       #(swap! s assoc
-                                               :editing? true
-                                               :text txt))}
-                 txt]
-                 (when on-remove
-                   [:a.trash {:href "#"
-                              :on-click (fn [e]
-                                          (.preventDefault e)
-                                          (on-remove))
-                              :style {:font-size "small"}} "🗑"])]])])))
+         [:span 
+          [:a.edit {:href "#"
+                    :style {:margin-left "4px"
+                            :alt-text "edit"}
+                    :on-click #(do
+                                 (.preventDefault %)
+                                 (swap! s assoc
+                                        :editing? true
+                                        :text txt))}
+           txt]
+          (when on-remove
+            [:a.trash {:href "#"
+                       :on-click (fn [e]
+                                   (.preventDefault e)
+                                   (on-remove))
+                       :style {:font-size "small"}} "🗑"])])])))
 
 ;; Tag Editor
 (defn tag-icon []  
