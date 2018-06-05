@@ -144,9 +144,9 @@
         (re-matches #"(\d+)\s+(\d+)/(\d+)|(\d+)/(\d+)|(\d+[.]\d+)|(\d+)" string)]
     (cond whole {:whole whole :numer numer :denom denom}
           numer2 {:numer numer2 :denom denom2}
-          float {:qty float}
-          int {:qty int}
-          :else (str "Unable to parse " string))))
+          float float
+          int  int
+          :else "non-parsable")))
 
 (defn display-rational [{:keys [whole numer denom] :as qty}]
   (cond whole [:span whole [:sup numer] "/" [:sub denom]] 
@@ -163,16 +163,17 @@
 
 
 ;; Durations of time
-(defn display-duration [duration]
-  [:time {:datetime (str "PT" duration)} duration])
+(defn display-duration [{:keys [hr min sec] :as duration}]
+  [:time {:datetime (str "PT" duration)} 
+   (goog.string/format "%dH %dM %fS" hr min sec)])
 
-(defn encode-duration [h m s]
-  (goog.string/format "%dH %dM %fS" h m s))
-
-(defn edit-time []
-  (let [time (r/atom {})]
-    (fn []
-      )))
+(defn parse-duration [duration]
+  "parse duration string of the form H100M59S59.123 into components"
+  (let [[orig h m s]
+        (re-matches #"H*(\d+)*M*([1-5]\d)*S*([1-5]\d*[.]*\d+)*" duration)]
+    {:hr (int h)
+     :min (int m)
+     :sec (float s)}))
 
 ;; Datalist
 (defn data-list [name options]

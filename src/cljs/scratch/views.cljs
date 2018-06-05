@@ -16,7 +16,8 @@
                                      display-line-item
                                      display-duration
                                      display-rational
-                                     parse-rational]]
+                                     parse-rational
+                                     parse-duration]]
             [goog.string :as gstring]))
 
 
@@ -203,7 +204,62 @@
   (if-let [duration (rf/subscribe [:task/duration task])]
     [:button {:style {:border-radius 10}}
      [svg-clock]
-     (display-duration @duration)]))
+     (when @duration
+       (display-duration (parse-duration @duration)))]))
+
+(defn line-item [submit]
+  (let [item-id (r/atom "")
+        qty (r/atom {:text ""
+                     :value {}
+                     :editing? true})
+        unit-id (r/atom "")]
+    (fn [submit] 
+      [:div.white-panel
+       [:form {:on-submit #(do (.preventDefault %)
+                               (submit @item-id (:value @qty) @unit-id)
+                               (rf/dispatch [:modal {:show? false
+                                                     :child nil
+                                                     :size :default}]))}
+        (if (:editing? @qty) 
+          [:input  {:type :text
+                    :placeholder "quantity (i.e. 2.3 or 5 2/3)"
+                    :auto-focus true
+                    :value (:text @qty)
+                    :style {:border (when (= "non-parsable" (:value @qty)) 
+                                      "2px solid red")}
+                    :on-change #(do 
+                                  (swap! qty assoc :text (-> % .-target .-value))
+                                  (swap! qty assoc :value 
+                                         (parse-rational (:text @qty))))
+                    :on-blur #(do
+                                (.preventDefault %)
+                                (when (not (= "non-parsable" 
+                                              (parse-rational (:text @qty))))
+                                  (swap! qty dissoc :editing?)))}]
+          [:a.edit {:href "#"
+                   :on-click #(swap! qty assoc :editing? true)}
+           (display-rational (:value @qty))])
+        (if (= @unit-id "")
+          [item-search {:placeholder "unit"
+                        :source  (rf/subscribe [:unit/source])
+                        :add #(reset! unit-id %)}]
+          [:a.edit {:href "#"
+                           :style {:margin-left "4px"
+                                   :alt-text "edit"}
+                           :on-click #(reset! unit-id "")}  
+           @(rf/subscribe [:unit/abbrev @unit-id])])
+        (if (= @item-id "")
+          [item-search {:placeholder "item"
+                        :create nil
+                        :source (rf/subscribe [:item/source])
+                        :add #(reset! item-id %)}]
+          [:a.edit {:href "#"
+                           :style {:margin-left "4px"
+                                   :alt-text "edit"}
+                           :on-click #(reset! item-id "")}
+           @(rf/subscribe [:item/name @item-id])])
+        [:button "+ Line Item"]]])))
+
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -219,7 +275,8 @@
             [:td ^{:key (str (:id task) "items")}
              [:div ^{:key (str (:id task) "equipment")}
               [modal-button "Add Equipment" "Equipment:"
-               [line-item-editor task :task/add-equipment]
+               ;;[line-item-editor task :task/add-equipment]
+               [line-item #(rf/dispatch [:task/add-equipment task %1 %2 %3])]
                "equipment-qty"]]
              [list-items @(rf/subscribe [:task/equipment-line-items task])
               :task/remove-equipment task]
@@ -245,38 +302,6 @@
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
 
-
-(defn line-items []
-  (let [item (r/atom "")
-        qty-text (r/atom "") 
-        qty-value (r/atom {})
-        unit (r/atom "")]
-    (fn [] 
-      [:div.white-panel (prn-str @qty-value @unit @item)
-       [:form {:on-submit #(do (.preventDefault %)
-                               ;(rf/dispatch [submit task @item @qty @unit])
-                               (rf/dispatch [:modal {:show? false
-                                                     :child nil
-                                                     :size :default}]))}
-        [:input  {:type :text
-                  :auto-focus true
-                  :value @qty-text
-                  :on-change #(do 
-                                (reset! qty-text (-> % .-target .-value))
-                                (reset! qty-value (parse-rational @qty-text)))}]
-        (if (= @unit "")
-          [item-search {:placeholder "unit"
-                        :source  (rf/subscribe [:unit/source])
-                        :add #(reset! unit %)}]
-          [:span @(rf/subscribe [:unit/name @unit])])
-        (if (= @item "")
-          [item-search {:placeholder "item"
-                        :create nil
-                        :source (rf/subscribe [:item/source])
-                        :add #(reset! item %)}]
-          [:span @(rf/subscribe [:item/name @item])])
-        [:button "+ Line Item"]]])))
-
 (defn main-panel []
   (let [recipe-id (rf/subscribe [:loaded-recipe])
         name (rf/subscribe [:recipe/name @recipe-id])
@@ -298,10 +323,8 @@
        [:div [task-table @recipe-id]]
        ]
       [:div.column.right
-       [:div [rational-input]]
-       [:hr]
-       [line-items]
-       [:div (prn-str @(rf/subscribe [:item/source]))]]]]))
+       
+       ]]]))
 
  (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))

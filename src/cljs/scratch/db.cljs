@@ -97,7 +97,7 @@
                  :tags []}}
    :units {"u1" {:id "u1"
                  :name "each"
-                 :abbrev ""
+                 :abbrev "-"
                  :type "volume"}
            "u2" {:id "u2"
                  :name "quarts"

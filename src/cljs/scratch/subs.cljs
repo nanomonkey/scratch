@@ -39,7 +39,7 @@
     (rf/subscribe [:units]))
   (fn [unit-index]
     (into [] (for [[id unit] unit-index]
-               [(:name unit) id]))))
+               [(str (:name unit) " [" (:abbrev unit) "]") id]))))
 
 
 ;; Items
