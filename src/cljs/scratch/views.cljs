@@ -186,8 +186,9 @@
 (defn add-task [recipe-id]
   (let [name (r/atom "new task")]
     (fn [recipe-id]
-      [:div [:button {:on-click #(do (.preventDefault %)
-                                     (rf/dispatch [:recipe/new-task recipe-id @name]))}
+      [:div [:button.wide {:on-click #(do (.preventDefault %)
+                                          (rf/dispatch 
+                                           [:recipe/new-task recipe-id @name]))}
              "+ Task"]])))
 
 (defn svg-clock []
@@ -232,11 +233,11 @@
                   :on-change #(swap! duration assoc :sec (-> % .-target .-value))}]
          [:button "✓"]
          [:button {:on-click #(do
-                                (.preventDefault %)
-                                (reset! :editing? false)
+                                (.preventDefault %) 
                                 (reset! duration 
                                         (parse-duration 
-                                         @(rf/subscribe [:task/duration task]))))
+                                         @(rf/subscribe [:task/duration task])))
+                                (reset! editing? false))
                    :on-blur #(do
                                (.preventDefault %)
                                (reset! editing? false))}
@@ -316,7 +317,6 @@
             [:td ^{:key (str (:id task) "items")}
              [:div ^{:key (str (:id task) "equipment")}
               [modal-button "Add Equipment" "Equipment:"
-               ;;[line-item-editor task :task/add-equipment]
                [line-item #(rf/dispatch [:task/add-equipment task %1 %2 %3])]
                "equipment-qty"]]
              [list-items @(rf/subscribe [:task/equipment-line-items task])

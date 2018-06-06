@@ -25,48 +25,48 @@
                         :units "min"}
                  :equipment {:items ["i1"]
                              :qty {"i1" 1}
-                             :units {"i1" "u1"}}
+                             :units {"i1" "ea"}}
                  :ingredients {:items ["i3"]
                                :qty {"i3" 2}
-                               :units {"i3" "u2"}}
+                               :units {"i3" "usquart"}}
                  :steps ["fill pot with water"]
                  :yields {:items ["i5"]
                           :qty {"i5" 1}
-                          :units {"i5" "u1"}}}
+                          :units {"i5" "ea"}}}
            "t2" {:id "t2"
                  :name "Bring to Boil"
                  :duration "M12S45"
                  :equipment {:items ["i2"]
                              :qty {"i2" 1}
-                             :units {"i2" "u1"}}
+                             :units {"i2" "ea"}}
                  :ingredients {:items ["i5"]
                                :qty {"i5" 1}
-                               :units {"i5" "u1"}
+                               :units {"i5" "ea"}
                                :scaling {"i5" 1}}
                  :steps ["Turn stove on medium" "Leave until boiling"]
                  :yields {:items ["i4" "i5"]
                           :qty {"i4" 6
                                 "i5" 1}
-                          :units {"i4" "u2"
-                                  "i5" "u2"}}}
+                          :units {"i4" "usquart"
+                                  "i5" "usquart"}}}
            "t3" {:id "t3"
                  :name "Add Salt"
                  :equipment {:items ["i2"]
                              :qty {"i2" 1}
-                             :units {"i2" "u1"}}
+                             :units {"i2" "tsp"}}
                  :ingredients {:items ["i6"]
                                :qty {"i6" {:whole 1 :numer 1 :denom 2}}
-                               :units {"i6" "u3"}
+                               :units {"i6" "tbl"}
                                :scaling {"i6" 1}}
                  :optional {:items ["i7"]
                             :qty {"i7" 1}
-                            :units {"i7" "u3"}}
+                            :units {"i7" "tbl"}}
                  :steps ["Add salt and optional baking soda to boiling water, stir until dissolved." "Cool solution to body temperature."]
                  :yields {:items ["i4" "i5"]
                           :qty {"i4" 6
                                 "i5" 1}
-                          :units {"i4" "u2"
-                                  "i5" "u2"}}}}
+                          :units {"i4" "usquart"
+                                  "i5" "usquart"}}}}
    :items {"i1" {:id "i1"
                  :name "6 Qt. Pot"
                  :description ""
