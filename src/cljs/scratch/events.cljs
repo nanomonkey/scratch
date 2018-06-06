@@ -109,6 +109,11 @@
    (assoc-in db [:tasks task-id :name] name)))
 
 (rf/reg-event-db
+:task/new-duration 
+(fn [db [_ task-id duration]]
+  (assoc-in db [:task task-id :duration] duration)))
+
+(rf/reg-event-db
  :task/add-ingredient
  (fn [db [_ task-id item-id qty unit]]
    ;; check if it's already in the task

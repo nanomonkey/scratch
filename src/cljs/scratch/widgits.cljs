@@ -155,22 +155,29 @@
   (let [qty (:qty line-item)
         unit (rf/subscribe [:unit/abbrev (:unit line-item)])
         item (rf/subscribe [:item/name (:item line-item)])]
-    [:span (display-rational qty)
-     (goog.string/format " %s - %s" @unit @item)]))
+    [:span (display-rational qty) " " @unit " " [:strong @item]]))
 
 
 ;; Durations of time
 (defn display-duration [{:keys [hr min sec] :as duration}]
-  [:time {:datetime (str "PT" duration)} 
-   (goog.string/format "%dH %dM %fS" hr min sec)])
+  [:time {:datetime (str "PT"
+                         (when hr (str "H" hr))
+                         (when min (str "M" min))
+                         (when sec (str "S" sec)))}
+   
+   (when hr (str hr " hour" (if (< 1 hr) "s " " ")))
+   (when min (str min " minute" (if (< 1 min) "s " " ")))
+   (when sec (str sec " second" (if (< 1 sec) "s " " ")))])
 
 (defn parse-duration [duration]
   "parse duration string of the form H100M59S59.123 into components"
-  (let [[orig h m s]
-        (re-matches #"H*(\d+)*M*([1-5]\d)*S*([1-5]\d*[.]*\d+)*" duration)]
-    {:hr (int h)
-     :min (int m)
-     :sec (float s)}))
+  (when duration
+    (let [[orig h m s]
+          (re-matches #"H*(\d+)*M*([1-5]\d)*S*([1-5]\d*[.]*\d+)*" duration)]
+      {:hr (int h)
+       :min (int m)
+       :sec (float s)})
+    nil))
 
 ;; Datalist
 (defn data-list [name options]
