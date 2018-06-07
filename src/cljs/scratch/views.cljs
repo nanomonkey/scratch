@@ -27,8 +27,8 @@
 (defn topnav []
   [:nav  [:ul [:li [recipe-search]]
           [:li [:a {:href "inventory"} "Inventory"]]
-          [:li [:a {:href "items"} "Items"]]
-          [:li [:a {:href "units"} "Units"]]]])
+          [:li [:a {:href "suppliers"} "Suppliers"]]
+          [:li [:a {:href "schedule"} "Schedule"]]]])
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -103,18 +103,6 @@
     :task/remove-product task-id]
    [add-product task-id]])
 
-
-(defn rational-input [text]
-  (let [rational (r/atom {})]
-    (fn [text]
-      [:input.rational {:type :text
-                        :value @rational
-                        :on-change #(reset! rational (-> % 
-                                                         .-target 
-                                                         .-value 
-                                                         parse-rational))}])
-    [:span (display-rational @rational)]))
-
 (defn line-item-editor [task submit]
   (let [items @(rf/subscribe [:items])
         item (r/atom (key (first items)))
@@ -152,36 +140,34 @@
               (:name item)]))]]
         [:button "+ Item"]]])))
 
-(defn create-item [name]
-  (let [name (r/atom name)
+(defn create-item [new-name]
+  (let [name (r/atom new-name)
         description (r/atom "")
         tags (r/atom #{})]
-    (fn [name]
-      [:div
-       [:form {:on-submit #(do
-                             (.preventDefault %))}
-        [:row
-         [:label "Name"]
-         [:input {:type "text"
-                               :placeholder "item name"
-                               :value @name
-                               :on-change #(reset! name (-> % .-target .-value))}]]
+    (fn [new-name]
+      [:div.white-panel
+       [:form {:on-submit #(do (.preventDefault %)
+                               (rf/dispatch [:item/new @name @description @tags])
+                               (reset! name "")
+                               (reset! description "")
+                               (reset! tags #{})
+                               (rf/dispatch [:modal {:show? false
+                                                     :child nil
+                                                     :size :default}]))}
+        [:input {:type "text"
+                 :placeholder "Name"
+                 :name "item-name"
+                 :auto-focus true
+                 :value @name
+                 :on-change #(reset! name (-> % .-target .-value))}]
         [:div
-         [:row
-          [:label "Description"]
-          [:input {:type "text"
-                                :placeholder "item description"
-                                :value @description
-                                :on-change #(reset! description 
-                                                    (-> % .-target .-value))}]]]
-        [:row
-         [:label "Tags"]]
-        [:button {:on-click #(do (.preventDefault %)
-                                 (rf/dispatch [:item/new @name @description @tags])
-                                 (reset! name "")
-                                 (reset! description "")
-                                 (reset! tags #{}))}
-         "Create Item"]]])))
+         [:input {:type "text"
+                  :placeholder "Description"
+                  :value @description
+                  :on-change #(reset! description 
+                                      (-> % .-target .-value))}]]
+        [tag-editor @tags #(swap! tags disj %) #(swap! tags conj %)]
+        [:button "Create Item"]]])))
 
 (defn add-task [recipe-id]
   (let [name (r/atom "new task")]
@@ -351,16 +337,18 @@
      [modal]
      (topnav)
      [:div.row
-      [:div.column.left 
-       ;;[recipe-search]
-       ;;[:div "Create New Item:"[modal-button "New Item" "+" [create-item ""]]]
+      [:div.column.left
+       [:div [modal-button "Create Item" "Create New Item" [create-item ""] "item-name"]]
        ]
       [:div.column.middle
        [:h1 [inline-editor @name 
              {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
        [:h2 [inline-editor @description 
              {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])}]]
-       [:div [tag-editor :recipe/tags :recipe/remove-tag :recipe/save-tag @recipe-id]]
+       [:div [tag-editor 
+              @(rf/subscribe [:recipe/tags @recipe-id]) 
+              #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
+              #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
        [:div [task-table @recipe-id]]
        ]
       [:div.column.right

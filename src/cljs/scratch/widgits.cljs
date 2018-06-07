@@ -63,18 +63,17 @@
          :aria-hidden "true"}
    [:path {:d "M7 7c0-1.109-.891-2-2-2s-2 .891-2 2 .891 2 2 2 2-.891 2-2zm16.672 9c0 .531-.219 1.047-.578 1.406l-7.672 7.688c-.375.359-.891.578-1.422.578s-1.047-.219-1.406-.578L1.422 13.906C.625 13.125 0 11.609 0 10.5V4c0-1.094.906-2 2-2h6.5c1.109 0 2.625.625 3.422 1.422l11.172 11.156c.359.375.578.891.578 1.422zm6 0c0 .531-.219 1.047-.578 1.406l-7.672 7.688a2.08 2.08 0 0 1-1.422.578c-.812 0-1.219-.375-1.75-.922l7.344-7.344c.359-.359.578-.875.578-1.406s-.219-1.047-.578-1.422L14.422 3.422C13.625 2.625 12.11 2 11 2h3.5c1.109 0 2.625.625 3.422 1.422l11.172 11.156c.359.375.578.891.578 1.422z"}]])
 
-(defn tag-editor [source remove save id]
-  "adds a tag to a recipient in the database using the
-   subscription, remove and save handlers"
+(defn tag-editor [source remove add]
+  "view and modify tags using event handlers source remove and add"
   (let [s (r/atom "")
         k (r/atom "")]
-    (fn [source remove save id]
+    (fn [source remove add]
       [:div#tags
       [tag-icon]
        [:span
         "Tags: "
         (doall
-         (for [tag @(rf/subscribe [source id])]
+         (for [tag source]
            [:div#tag {:key tag
                       :style {:display :inline-block
                               :background-color :yellow
@@ -83,19 +82,18 @@
             tag
             [:a {:href "#"
                  :style {:margin-left "4px"}
-                 :on-click (fn [e] 
-                             (.preventDefault e)
-                             (rf/dispatch [remove id tag]))}
+                 :on-click (fn [e] (.preventDefault e) (remove tag))}
              [:sup "x"]]]))]
        [:span
         [:input {:type :text
                  :value @s
+                 :style {:width "6em"}
                  :on-change #(reset! s (-> % .-target .-value))
                  :on-key-up (fn [e]
                               (reset! k (-> e .-key))
                               (when (or (= " " (-> e .-key))
                                         (= "Enter" (-> e .-key)))
-                                (rf/dispatch [save id (.trim @s)])
+                                (add (.trim @s))
                                 (reset! s "")))}]]])))
 
 (defn has-tag? [col tag]
@@ -178,19 +176,6 @@
        :min (int m)
        :sec (float s)})
     nil))
-
-;; Datalist
-(defn data-list [name options]
-  [:div
-   [:label name]
-   [:input {:list name}]
-   [:datalist {:id name}
-    (for [[item id] options]
-      [:option {:value id} item])]])
-
-(defn item-selector []
-  "data-lists don't work in Safari..."
-  (data-list "select-item" @(rf/subscribe [:item/source])))
 
 (defn add-product [task]
   (let [search-string (r/atom "")]
