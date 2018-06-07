@@ -285,9 +285,10 @@ input:not([type=submit]):not([type=file]):not(type=number) {
     border-bottom: 1px solid green;
 }
 */
-input[type=number]{
-  size: "4";
-  width: 80px;
+input[type=text]{
+    border-radius: 1px;
+    font-size: 13px;
+    background-color: white;
 }
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -296,8 +297,8 @@ input[type=search] {
     border-radius: 1px;
     font-size: 22px;
     background-color: white;
-    background-image: url('../icons/searchicon.png');
-    background-position: 10px 10px; 
+    //background-image: url('../icons/searchicon.png');
+    //background-position: 10px 10px; 
     background-repeat: no-repeat;
     padding: 12px 20px 12px 40px;
 }

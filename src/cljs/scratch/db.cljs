@@ -1,5 +1,9 @@
 (ns scratch.db)
 
+;; useful fn's for later
+(defn index-by [key-fn coll]
+    (into {} (map (juxt key-fn identity) coll)))
+
 (def recipe-db
   {:loaded-recipe "r1"
    :temp-id 0
@@ -51,50 +55,32 @@
                                   "i5" "usquart"}}}
            "t3" {:id "t3"
                  :name "Add Salt"
-                 :equipment {:items ["i2"]
-                             :qty {"i2" 1}
-                             :units {"i2" "tsp"}}
                  :ingredients {:items ["i6"]
                                :qty {"i6" {:whole 1 :numer 1 :denom 2}}
-                               :units {"i6" "tbl"}
+                               :units {"i6" "ustbsp"}
                                :scaling {"i6" 1}}
                  :optional {:items ["i7"]
                             :qty {"i7" 1}
-                            :units {"i7" "tbl"}}
+                            :units {"i7" "ustbsp"}}
                  :steps ["Add salt and optional baking soda to boiling water, stir until dissolved." "Cool solution to body temperature."]
                  :yields {:items ["i4" "i5"]
                           :qty {"i4" 6
                                 "i5" 1}
                           :units {"i4" "usquart"
                                   "i5" "usquart"}}}}
-   :items {"i1" {:id "i1"
-                 :name "6 Qt. Pot"
-                 :description ""
-                 :tags []}
-           "i2" {:id "i2"
-                 :name "stove"
-                 :description ""
-                 :tags []}
-           "i3" {:id "i3"
-                 :name "water"
-                 :description ""
-                 :tags []}
-           "i4" {:id "i4"
-                 :name "Boiled Water"
-                 :description ""
-                 :tags []}
-           "i5" {:id "i5"
-                 :name "full pot"
-                 :description "pot full of water"
-                 :tags []}
-           "i6" {:id "i6"
-                 :name "Kosher Salt"
-                 :description "non-iodized kosher salt"
-                 :tags []}
-           "i7" {:id "i7"
-                 :name "Baking Soda"
-                 :description ""
-                 :tags []}}
+   :items {"i1" {:id "i1" :name "6 Qt. Pot" :description "" :tags []}
+           "i2" {:id "i2" :name "stove" :description "" :tags []} 
+           "i3" {:id "i3" :name "water" :description "" :tags []} 
+           "i4" {:id "i4" :name "Boiled Water" :description "" :tags []} 
+           "i5" {:id "i5" :name "full pot" :description "pot full of water" :tags []}
+           "i6" {:id "i6" :name "Kosher Salt" :description "non-iodized kosher salt" :tags []}
+           "i7" {:id "i7" :name "Baking Soda" :description "" :tags []}
+           "i8" {:id "i8" :name "flour" :description "" :tags []}
+           "i9" {:id "i9" :name "sugar" :description "" :tags []}
+           "i10" {:id "i10" :name "yeast" :description "" :tags []}
+           "i11" {:id "i11" :name "garlic" :description "" :tags []}
+           "i12" {:id "i12" :name "red onions" :description "" :tags []}
+           "i13" {:id "i13" :name "olive oil" :description "" :tags []}}
    :units {"beerbarrel" {:id "beerbarrel" :name "Beerbarrel" :abbrev "bbl" :type "volume"}
            "centilitre" {:id "centilitre" :name "Centilitre" :abbrev "L^3" :type "volume"}
            "cc" {:id "cc" :name "Cubic Centimeter" :abbrev "cm^3" :type "volume"}
@@ -122,8 +108,8 @@
            "pints" {:id "pints" :name "Pint (US)" :abbrev "pt" :type "volume"}
            "impquart" {:id "impquart" :name "Quart (Imperial)" :abbrev "qrt" :type "volume"}
            "usquart" {:id "usquart" :name "Quart (US)" :abbrev "qt" :type "volume"}
-           "imptbsp" {:id "imptbsp" :name "Tablespoon (Imperial)" :abbrev "tbls" :type "volume"}
-           "ustbsp" {:id "ustbsp" :name "Tablespoon (US)" :abbrev "tbls" :type "volume"}
+           "imptbsp" {:id "imptbsp" :name "Tablespoon (Imperial)" :abbrev "tbsp" :type "volume"}
+           "ustbsp" {:id "ustbsp" :name "Tablespoon (US)" :abbrev "tbsp" :type "volume"}
            "imptsp" {:id "imptsp" :name "Teaspoon (Imperial)" :abbrev "tsp" :type "volume"}
            "ustsp" {:id "ustsp" :name "Teaspoon (US)" :abbrev "tsp" :type "volume"}
            "ea" {:id "ea" :name "Each" :abbrev "-" :type "count"}
@@ -165,6 +151,3 @@
            "yard" {:id "yard" :name "Yard" :abbrev "yrd" :type "length"}}})
 
 
-;; useful fn's for later
-(defn index-by [key-fn coll]
-    (into {} (map (juxt key-fn identity) coll)))

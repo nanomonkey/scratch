@@ -1,4 +1,4 @@
-at(ns scratch.schema
+(ns scratch.schema
   (:require [clojure.spec.alpha :as s]))
 ;; https://clojure.org/guides/spec
 

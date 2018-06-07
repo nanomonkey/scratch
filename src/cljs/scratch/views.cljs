@@ -323,13 +323,13 @@
               :task/remove-equipment task]
              [:div ^{:key (str (:id task) "ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
-               [line-item-editor task :task/add-ingredient]
+               [line-item #(rf/dispatch [:task/add-ingredient task %1 %2 %3])]
                "ingredient-qty"]]
              [list-items @(rf/subscribe [:task/ingredients-line-items task])
               :task/remove-ingredient task]
              [:div ^{:key (str (:id task) "optional")}
               [modal-button "Add Optional Item" "Optional:"
-               [line-item-editor task :task/add-optional]
+               [line-item #(rf/dispatch [:task/add-optional task %1 %2 %3])]
                "optional-qty"]]
               [list-items @(rf/subscribe [:task/optional-line-items task])
                :task/remove-optional task]]
