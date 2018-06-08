@@ -184,39 +184,6 @@
        :sec (float s)})
     nil))
 
-(defn add-product [task]
-  (let [search-string (r/atom "")]
-    (fn [task]
-      [:div
-       [:input {:type "search"
-                :placeholder "add product"
-                :value @search-string
-                :on-change #(reset! search-string 
-                                    (-> % .-target .-value))}]
-       [:button {:on-click 
-                 #(do
-                   (.preventDefault %)
-                   (rf/dispatch [:item/new @search-string "" #{} []])
-                   (if-let [item-id @(rf/subscribe [:item/id-from-name 
-                                                    @search-string])]
-                     (rf/dispatch [:task/add-product task item-id 1 "u1"])))} "+"]
-       (when (< 1 (count @search-string)) 
-         [:div#options-container
-          [:div#options
-           (for [item @(rf/subscribe [:item/names])]
-             ;; regular expression to see if the search string matches the name
-             (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name item))
-                     (= "" @search-string)) 
-               [:div#option {:key (:id item)}
-                [:a {:href "#"
-                     :on-click 
-                     #(do
-                        (.preventDefault %)
-                        (rf/dispatch 
-                         [:task/add-product task (:id item) 1 "u1"])
-                        (reset! search-string ""))} 
-                 (:name item)]]))]])])))
-
 ;; Recipe Search
 (defn recipe-search []
   (let [search-string (r/atom "")]

@@ -9,7 +9,6 @@
                                      tag-editor
                                      recipe-search
                                      item-search
-                                     add-product
                                      modal
                                      modal-button
                                      full-modal 
@@ -98,12 +97,6 @@
                                                 (swap! s assoc :changed? true))}]]))
         [:li.active [add-step task {:on-add #(swap! s assoc :changed? true)}]]]])))
 
-(defn display-products [task-id]
-  [:div [:strong "Yields: "] 
-   [list-items @(rf/subscribe [:task/yields task-id])
-    :task/remove-product task-id]
-   [add-product task-id]])
-
 (defn line-item-editor [task submit]
   (let [items @(rf/subscribe [:items])
         item (r/atom (key (first items)))
@@ -184,7 +177,7 @@
          :height "28" 
          :viewBox "0 0 24 28" 
          :aria-hidden "true"}
-   [:path  {:fill "grey" :d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]])
+   [:path  {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]])
 
 (defn task-duration [task]
   (let [duration (r/atom (parse-duration @(rf/subscribe [:task/duration task])))
