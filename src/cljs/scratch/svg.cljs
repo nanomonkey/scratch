@@ -40,3 +40,6 @@
 [:path d="M18.5 28.5h-1V16.6h1z" fill="#cacaca" stroke="#cacaca" stroke-width="2.5"]
 [:path d="M18 16l-.46.81-6.1-3.33.46-.81z" fill="#cacaca" stroke="#cacaca" stroke-width="2.5"]
 [:circle cx="18" cy="17.06" r="3.97" fill="#cacaca"]]]
+
+ [:symbol viewbox="0 0 36 36" id="trash"
+  [:path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" class="style-scope yt-icon"]]

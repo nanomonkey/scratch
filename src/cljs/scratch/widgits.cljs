@@ -121,8 +121,8 @@
                    #(do 
                       (.preventDefault %)
                       (create @search-string)
-                      (if-let [item-id (find-by-name @search-string)]
-                        (add item-id))
+                      #_(if-let [item-id (find-by-name @search-string)]
+                          (add item-id))
                       (reset! @search-string ""))} "+"])
        (when (< 1 (count @search-string))
          [:div#options-container

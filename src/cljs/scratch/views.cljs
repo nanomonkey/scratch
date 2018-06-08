@@ -28,7 +28,8 @@
   [:nav  [:ul [:li [recipe-search]]
           [:li [:a {:href "inventory"} "Inventory"]]
           [:li [:a {:href "suppliers"} "Suppliers"]]
-          [:li [:a {:href "schedule"} "Schedule"]]]])
+          [:li [:a {:href "schedule"} "Schedule"]]
+          [:li [:a {:href "settings"} "Settings"]]]])
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -254,7 +255,7 @@
                     :auto-focus true
                     :value (:text @qty)
                     :style {:border (when (= "non-parsable" (:value @qty)) 
-                                      "2px solid red")}
+                                      "4px solid red")}
                     :on-change #(do 
                                   (swap! qty assoc :text (-> % .-target .-value))
                                   (swap! qty assoc :value 
@@ -278,13 +279,12 @@
            @(rf/subscribe [:unit/abbrev @unit-id])])
         (if (= @item-id "")
           [item-search {:placeholder "item"
-                        :create nil
+                        :create #(rf/dispatch [:item/new % "" #{} []])
                         :source (rf/subscribe [:item/source])
                         :add #(reset! item-id %)}]
           [:a.edit {:href "#"
-                           :style {:margin-left "4px"
-                                   :alt-text "edit"}
-                           :on-click #(reset! item-id "")}
+                    :style {:margin-left "4px" :alt-text "edit"}
+                    :on-click #(reset! item-id "")}
            @(rf/subscribe [:item/name @item-id])])
         [:button "+ Line Item"]]])))
 
@@ -293,38 +293,48 @@
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe/task-list recipe-id])]
       [:table#tasks
-       (comment [:thead
-                 [:tr ^{:key "header"}
-                  [:th "Items"] [:th "Steps"]]])
+       [:thead
+        [:tr ^{:key "header"}
+         [:th "Items"] [:th "Steps"]]]
        [:tbody
         (doall
          (for [task tasks]
            [:tr ^{:key (:id task)} 
             [:td ^{:key (str (:id task) "items")}
+             ;;Equipment for task
              [:div ^{:key (str (:id task) "equipment")}
               [modal-button "Add Equipment" "Equipment:"
                [line-item #(rf/dispatch [:task/add-equipment task %1 %2 %3])]
                "equipment-qty"]]
              [list-items @(rf/subscribe [:task/equipment-line-items task])
               :task/remove-equipment task]
+             ;;Ingredients for task
              [:div ^{:key (str (:id task) "ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
                [line-item #(rf/dispatch [:task/add-ingredient task %1 %2 %3])]
                "ingredient-qty"]]
              [list-items @(rf/subscribe [:task/ingredients-line-items task])
               :task/remove-ingredient task]
+             ;;Optional items for Task
              [:div ^{:key (str (:id task) "optional")}
               [modal-button "Add Optional Item" "Optional:"
                [line-item #(rf/dispatch [:task/add-optional task %1 %2 %3])]
                "optional-qty"]]
               [list-items @(rf/subscribe [:task/optional-line-items task])
                :task/remove-optional task]]
+            ;;Steps for task
             [:td#task ^{:key (str (:id task) "steps")}
              [:h2 [inline-editor @(rf/subscribe [:task/name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
              [task-duration task]
              [display-steps task]
-             (display-products task)]]))
+             ;;Yielded products:
+             [:div ^{:key (str (:id task) "yields")}
+              [modal-button "Add Yield Item" "Yields:"
+               [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
+               "optional-qty"]]
+              [list-items @(rf/subscribe [:task/yields task])
+               :task/remove-product task]]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
@@ -344,9 +354,9 @@
       [:div.column.middle
        [:h1 [inline-editor @name 
              {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
-       [:div [inline-editor @description 
-              {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
-               :markdown? true}]]
+       [inline-editor @description 
+          {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
+           :markdown? true}]
        [:div [tag-editor 
               @(rf/subscribe [:recipe/tags @recipe-id]) 
               #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
