@@ -293,9 +293,9 @@
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe/task-list recipe-id])]
       [:table#tasks
-       [:thead
-        [:tr ^{:key "header"}
-         [:th "Items"] [:th "Steps"]]]
+       (comment [:thead
+                 [:tr ^{:key "header"}
+                  [:th "Items"] [:th "Steps"]]])
        [:tbody
         (doall
          (for [task tasks]
@@ -338,13 +338,15 @@
      (topnav)
      [:div.row
       [:div.column.left
-       [:div [modal-button "Create Item" "Create New Item" [create-item ""] "item-name"]]
+       [:div [modal-button "Create Item" "Create New Item" 
+              [create-item ""] "item-name"]]
        ]
       [:div.column.middle
        [:h1 [inline-editor @name 
              {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
-       [:h2 [inline-editor @description 
-             {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])}]]
+       [:div [inline-editor @description 
+              {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
+               :markdown? true}]]
        [:div [tag-editor 
               @(rf/subscribe [:recipe/tags @recipe-id]) 
               #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 

@@ -4,7 +4,7 @@
             [goog.string.format]))
 
 ;; Markdown
-(defonce converter (new js/showdown.Converter))
+(defonce converter (new js/showdown.Converter {:strikethrough true}))
 
 (defn ->html [s]
   (.makeHtml converter s))
@@ -14,8 +14,9 @@
    {:dangerouslySetInnerHTML {:__html (->html s)}}])
 
 ;; Inline Editor
-(defn inline-editor [txt {:keys [on-update on-remove]}]
-  (let [s (r/atom {})]
+(defn inline-editor [txt {:keys [on-update on-remove markdown?]}]
+  (let [s (r/atom {})
+        rows (r/atom 0)]
     (fn [txt event-handlers]
       [:span
        (if (:editing? @s)
@@ -24,10 +25,15 @@
                                (swap! s dissoc :editing?)
                                (when on-update
                                  (on-update (:text @s))))}
-           [:input {:type :text 
-                    :value (:text @s)
-                    :on-change #(swap! s assoc 
-                                     :text (-> % .-target .-value))}]
+           [:textarea {:rows (+ 1 @rows)
+                       :style {:resize "none"
+                               :width "50%" 
+                               :margin "auto"
+                               :overlfow "auto"}
+                       :value (:text @s)
+                       :on-change #(do (swap! s assoc 
+                                              :text (-> % .-target .-value))
+                                       (reset! rows (count (re-seq #"\n" (:text @s)))))}]
           [:button "✓"]
           [:button {:on-click #(do
                                  (.preventDefault %)
@@ -44,8 +50,9 @@
                                  (.preventDefault %)
                                  (swap! s assoc
                                         :editing? true
-                                        :text txt))}
-           txt]
+                                        :text txt)
+                                 (reset! rows (count (re-seq #"\n" (:text @s)))))}
+           (if markdown? (markdown-section txt) txt)]
           (when on-remove
             [:a.trash {:href "#"
                        :on-click (fn [e]

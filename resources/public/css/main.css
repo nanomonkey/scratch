@@ -30,6 +30,12 @@ h1, h2, h3 {
     text-align: center;
 }
 
+p {margin:0;}
+blockquote {color: purple; 
+            border-left:3px solid purple;
+            padding-left: .5em;
+            margin-left: 10px;}
+
 /* Navigation Search */
 nav ul ul {
     padding-top: 12px;
