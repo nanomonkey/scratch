@@ -25,7 +25,7 @@
                                (swap! s dissoc :editing?)
                                (when on-update
                                  (on-update (:text @s))))}
-           [:textarea {:rows (+ 1 @rows)
+           [:textarea {:rows (+ 2 @rows)
                        :style {:resize "none"
                                :width "50%" 
                                :margin "auto"
@@ -122,8 +122,9 @@
                       (.preventDefault %)
                       (create @search-string)
                       #_(if-let [item-id (find-by-name @search-string)]
-                          (add item-id))
-                      (reset! @search-string ""))} "+"])
+                          (add item-id)
+                          (reset! search-string ""))
+                      )} "+"])
        (when (< 1 (count @search-string))
          [:div#options-container
           [:div#options

@@ -8,10 +8,10 @@ Notes
 
 
 * IMPLIMENT
-** TODO Add Search lookahead for adding item to task
+** DONE Add Search lookahead for adding item to task
 - When item isn't found, and (+) button is clicked, open modal to create item
 - after modal, add to tasklist with default number and unit (1 each?)
-** TODO Add similar for units 
+** DONE Add similar for units 
 - Seperate modal, or units may need their own configuration page or be hard coded
 
 ** TODO record changes locally in a parametric manner, then update ssb upon user's request.
@@ -52,16 +52,9 @@ added?
 * Dealing with Units
 ** JS library
 - https://github.com/ben-ng/convert-units
-* Dealing with rational quantities
-#+BEGIN_SRC clojure
-(let [[string whole numerator denominator] (re-matches #"(\d+)\s(\d+)/(\d+)" qty)]
-  (if fn ;; successful match
-    (println (+ (int whole) (/ (int numerator) (int denominator)))
-    (println "Unparsable rational number" string)))
-#+END_SRC
-
-#+BEGIN_SRC clojure
-(?:(?i)(?:[+-]?)(?:(?=[.]?[0-9])(?:[0-9]*)(?:(?:[.])(?:[0-9]{0,}))?)(?:(?:[E])(?:(?:[+-]?)(?:[0-9]+))|))
-#+END_SRC
 
 
+Transmutation: Turn Lead into Gold
+
+Combine one part Fiery Dragon, some Doves of Diana, and at least seven Eagles of mercury
+sophick mercury

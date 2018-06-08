@@ -31,10 +31,15 @@ h1, h2, h3 {
 }
 
 p {margin:0;}
+
 blockquote {color: purple; 
             border-left:3px solid purple;
             padding-left: .5em;
-            margin-left: 10px;}
+            margin-left: 10px;
+            margin-right: 40px;}
+
+button .icon-clock {fill: grey;}
+button:hover > .icon-clock {fill: white;}
 
 /* Navigation Search */
 nav ul ul {
@@ -42,6 +47,7 @@ nav ul ul {
     padding-bottom: 12px;
     text-align: left;
     background-color: #008CBA;
+    font-weight:bold;
     color: white;
     display: block; //none;
     z-index: 99;
@@ -72,6 +78,7 @@ nav ul li:hover a {
 nav ul li a {
     display: block;
     padding: 8px 16px;
+    font-weight: bold;
     color: white; //#757575; 
     text-decoration: none;
 }
@@ -142,10 +149,10 @@ nav ul ul ul {
     width: 10%;
 }
 .column.middle {
-    width: 55%;
+    width: 75%;
 }
 .column.right {
-    width: 30%;
+    width: 10%;
 }
 .row:after {
     content: "";
@@ -176,9 +183,10 @@ nav ul ul ul {
 #task .steps-indicator .connector{
     position:absolute;
     border-left:3px solid #CDCDCD;
-    height:97%;
+    //height:97%;
     left:23px;
     top:2px;
+    bottom:38px;
 }
 #task .steps-indicator .connector.complete{height:0;border-color:#64c84b}
 #task .steps-indicator .steps{

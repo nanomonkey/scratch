@@ -113,6 +113,7 @@
            "imptsp" {:id "imptsp" :name "Teaspoon (Imperial)" :abbrev "tsp" :type "volume"}
            "ustsp" {:id "ustsp" :name "Teaspoon (US)" :abbrev "tsp" :type "volume"}
            "ea" {:id "ea" :name "Each" :abbrev "-" :type "count"}
+           "part" {:id "part" :name "Part" :abbrev "part" :type "count"}
            "dozen" {:id "dozen" :name "Dozen" :abbrev "doz" :type "count"}
            "atomicmassunit" {:id "atomicmassunit" :name "Atomic Mass Unit" :abbrev "u" :type "mass"}
            "carat" {:id "carat" :name "Carat" :abbrev "ct" :type "mass"}

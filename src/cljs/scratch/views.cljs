@@ -286,9 +286,9 @@
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe/task-list recipe-id])]
       [:table#tasks
-       [:thead
-        [:tr ^{:key "header"}
-         [:th "Items"] [:th "Steps"]]]
+       (comment [:thead
+                 [:tr ^{:key "header"}
+                  [:th "Items"] [:th "Steps"]]])
        [:tbody
         (doall
          (for [task tasks]
@@ -320,12 +320,12 @@
              [:h2 [inline-editor @(rf/subscribe [:task/name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
              [task-duration task]
-             [display-steps task]
+             [display-steps task]]
+            [:td ^{:key (str (:id task) "products")}
              ;;Yielded products:
-             [:div ^{:key (str (:id task) "yields")}
-              [modal-button "Add Yield Item" "Yields:"
-               [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
-               "optional-qty"]]
+             [modal-button "Add Product Item" "Yields:"
+              [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
+              "optional-qty"]
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]]]))
         [:tr ^{:key "Add_Task_row"}
