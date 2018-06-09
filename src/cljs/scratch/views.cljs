@@ -60,42 +60,44 @@
     (concat head [item] tail)))
 
 (defn display-steps [task]
-  (let [steps (rf/subscribe [:task/steps task])
-        s (r/atom {:order (range (count @steps))})]
+  (let [s (r/atom {:order (range (count @(rf/subscribe [:task/steps task])))})]
     (fn [task]
-      (when (:changed? @s) (reset! s {:order (range (count @steps))}))
-      [:div.steps-indicator
-       [:div.connector]
-       [:div.connector.complete]
-       [:ol.steps 
-        (doall
-         (for [[i pos] (map vector (:order @s) (range))]
-           [:li.active {:key i
-                        :style {:border (when (= i (:drag-index @s))
-                                          "1px dotted orange")}
-                        :draggable true
-                        :on-drag-start #(swap! s assoc :drag-index i)
-                        :on-drag-over (fn [e]
-                                        (.preventDefault e)
-                                        (swap! s assoc :drag-over pos)
-                                        (swap! s update :order 
-                                               put-before pos (:drag-index @s)))
-                        :on-drag-leave #(swap! s assoc :drag-over :nothing)
-                        :on-drag-end (fn []
-                                       (swap! s dissoc :drag-over :drag-index)
-                                       (rf/dispatch 
-                                        [:task/update-all-steps task 
-                                         (vec (map @steps (:order @s)))])
-                                       (swap! s assoc :changed? true))}
-            [inline-editor (get @steps i) {:on-update 
-                                           #(do (rf/dispatch 
-                                                 [:task/replace-step task % pos])
-                                                (reset! s {:order (range (count @steps))}))
-                                           :on-remove 
-                                           #(do (rf/dispatch 
-                                                 [:task/remove-step task pos])
-                                                (swap! s assoc :changed? true))}]]))
-        [:li.active [add-step task {:on-add #(swap! s assoc :changed? true)}]]]])))
+      (let [steps (rf/subscribe [:task/steps task])]
+        (when (not (= task (:changed? @s))) 
+          (reset! s {:order (range (count @steps))
+                     :changed? task}))
+        [:div.steps-indicator
+         [:div.connector]
+         [:div.connector.complete]
+         [:ol.steps
+          (doall
+           (for [[i pos] (map vector (:order @s) (range))]
+             [:li.active {:key i
+                          :style {:border (when (= i (:drag-index @s))
+                                            "1px dotted orange")}
+                          :draggable true
+                          :on-drag-start #(swap! s assoc :drag-index i)
+                          :on-drag-over (fn [e]
+                                          (.preventDefault e)
+                                          (swap! s assoc :drag-over pos)
+                                          (swap! s update :order 
+                                                 put-before pos (:drag-index @s)))
+                          :on-drag-leave #(swap! s assoc :drag-over :nothing)
+                          :on-drag-end (fn []
+                                         (swap! s dissoc :drag-over :drag-index)
+                                         (rf/dispatch 
+                                          [:task/update-all-steps task 
+                                           (vec (map @steps (:order @s)))])
+                                         (swap! s assoc :changed? true))}
+              [inline-editor (get @steps i) {:on-update 
+                                             #(do (rf/dispatch 
+                                                   [:task/replace-step task % pos])
+                                                  (reset! s {:order (range (count @steps))}))
+                                             :on-remove 
+                                             #(do (rf/dispatch 
+                                                   [:task/remove-step task pos])
+                                                  (swap! s assoc :changed? true))}]]))
+          [:li.active [add-step task {:on-add #(swap! s assoc :changed? true)}]]]]))))
 
 (defn line-item-editor [task submit]
   (let [items @(rf/subscribe [:items])
