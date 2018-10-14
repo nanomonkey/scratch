@@ -292,23 +292,24 @@ a.trash:hover, a.trash:focus, a.trash:active {
     opacity: 1;
 }
 
-/*
+
 input:not([type=submit]):not([type=file]):not(type=number) {
     font-size: 16px;
     border: 1px solid white;
     border-bottom: 1px solid green;
 }
-*/
-input[type=text]{
+input[type=textarea]{
     border-radius: 1px;
     font-size: 13px;
     background-color: white;
+    color: black;
 }
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
 input[type=search] {
     border-radius: 1px;
+    color:black;
     font-size: 22px;
     background-color: white;
     //background-image: url('../icons/searchicon.png');
@@ -316,8 +317,10 @@ input[type=search] {
     background-repeat: no-repeat;
     padding: 12px 20px 12px 40px;
 }
-input.item[type=text]{
+input[type=text]{
     font-size: 16px;
+    color:black;
+    background-color:white;
 }
 /***************/
 /* item-lists */
