@@ -8,9 +8,14 @@
  (fn [db _] (reaction (:modal @db))))
 
 (rf/reg-sub
- :loaded-recipe
+ :mode
  (fn [db]
-   (:loaded-recipe db)))
+   (:mode db)))
+
+(rf/reg-sub
+ :loaded
+ (fn [db]
+   (:loaded db)))
 
 ;; Units
 (rf/reg-sub
@@ -221,4 +226,26 @@
               :item item-id})
            (get-in db [:tasks task-id :yields :items]))))
 
+(rf/reg-sub
+:location/name
+(fn [db [_ location-id]]
+  (get-in db [:locations location-id :name])))
 
+(rf/reg-sub
+:location/description
+(fn [db [_ location-id]]
+  (get-in db [:locations location-id :description])))
+
+(rf/reg-sub
+:location/address
+(fn [db [_ location-id]]
+  (get-in db [:locations location-id :address])))
+
+(rf/reg-sub
+ :location/inventory
+ (fn [db [_ location-id]]
+   (mapv (fn [item-id]
+             {:qty (get-in db [:inventory location-id :qty item-id])
+              :unit (get-in db [:inventory location-id :units item-id])
+              :item item-id})
+           (get-in db [:inventory location-id :items]))))

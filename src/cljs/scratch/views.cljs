@@ -19,6 +19,18 @@
                                      parse-duration]]
             [goog.string :as gstring]))
 
+(accountant/configure-navigation! {:nav-handler (fn [path]
+                                                  (secretary/dispatch! path))
+                                   :path-exists? (fn [path]
+                                                   (secretary/locate-route path))})
+
+(defroute "/recipes/:id" [id]
+  (rf/dispatch :load-recipe id))
+
+(defroute "/items/:id" [id]
+  (rf/dispatch :load-item id))
+
+
 
 (defn header []
   [:div.header "Made From Scratch"])
@@ -334,10 +346,12 @@
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
 
-(defn main-panel []
-  (let [recipe-id (rf/subscribe [:loaded-recipe])
-        name (rf/subscribe [:recipe/name @recipe-id])
-        description (rf/subscribe [:recipe/description @recipe-id])]
+
+
+(defn recipe-view []
+  (let [recipe-id @(rf/subscribe [:loaded])
+        name @(rf/subscribe [:recipe/name recipe-id])
+        description @(rf/subscribe [:recipe/description recipe-id])]
     [:div
      [modal]
      (topnav)
@@ -347,22 +361,55 @@
               [create-item ""] "item-name"]]
        ]
       [:div.column.middle
-       [:h1 [inline-editor @name 
-             {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
-       [inline-editor @description 
-          {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
-           :markdown? true}]
+       [:h1 [inline-editor name 
+             {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]]
+       [inline-editor description 
+        {:on-update #(rf/dispatch [:recipe/update-description recipe-id %])
+         :markdown? true}]
        [:div [tag-editor 
-              @(rf/subscribe [:recipe/tags @recipe-id]) 
-              #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
-              #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
-       [:div [task-table @recipe-id]]
+              @(rf/subscribe [:recipe/tags recipe-id]) 
+              #(rf/dispatch [:recipe/remove-tag recipe-id %]) 
+              #(rf/dispatch [:recipe/save-tag recipe-id %])]]
+       [:div [task-table recipe-id]]
        ]
       [:div.column.right
-       
+       [:div "mode: "
+        @(rf/subscribe [:mode])]
        ]]]))
 
- (when-some [el (js/document.getElementById "scratch-views")]
+(defn inventory-view []
+  (let [location-id @(rf/subscribe [:loaded])]
+    [:div 
+     (topnav)
+     [:div.row
+      [:div.column.left "placeholder"
+       ]
+      [:div.column.middle
+       [:div
+        [:h1 [inline-editor @(rf/subscribe [:location/name location-id])
+              {:on-update #(rf/dispatch [:location/update-name location-id %])}]]
+        [inline-editor @(rf/subscribe [:location/description location-id])
+         {:on-update #(rf/dispatch [:location/update-description location-id %])
+          :markdown? true}]
+        [inline-editor @(rf/subscribe [:location/address location-id])
+         {:on-update #(rf/dispatch [:location/update-address location-id %])}]
+        [:hr]
+        [:div "Inventory:"
+          (doall
+             (for [item @(rf/subscribe [:location/inventory location-id])]
+               [:div
+                [:span item]
+                [:span [display-line-item item]]]))]]]
+      [:div.column.right]]]))
+
+(defn main-panel []
+  (let [loaded (rf/subscribe [:loaded])
+        mode @(rf/subscribe [:mode])]
+    (case mode
+      :recipe (recipe-view)
+      :inventory (inventory-view)
+      [:div "test"])))
+
+(when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
     (r/render [main-panel] el))
-

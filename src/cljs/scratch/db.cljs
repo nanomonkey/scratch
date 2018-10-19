@@ -5,7 +5,8 @@
     (into {} (map (juxt key-fn identity) coll)))
 
 (def recipe-db
-  {:loaded-recipe "r1"
+  {:loaded "l1"
+   :mode :inventory
    :temp-id 0
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
@@ -81,6 +82,20 @@
            "i11" {:id "i11" :name "garlic" :description "" :tags []}
            "i12" {:id "i12" :name "red onions" :description "" :tags []}
            "i13" {:id "i13" :name "olive oil" :description "" :tags []}}
+   :locations {"l1" {:id "l1" :name "Location 1" :description "Storage area in front of house" :address "123 My St."}
+               "l2" {:id "l2" :name "Location 2" :description "Storage area in kitchen" :address "234 Yr Rd."}
+               "l3" {:id "l3" :name "Location 3" :description "Walk in fridge" :address "345 My St."}}
+   :inventory {"l1" {:items ["i5" "i6"]
+                     :qty {"i5" 1
+                           "i6" 4}
+                     :units {"i5" "ea"
+                             "i6" "floz"}}
+               "l2" {:items ["i2"] 
+                     :qty {"i2" 1} 
+                     :units {"i2" "ea"}}
+               "l3" {:items ["i6"]  
+                     :qty {"i6" {:whole 1 :numer 1 :denom 2}} 
+                     :units {"i6" "uscup"}}}
    :units {"beerbarrel" {:id "beerbarrel" :name "Beerbarrel" :abbrev "bbl" :type "volume"}
            "centilitre" {:id "centilitre" :name "Centilitre" :abbrev "L^3" :type "volume"}
            "cc" {:id "cc" :name "Cubic Centimeter" :abbrev "cm^3" :type "volume"}

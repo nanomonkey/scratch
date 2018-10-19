@@ -2,7 +2,6 @@
   (:require [re-frame.core :as rf]
             [scratch.db :as db]))
 
-
 (rf/reg-event-db
  ::initialize-db
  (fn  [_ _]
@@ -12,7 +11,8 @@
 (rf/reg-event-db
  :load-recipe 
 (fn [db [_ recipe-id]]
-  (assoc-in db [:loaded-recipe] recipe-id)))
+  (do (assoc-in db [:mode] :recipe)
+      (assoc-in db [:loaded] recipe-id))))
 
 (rf/reg-event-db
  :modal
@@ -230,3 +230,19 @@
  :task/remove-step
  (fn [db [_ task-id step-pos]]
    (update-in db [:tasks task-id :steps] #(vec-remove % step-pos))))
+
+;;Locations
+(rf/reg-event-db
+ :location/update-name 
+ (fn [db [_ location-id name]]
+   (assoc-in db [:locations location-id :name] name)))
+
+(rf/reg-event-db
+ :location/update-description
+ (fn [db [_ location-id description]]
+   (assoc-in db [:locations location-id :description] description)))
+
+(rf/reg-event-db
+ :location/update-address
+ (fn [db [_ location-id address]]
+   (assoc-in db [:locations location-id :address] address)))
