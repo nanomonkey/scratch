@@ -382,7 +382,13 @@
     [:div 
      (topnav)
      [:div.row
-      [:div.column.left "placeholder"
+      [:div.column.left 
+       (doall
+        (for [[name id] @(rf/subscribe [:location/source])]
+          (if (not (= id location-id))
+            [:div [:a.location {:href "#"
+                                :on-click #(rf/dispatch [:loaded id])}
+                   name]])))
        ]
       [:div.column.middle
        [:div
@@ -403,12 +409,10 @@
       [:div.column.right]]]))
 
 (defn main-panel []
-  (let [loaded (rf/subscribe [:loaded])
-        mode @(rf/subscribe [:mode])]
-    (case mode
-      :recipe (recipe-view)
-      :inventory (inventory-view)
-      [:div "test"])))
+  (case @(rf/subscribe [:mode])
+    :recipe (recipe-view)
+    :inventory (inventory-view)
+    [:div "test"]))
 
 (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))

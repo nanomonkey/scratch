@@ -15,6 +15,11 @@
       (assoc-in db [:loaded] recipe-id))))
 
 (rf/reg-event-db
+ :loaded
+(fn [db [_ id]]
+  (assoc-in db [:loaded] id)))
+
+(rf/reg-event-db
  :modal
  (fn [db [_ data]]
    (assoc-in db [:modal] data)))

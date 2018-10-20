@@ -227,6 +227,19 @@
            (get-in db [:tasks task-id :yields :items]))))
 
 (rf/reg-sub
+:locations
+(fn [db]
+  (:locations db)))
+
+(rf/reg-sub
+:location/source
+(fn []
+  (rf/subscribe [:locations]))
+(fn [location-index]
+  (into [] (for [[id location] location-index]
+             [(:name location)  id]))))
+
+(rf/reg-sub
 :location/name
 (fn [db [_ location-id]]
   (get-in db [:locations location-id :name])))

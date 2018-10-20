@@ -6,7 +6,7 @@
 
 (def recipe-db
   {:loaded "l1"
-   :mode :inventory
+   :mode :recipe
    :temp-id 0
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
@@ -89,7 +89,7 @@
                      :qty {"i5" 1
                            "i6" 4}
                      :units {"i5" "ea"
-                             "i6" "floz"}}
+                             "i6" "uscup"}}
                "l2" {:items ["i2"] 
                      :qty {"i2" 1} 
                      :units {"i2" "ea"}}
