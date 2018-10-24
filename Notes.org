@@ -1,12 +1,9 @@
 Notes 
-
 * Re-frame
 ** Dashboards
 [[https://github.com/Day8/re-frame-10x][Re-frame-10x]]
 ** Modals
 [[https://github.com/benhowell/re-frame-modal][re-frame modal]]
-
-
 * IMPLIMENT
 ** DONE Add Search lookahead for adding item to task
 - When item isn't found, and (+) button is clicked, open modal to create item
@@ -58,3 +55,11 @@ Transmutation: Turn Lead into Gold
 
 Combine one part Fiery Dragon, some Doves of Diana, and at least seven Eagles of mercury
 sophick mercury
+
+* SSB as database
+** Nodejs backend talks to Reframe front-end
+*** How to set up project like this
+*** transit
+- flumeview for data types
+
+** GraphQL backend talks to Reframe front-end

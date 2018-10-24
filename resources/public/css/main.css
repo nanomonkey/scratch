@@ -258,7 +258,7 @@ nav ul ul ul {
     content:"\f12a"
 }
 #task .steps-indicator .steps li:last-child:before{
-    line-height:32px;
+    line-height:42px;
     font-weight:normal;
     font-style:normal;
     font-size: 2rem;
@@ -310,12 +310,12 @@ input[type=number]::-webkit-inner-spin-button {
 input[type=search] {
     border-radius: 1px;
     color:black;
-    font-size: 22px;
+    font-size: 16px;
     background-color: white;
     //background-image: url('../icons/searchicon.png');
     //background-position: 10px 10px; 
-    background-repeat: no-repeat;
-    padding: 12px 20px 12px 40px;
+    //background-repeat: no-repeat;
+    //padding: 6px 20px 12px 40px;
 }
 input[type=text]{
     font-size: 16px;

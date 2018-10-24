@@ -373,9 +373,25 @@
        [:div [task-table recipe-id]]
        ]
       [:div.column.right
-       [:div "mode: "
-        @(rf/subscribe [:mode])]
+       [:div
+        (prn @(rf/subscribe [:recipe @(rf/subscribe [:loaded])]))]
        ]]]))
+
+(defn supplier-view []
+  (let [supplier-id @(rf/subscribe [:loaded])]
+    [:div
+     (topnav)
+     [:div.row
+      [:div.column.left
+       (doall
+        (for [[name id] @(rf/subscribe [:supplier/source])]
+          (if (not (= id supplier-id))
+            [:div [:a.supplier {:href "#"
+                                :on-click #(rf/dispatch [:loaded id])}
+                   name]])))]
+      [:div.column.middle
+       [:div
+        [:h1 [inline-editor @(rf/subscribe [:supplier/name])]]]]]]))
 
 (defn inventory-view []
   (let [location-id @(rf/subscribe [:loaded])]

@@ -5,8 +5,8 @@
     (into {} (map (juxt key-fn identity) coll)))
 
 (def recipe-db
-  {:loaded "l1"
-   :mode :recipe
+  {:loaded "s1"
+   :mode :supplier
    :temp-id 0
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
@@ -96,13 +96,23 @@
                "l3" {:items ["i6"]  
                      :qty {"i6" {:whole 1 :numer 1 :denom 2}} 
                      :units {"i6" "uscup"}}}
+   :suppliers {"s1" {:id "s1" 
+                     :name "Supplier 1" 
+                     :description "First supplier" 
+                     :contact-info {:email "sup1@supplier.com"
+                                    :address "123 Main St."}}}
+   :cost-list {"s1" {:items ["i1"]
+                     :price {"i1" {:denomination "2.50"
+                                   :currency "usd"}}
+                     :qty {"i1" 6}
+                     :units {"i1" "bottle"}}}
    :units {"beerbarrel" {:id "beerbarrel" :name "Beerbarrel" :abbrev "bbl" :type "volume"}
            "centilitre" {:id "centilitre" :name "Centilitre" :abbrev "L^3" :type "volume"}
            "cc" {:id "cc" :name "Cubic Centimeter" :abbrev "cm^3" :type "volume"}
            "cuft" {:id "cuft" :name "Cubic Foot" :abbrev "ft^3" :type "volume"}
            "cuin" {:id "cuin" :name "Cubic Inch" :abbrev "in^3" :type "volume"}
            "cuyd" {:id "cuyd" :name "Cubic Yard" :abbrev "yrd^3" :type "volume"}
-
+           "bottle" {:id "bottle" :name "Bottle" :abbrev "btl" :type "count"}
            "impcup" {:id "impcup" :name "Cup (Imperial)" :abbrev "cp" :type "volume"}
            "uscup" {:id "uscup" :name "Cup (US Legal)" :abbrev "cp" :type "volume"}
            "decalitre" {:id "decalitre" :name "Decalitre" :abbrev "dal" :type "volume"}
