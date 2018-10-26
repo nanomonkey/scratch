@@ -6,7 +6,7 @@
 
 (def recipe-db
   {:loaded "s1"
-   :mode :supplier
+   :active-panel :supplier
    :temp-id 0
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"

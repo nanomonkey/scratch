@@ -9,9 +9,14 @@
 
 ;; UI elements
 (rf/reg-event-db
+  :set-active-panel
+  (fn [db [_ value]]
+    (assoc db :active-panel value)))
+
+(rf/reg-event-db
  :load-recipe 
 (fn [db [_ recipe-id]]
-  (do (assoc-in db [:mode] :recipe)
+  (do (assoc-in db [:active-panel] :recipe)
       (assoc-in db [:loaded] recipe-id))))
 
 (rf/reg-event-db
@@ -251,3 +256,22 @@
  :location/update-address
  (fn [db [_ location-id address]]
    (assoc-in db [:locations location-id :address] address)))
+
+;;Suppliers
+(rf/reg-event-db
+ :supplier/update-name 
+ (fn [db [_ supplier-id name]]
+   (assoc-in db [:suppliers supplier-id :name] name)))
+
+(rf/reg-event-db
+ :supplier/update-description
+ (fn [db [_ supplier-id description]]
+   (assoc-in db [:suppliers supplier-id :description] description)))
+
+(rf/reg-event-db
+ :supplier/update-address
+ (fn [db [_ supplier-id address]]
+   (assoc-in db [:suppliers supplier-id :address] address)))
+
+
+

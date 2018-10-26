@@ -8,9 +8,9 @@
  (fn [db _] (reaction (:modal @db))))
 
 (rf/reg-sub
- :mode
- (fn [db]
-   (:mode db)))
+  :active-panel
+  (fn [db _]
+    (:active-panel db)))
 
 (rf/reg-sub
  :loaded
@@ -262,3 +262,34 @@
               :unit (get-in db [:inventory location-id :units item-id])
               :item item-id})
            (get-in db [:inventory location-id :items]))))
+
+;Supplers
+
+(rf/reg-sub
+:suppliers
+(fn [db]
+(:suppliers db)))
+
+(rf/reg-sub
+  :supplier/source
+  (fn []
+    (rf/subscribe [:suppliers]))
+  (fn [supplier-index]
+    (into [] (for [[id supplier] supplier-index]
+               [(:name supplier) id]))))
+
+(rf/reg-sub
+:supplier/name
+(fn [db [_ supplier-id]]
+  (get-in db [:suppliers supplier-id :name])))
+
+(rf/reg-sub
+:supplier/description
+(fn [db [_ supplier-id]]
+  (get-in db [:suppliers supplier-id :description])))
+
+(rf/reg-sub
+:supplier/address
+(fn [db [_ supplier-id]]
+  (get-in db [:suppliers supplier-id :address])))
+

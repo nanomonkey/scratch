@@ -1,8 +1,6 @@
 (ns scratch.views
   (:require [re-frame.core :as rf]
             [reagent.core :as r] 
-            [accountant.core :as accountant]
-            [secretary.core :as secretary :refer-macros [defroute]]
             [scratch.subs :as subs]
             [scratch.widgets :refer [markdown-section 
                                      inline-editor 
@@ -19,17 +17,6 @@
                                      parse-duration]]
             [goog.string :as gstring]))
 
-(accountant/configure-navigation! {:nav-handler (fn [path]
-                                                  (secretary/dispatch! path))
-                                   :path-exists? (fn [path]
-                                                   (secretary/locate-route path))})
-
-(defroute "/recipes/:id" [id]
-  (rf/dispatch :load-recipe id))
-
-(defroute "/items/:id" [id]
-  (rf/dispatch :load-item id))
-
 
 
 (defn header []
@@ -37,10 +24,15 @@
 
 (defn topnav []
   [:nav  [:ul [:li [recipe-search]]
-          [:li [:a {:href "inventory"} "Inventory"]]
-          [:li [:a {:href "suppliers"} "Suppliers"]]
+          [:li [:a {:href "#" 
+                    :on-click #(rf/dispatch [:set-active-panel :inventory])} "Inventory"]]
+          [:li [:a {:href "#"
+                    :on-click #(rf/dispatch [:set-active-panel :supplier])} "Suppliers"]]
           [:li [:a {:href "schedule"} "Schedule"]]
           [:li [:a {:href "settings"} "Settings"]]]])
+
+(defn right-panel []
+  [:div (rf/subscribe [:active-panel])])
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -349,9 +341,7 @@
 
 
 (defn recipe-view []
-  (let [recipe-id @(rf/subscribe [:loaded])
-        name @(rf/subscribe [:recipe/name recipe-id])
-        description @(rf/subscribe [:recipe/description recipe-id])]
+  (let [recipe-id (rf/subscribe [:loaded])]
     [:div
      [modal]
      (topnav)
@@ -361,74 +351,79 @@
               [create-item ""] "item-name"]]
        ]
       [:div.column.middle
-       [:h1 [inline-editor name 
+       [:h1 [inline-editor @(rf/subscribe [:recipe/name @recipe-id])
              {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]]
-       [inline-editor description 
-        {:on-update #(rf/dispatch [:recipe/update-description recipe-id %])
+       [inline-editor (rf/subscribe [:recipe/description @recipe-id])
+        {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
          :markdown? true}]
        [:div [tag-editor 
-              @(rf/subscribe [:recipe/tags recipe-id]) 
-              #(rf/dispatch [:recipe/remove-tag recipe-id %]) 
-              #(rf/dispatch [:recipe/save-tag recipe-id %])]]
-       [:div [task-table recipe-id]]
+              @(rf/subscribe [:recipe/tags @recipe-id]) 
+              #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
+              #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
+       [:div [task-table @recipe-id]]
        ]
       [:div.column.right
-       [:div
-        (prn @(rf/subscribe [:recipe @(rf/subscribe [:loaded])]))]
        ]]]))
 
 (defn supplier-view []
-  (let [supplier-id @(rf/subscribe [:loaded])]
+  (let [supplier-id (rf/subscribe [:loaded])]
     [:div
      (topnav)
      [:div.row
       [:div.column.left
        (doall
         (for [[name id] @(rf/subscribe [:supplier/source])]
-          (if (not (= id supplier-id))
+          (if (not (= id @supplier-id))
             [:div [:a.supplier {:href "#"
                                 :on-click #(rf/dispatch [:loaded id])}
                    name]])))]
       [:div.column.middle
        [:div
-        [:h1 [inline-editor @(rf/subscribe [:supplier/name])]]]]]]))
+        [:h1 [inline-editor @(rf/subscribe [:supplier/name @supplier-id])
+              {:on-update #(rf/dispatch [:supplier/update-name @supplier-id %])}]]]]
+      [:div.column.right
+       (right-panel)]]]))
 
 (defn inventory-view []
-  (let [location-id @(rf/subscribe [:loaded])]
+  (let [location-id (rf/subscribe [:loaded])]
     [:div 
      (topnav)
      [:div.row
       [:div.column.left 
        (doall
         (for [[name id] @(rf/subscribe [:location/source])]
-          (if (not (= id location-id))
+          (if (not (= id @location-id))
             [:div [:a.location {:href "#"
                                 :on-click #(rf/dispatch [:loaded id])}
                    name]])))
        ]
       [:div.column.middle
        [:div
-        [:h1 [inline-editor @(rf/subscribe [:location/name location-id])
-              {:on-update #(rf/dispatch [:location/update-name location-id %])}]]
-        [inline-editor @(rf/subscribe [:location/description location-id])
-         {:on-update #(rf/dispatch [:location/update-description location-id %])
+        [:h1 [inline-editor @(rf/subscribe [:location/name @location-id])
+              {:on-update #(rf/dispatch [:location/update-name @location-id %])}]]
+        [inline-editor @(rf/subscribe [:location/description @location-id])
+         {:on-update #(rf/dispatch [:location/update-description @location-id %])
           :markdown? true}]
-        [inline-editor @(rf/subscribe [:location/address location-id])
-         {:on-update #(rf/dispatch [:location/update-address location-id %])}]
+        [inline-editor @(rf/subscribe [:location/address @location-id])
+         {:on-update #(rf/dispatch [:location/update-address @location-id %])}]
         [:hr]
         [:div "Inventory:"
           (doall
-             (for [item @(rf/subscribe [:location/inventory location-id])]
+             (for [item @(rf/subscribe [:location/inventory @location-id])]
                [:div
                 [:span item]
                 [:span [display-line-item item]]]))]]]
-      [:div.column.right]]]))
+      [:div.column.right
+       [:div @(rf/subscribe [:active-panel])]]]]))
 
 (defn main-panel []
-  (case @(rf/subscribe [:mode])
-    :recipe (recipe-view)
-    :inventory (inventory-view)
-    [:div "test"]))
+  (let [active (rf/subscribe [:active-panel])]
+    (fn []
+      (condp = @active
+        :recipe (recipe-view)
+        :inventory (inventory-view)
+        :supplier (supplier-view)
+        ))))
 
 (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
