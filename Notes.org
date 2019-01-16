@@ -63,3 +63,237 @@ sophick mercury
 - flumeview for data types
 
 ** GraphQL backend talks to Reframe front-end
+* Datastructures (possible)
+   Database Tables and their fields, each has a primary key (UUID or hash id) not shown
+*** Item
+- name
+- tags [food, material, tool, container, furniture, equipment]
+- description
+? specifications
+? wikipedia category
+*** Units
+- name
+- type [distance, volume or weight]
+*** Unit_Conversion
+- unit1
+- unit2
+- conversion_factor
+*** Recipe
+- name
+- type          //production, subrecipe, etc.  Not sure if this is needed
+- description
+- notes
+- reference    //citation to previous work or versions from which this is adapted
+- task_list  
+**** Calculateable from task_list:
++ equipment_list
++ total_time
++ item_list (qty, unit, item)
++ instruction_list
++ media_list
+
+Example:
+
+Rib Eye with Cherry Mustard Marmalead and Porcini
+Adapted from Alain Ducasse
+Yiels: four .25 kg portions
+
+| INGREDIENTS                     | QUANTITY | SCALING | PROCEDURE                                        |
+|---------------------------------+----------+---------+--------------------------------------------------|
+| Beef rib eye, bone in 5cm       | 800g     |    100% | 1. Vacuum seal together                          |
+| Unsalted butter                 | 40g      |      5% | 2. Cook sous vide in 54 degC bath,               |
+|                                 |          |         | about 1 1/4 h.                                   |
+|                                 |          |         | 3. Sear surface with blowtorch                   |
+|                                 |          |         | yields: Rib Eye, cooked                          |
+|---------------------------------+----------+---------+--------------------------------------------------|
+| Shallots, finely minced         | 50g      |      6% | 1. Sweat until shallots are tender but not brown |
+| Fennel, finely minced           | 25g      |      3% |                                                  |
+| Neutral oil                     | 12.5g    |    1.5% | yields: Shallot Mixture                          |
+|---------------------------------+----------+---------+--------------------------------------------------|
+| Pickled Cherry Brine            | 150g     |     19% | 1. Add to Shallot Mixture                        |
+| Red Wine Vinegar                | 50g      |      6% | 2. Reduce to 100g                                |
+| Red Wine (Pinot Noir)           | 40g      |      6% |                                                  |
+| Quatre epices                   | 0.5g     |   0.05% | yields: Cherry Marmalade                         |
+| Black Peppercorns, crushed      | 0.4g     |   0.05% |                                                  |
+| Juniper berries, finely ground  | 0.4g     |   0.05% |                                                  |
+| Coriander seeds, finely ground  | 0.15g    |   0.02% |                                                  |
+|---------------------------------+----------+---------+--------------------------------------------------|
+| Pickled cherries, finely minced | 100g     |   12.5% | 1. Whisk into marmalade                          |
+| Grain mustard                   | 40g      |      5% |                                                  |
+| Morcello cherry puree           | 35g      |    4.5% | yields: Cherry Mustard Marmalead sauce           |
+| Pressure-cooked mustard seeds   | 8g       |      1% |                                                  |
+|---------------------------------+----------+---------+--------------------------------------------------|
+| Porcini (fresh)                 | 100g     |   12.5% | 1. Slice Porcini very thinly                     |
+| Nuetral Oil                     | As need  |         | 2. Quickly sautee until golden                   |
+|                                 |          |         | yields: Sateed Porcini                           |
+|---------------------------------+----------+---------+--------------------------------------------------|
+| Salt                            | taste    |         | 1. Slice meat to desired thickness               |
+|                                 |          |         | 2. Season meat, marmalade, and mushrooms,        |
+|                                 |          |         | and arrange on plate.                            |
+|---------------------------------+----------+---------+--------------------------------------------------|
+
+Tips and Technique:
+Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds crunchy bursts of saltiness. The only problem is that the salt tends to dissolve into the natural juices by the time the dish reaches the table.  Herve This came up with a solution: toss the salt crystals with oil or fat.  A thin layer of oil then seperates the flakes from the cooking juices and prevents the salt from dissolving.
+
+ 
+**** Json
+{ 
+  id: MsgId,
+  name: string,
+  type: [food, sub_recipe, material, tool, container, furniture],
+  timestamp: number,
+  sequence:[task_id,]
+  yield: { item, number, unit }
+  author: FeedId,
+  description: textfield,
+  notes: textfield,
+  private: boolean
+}
+
+{ 
+  id: task_id,
+  name: string,
+  items: [item_id],
+  yield: [item_id],
+  waste: [item_id],
+  instructions: string,
+  skills: [skill_id,],
+  notes: string
+  equipment: [item_id,]
+  estimated_time: timespan
+}
+
+*** Tasks
+- instructions
+  production process consumable operator (g-code, text, reaction environment, etc.)
+- time
+- item_list
+- equipment_list
+- media_list <- just imbedded in the instructions?
+- product_list
+- precursor_task <- necessary, or just use item list?
+- necessary_conditions
+
+*** Suppliers
+- contact_info
+- order_requirements 
+  email, api, minimum costs, net 30, etc.
+- cost_list 
+  item, price, qty, unit (purchase unit may be different then other unit, i.e. box of 8 each)
+  
+*** People
+- name
+- access
+- primary_location
+- skillset
+- contact_info
+*** Group
+- name
+- access
+- people_list
+- location
+*** Location
+- name
+- address
+- sublocations
+- type
+- timezone
+*** Events
+- location (contains timezone, etc.)
+- date
+- reoccurring?
+- frequency
+*** Lot Tracking
+- task/recipe/product
+- batch
+- scan {timestamp, person, tracking number}
+*** Payment
+- transaction
+- person
+- payment method (cash, credit card, paypal, bitcoin, etc.)
+- tax
+- services (shipping, coupons, etc.)
+*** Orders
+- type [Purchase, Requisition, Transfer, Sales, Physical Inventory?, Merchandise Arrival?]
+- location
+- supplier
+- purchaser
+- payment
+- item_list (item, qty, unit, price, options)
++ item_total
+- shipping_costs
+- tax
+- signatures
+- order_date
+- fulfillment_date
+*** Purchase_Orders <-- make a part of generic Orders?
+- location
+- supplier
+- purchaser
+- signature
+- payment_method
+- purchase_list (item, qty, unit, price)
+- item_total
+- tax
+- shipping_cost
++ total_cost
+*** Requisition_Order  <-- make a part of generic Orders?
+- item_list
+- created_by
+- creation_date
+- need_by
+*** Chart of Accounts
+-name
+-department
+-account_number 
+*** Transactions
+- debit_account
+- credit_account
+- amount
+- type [purchase, sale, transfer, payroll, equity disbursement, loan payment, spoilage/loss, etc.] 
+- date_time
+- memo
+- currency_type
+*** Products
+- qty
+- unit
+- item
+? packaging
+? price
+? description
+? media
+? options (sizes, colors, etc.)
+
+*** Sales_Order  <-- make a part of generic Orders?
+- location (POS terminal, etc.)
+- customer
+- product_list (item, qty, unit, options, cost)
++ subtotal
++ sales_tax
++ shipping_costs
+- payment_method
+*** Physical_Inventory  <-- make a part of generic Orders?
+- location
+- qoh (item, qty, unit) a.k.a quantity on hand, simpler to use item_list?
+- par_levels (bin, item, min_qty, max_qty)
+*** Merchandise_Arrival  <-- make a part of generic Orders?
+- location
+- item_list (item, qty, unit)
+- reciever
+*** Schedule  <-- role into Events?
+- location
+- person
+- task (event data and process)
+- assigned_to (group or person)
+- task/recipe
+- event
+- completing_date
+
+*** Pattern Language lexicon
+*** Problem need specifier
+* Price field
+** parse
+- use seperate unit field (which would allow currency denominations, and the exchange of goods as barter).
+- or parse out currency denominations (ie $) and convert automatically. 
+- convert the remainder to decimals. 
+- 

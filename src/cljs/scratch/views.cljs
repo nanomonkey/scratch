@@ -18,12 +18,10 @@
             [goog.string :as gstring]))
 
 
-
-(defn header []
-  [:div.header "Made From Scratch"])
-
 (defn topnav []
   [:nav  [:ul [:li [recipe-search]]
+          [:li [:a {:href "#" 
+                    :on-click #(rf/dispatch [:set-active-panel :recipe])} "Recipes"]]
           [:li [:a {:href "#" 
                     :on-click #(rf/dispatch [:set-active-panel :inventory])} "Inventory"]]
           [:li [:a {:href "#"
@@ -235,57 +233,65 @@
          (when @duration
            (display-duration @duration))]))))
 
-(defn line-item [submit]
-  (let [item-id (r/atom "")
-        qty (r/atom {:text ""
-                     :value {}
-                     :editing? true})
-        unit-id (r/atom "")]
-    (fn [submit] 
-      [:div.white-panel
-       [:form {:on-submit #(do (.preventDefault %)
-                               (submit @item-id (:value @qty) @unit-id)
-                               (rf/dispatch [:modal {:show? false
-                                                     :child nil
-                                                     :size :default}]))}
-        (if (:editing? @qty) 
-          [:input  {:type :text
-                    :placeholder "quantity (i.e. 2.3 or 5 2/3)"
-                    :auto-focus true
-                    :value (:text @qty)
-                    :style {:border (when (= "non-parsable" (:value @qty)) 
-                                      "4px solid red")}
-                    :on-change #(do 
-                                  (swap! qty assoc :text (-> % .-target .-value))
-                                  (swap! qty assoc :value 
-                                         (parse-rational (:text @qty))))
-                    :on-blur #(do
-                                (.preventDefault %)
-                                (when (not (= "non-parsable" 
-                                              (parse-rational (:text @qty))))
-                                  (swap! qty dissoc :editing?)))}]
-          [:a.edit {:href "#"
-                   :on-click #(swap! qty assoc :editing? true)}
-           (display-rational (:value @qty))])
-        (if (= @unit-id "")
-          [item-search {:placeholder "unit"
-                        :source  (rf/subscribe [:unit/source])
-                        :add #(reset! unit-id %)}]
-          [:a.edit {:href "#"
-                           :style {:margin-left "4px"
-                                   :alt-text "edit"}
-                           :on-click #(reset! unit-id "")}  
-           @(rf/subscribe [:unit/abbrev @unit-id])])
-        (if (= @item-id "")
-          [item-search {:placeholder "item"
-                        :create #(rf/dispatch [:item/new % "" #{} []])
-                        :source (rf/subscribe [:item/source])
-                        :add #(reset! item-id %)}]
-          [:a.edit {:href "#"
-                    :style {:margin-left "4px" :alt-text "edit"}
-                    :on-click #(reset! item-id "")}
-           @(rf/subscribe [:item/name @item-id])])
-        [:button "+ Line Item"]]])))
+(defn price-field [price currency])
+
+(defn line-item 
+  ([submit](line-item submit {})) 
+  ([submit  {:keys [price?]}]
+   (let [item-id (r/atom "")
+         qty (r/atom {:text ""
+                      :value {}
+                      :editing? true})
+         unit-id (r/atom "")
+         price (r/atom "")]
+     (fn [submit] 
+       [:div.white-panel
+        [:form {:on-submit #(do (.preventDefault %)
+                                (submit @item-id (:value @qty) @unit-id)
+                                (rf/dispatch [:modal {:show? false
+                                                      :child nil
+                                                      :size :default}]))}
+         (if (:editing? @qty) 
+           [:input  {:type :text
+                     :placeholder "quantity (i.e. 2.3 or 5 2/3)"
+                     :auto-focus true
+                     :value (:text @qty)
+                     :style {:border (when (= "non-parsable" (:value @qty)) 
+                                       "4px solid red")}
+                     :on-change #(do 
+                                   (swap! qty assoc :text (-> % .-target .-value))
+                                   (swap! qty assoc :value 
+                                          (parse-rational (:text @qty))))
+                     :on-blur #(do
+                                 (.preventDefault %)
+                                 (when (not (= "non-parsable" 
+                                               (parse-rational (:text @qty))))
+                                   (swap! qty dissoc :editing?)))}]
+           [:a.edit {:href "#"
+                     :on-click #(swap! qty assoc :editing? true)}
+            (display-rational (:value @qty))])
+         (if (= @unit-id "")
+           [item-search {:placeholder "unit"
+                         :source  (rf/subscribe [:unit/source])
+                         :add #(reset! unit-id %)}]
+           [:a.edit {:href "#"
+                     :style {:margin-left "4px"
+                             :alt-text "edit"}
+                     :on-click #(reset! unit-id "")}  
+            @(rf/subscribe [:unit/abbrev @unit-id])])
+         (if (= @item-id "")
+           [item-search {:placeholder "item"
+                         :create #(rf/dispatch [:item/new % "" #{} []])
+                         :source (rf/subscribe [:item/source])
+                         :add #(reset! item-id %)}]
+           [:a.edit {:href "#"
+                     :style {:margin-left "4px" :alt-text "edit"}
+                     :on-click #(reset! item-id "")}
+            @(rf/subscribe [:item/name @item-id])])
+         (if price?
+           [price-field {:placeholder "price $1.23"
+                         }])
+         [:button "+ Line Item"]]]))))
 
 
 (defn task-table [recipe-id]
@@ -335,7 +341,7 @@
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]]]))
         [:tr ^{:key "Add_Task_row"}
-         [:td ^{:key "Add_Task"}
+         [:td ^{:key "Add_Task"} 
           [add-task recipe-id]]]]]))) 
 
 
@@ -353,7 +359,7 @@
       [:div.column.middle
        [:h1 [inline-editor @(rf/subscribe [:recipe/name @recipe-id])
              {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]]
-       [inline-editor (rf/subscribe [:recipe/description @recipe-id])
+       [inline-editor @(rf/subscribe [:recipe/description @recipe-id])
         {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
          :markdown? true}]
        [:div [tag-editor 
@@ -367,7 +373,7 @@
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded])]
-    [:div
+    [:divg
      (topnav)
      [:div.row
       [:div.column.left
@@ -384,9 +390,36 @@
       [:div.column.right
        (right-panel)]]]))
 
+
+(defmacro left-bar [mode loaded]
+  (let [source (str ":" mode "/source")]
+    `[:div.column.left 
+      (doall
+       (for [[name id] @(rf/subscribe ~source)]
+         (if (not (= id ~loaded))
+           [:div [:a {:href "#"
+                      :on-click #(rf/dispatch [:loaded id])}
+                  name]])))]))
+
+(comment
+  (defmacro header [mode id  &fields]
+    (let [get-name (str ":" mode "/name")
+          update-name (str ":" mode "/update-name")]
+      `[:div.column.middle
+        [:div
+         [:h1 [inline-editor @(rf/subscribe [~get-name ~@id])
+               {:on-update #(rf/dispatch [~update-name id %])}]]
+         (for [field in fields]
+           (let [sub (str ":" mode "/" field)
+                 dis (str ":" mode "/update-" field)])
+           `[inline-editor @(rf/subscribe [~sub ~id])
+             {:on-update #(rf/dispatch [~dis id %])
+              :markdown? true}])]])))
+
 (defn inventory-view []
   (let [location-id (rf/subscribe [:loaded])]
     [:div 
+     [modal]
      (topnav)
      [:div.row
       [:div.column.left 
@@ -406,15 +439,18 @@
           :markdown? true}]
         [inline-editor @(rf/subscribe [:location/address @location-id])
          {:on-update #(rf/dispatch [:location/update-address @location-id %])}]
-        [:hr]
-        [:div "Inventory:"
+        [:div 
+         [modal-button "Add Inventory" "+ Inventory"
+          [line-item #(rf/dispatch [:inventory/add @location-id %1 %2 %3])]
+          "qty"]
           (doall
              (for [item @(rf/subscribe [:location/inventory @location-id])]
                [:div
                 [:span item]
-                [:span [display-line-item item]]]))]]]
+                [:span [display-line-item item]]]))
+         ]]]]
       [:div.column.right
-       [:div @(rf/subscribe [:active-panel])]]]]))
+       ]]))
 
 (defn main-panel []
   (let [active (rf/subscribe [:active-panel])]

@@ -257,6 +257,20 @@
  (fn [db [_ location-id address]]
    (assoc-in db [:locations location-id :address] address)))
 
+;;Inventory
+(rf/reg-event-db
+ :inventory/add
+ (fn [db [_ location-id item-id qty unit]]
+   ;; check if it's already in inventory
+   (if (nil? (get-in db [:inventory location-id :items item-id]))
+     ;; not in inventory, add
+     (-> db
+         (assoc-in [:inventory location-id :qty item-id] qty)
+         (assoc-in [:inventory location-id  :units item-id] unit)
+         (update-in [:inventory location-id :items] (fnil conj []) item-id))
+     ;; in the inventory, add to existing qty
+     (update-in db [:inventory location-id :qty item-id] + qty))))
+
 ;;Suppliers
 (rf/reg-event-db
  :supplier/update-name 

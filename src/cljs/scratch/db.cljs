@@ -5,8 +5,8 @@
     (into {} (map (juxt key-fn identity) coll)))
 
 (def recipe-db
-  {:loaded "s1"
-   :active-panel :supplier
+  {:loaded "r1"
+   :active-panel :recipe
    :temp-id 0
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
@@ -103,9 +103,11 @@
                                     :address "123 Main St."}}}
    :cost-list {"s1" {:items ["i1"]
                      :price {"i1" {:denomination "2.50"
-                                   :currency "usd"}}
-                     :qty {"i1" 6}
-                     :units {"i1" "bottle"}}}
+                                   :currency "usd"
+                                   :qty {"i1" 6}
+                                   :units {"i1" "bottle"}
+                                   :duration {:start "2/1/2018"
+                                              :end "2/28/2018"}}}}}
    :units {"beerbarrel" {:id "beerbarrel" :name "Beerbarrel" :abbrev "bbl" :type "volume"}
            "centilitre" {:id "centilitre" :name "Centilitre" :abbrev "L^3" :type "volume"}
            "cc" {:id "cc" :name "Cubic Centimeter" :abbrev "cm^3" :type "volume"}
@@ -155,7 +157,7 @@
            "milligram" {:id "milligram" :name "Milligram" :abbrev "mg" :type "mass"}
            "ounce" {:id "ounce" :name "Ounce" :abbrev "oz" :type "mass"}
            "picogram" {:id "picogram" :name "Picogram" :abbrev "pg" :type "mass"}
-           "poundmass" {:id "poundmass" :name "Pound" :abbrev "lbm" :type "mass"}
+           "poundmass" {:id "poundmass" :name "Pound" :abbrev "lbs" :type "mass"}
            "stone" {:id "stone" :name "Stone" :abbrev "st" :type "mass"}
            "tola" {:id "tola" :name "Tola" :abbrev "tola" :type "mass"}
            "ton" {:id "ton" :name "Ton" :abbrev "T" :type "mass"}

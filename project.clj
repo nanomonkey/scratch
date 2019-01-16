@@ -1,8 +1,8 @@
 (defproject scratch "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.9.908"]
+                 [org.clojure/clojurescript "1.10.238"]
                  [reagent "0.7.0"]
-                 [re-frame "0.10.4"]]
+                 [re-frame "0.10.5"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
@@ -16,9 +16,10 @@
 
   :profiles
   {:dev
-   {:dependencies [[binaryage/devtools "0.9.4"]]
+   {:dependencies [[binaryage/devtools "0.9.10"]
+                   [day8.re-frame/re-frame-10x "0.3.3"]]
 
-    :plugins      [[lein-figwheel "0.5.13"]]}}
+    :plugins      [[lein-figwheel "0.5.16"]]}}
 
   :cljsbuild
   {:builds
@@ -30,7 +31,9 @@
                     :output-dir           "resources/public/js/compiled/out"
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
-                    :preloads             [devtools.preload]
+                    :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}
+                    :preloads             [devtools.preload
+                                           day8.re-frame-10x.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}
                     }}
 
