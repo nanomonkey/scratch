@@ -1,19 +1,14 @@
 # scratch
 
-A Decentralized Recipe tool built on 
-[Secure Scuttlebutt](https://securescuttlebutt.nz), 
+A Decentralized Platform for Supply chain and Resource Management, which allows creation and sharing of production Recipes, Inventory management, scheduling and production costing with a Supplier and Customer Market place  built on [Secure Scuttlebutt](https://securescuttlebutt.nz) to provide securely signed cryptographic ledgers that are distributed via a gossip network.
 
-written in Clojure using the following libraries 
-[reagent](https://holmsand.github.io/reagent/) interface for React, which utilizes [Hiccup](https://github.com/weavejester/hiccup) for HTML templating.
-[re-frame](https://github.com/Day8/re-frame) for front end state management.
-Secretary and Accountant for routing.
-
+[[~/docs/recipe.gif][recipe.gif]]
 
 ## Development Mode
 
 ### Run application:
 
-This application can be run in development mode by using the [Leinegen](https://leiningen.org) build tool.
+This application can be run in a Clojure development mode by using the [Leinegen](https://leiningen.org) build tool.
 
 ```
 lein clean
@@ -25,7 +20,6 @@ Figwheel will automatically push cljs changes to the browser.
 Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 
 ## Production Build
-
 
 To compile clojurescript to javascript:
 
