@@ -14,8 +14,7 @@
                                      display-duration
                                      display-rational
                                      parse-rational
-                                     ->duration-string
-                                     parse-duration]]
+                                     duration-editor]]
             [goog.string :as gstring]))
 
 
@@ -175,111 +174,6 @@
                                           (rf/dispatch 
                                            [:recipe/new-task recipe-id @name]))}
              "+ Task"]])))
-
-(defn svg-clock []
-  [:svg {:class "icon icon-clock" 
-         :width "24"
-         :height "28" 
-         :viewBox "0 0 24 28" 
-         :aria-hidden "true"}
-   [:path  {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]])
-
-(defn old-task-duration [task]
-  (let [duration (r/atom (parse-duration @(rf/subscribe [:task/duration task])))
-        editing? (r/atom false)]
-    (fn [task]
-      (if @editing?
-        [:form {:on-submit #(do
-                              (.preventDefault %)
-                              (reset! editing? false)
-                              (rf/dispatch [:task/set-duration task @duration]))}
-         [:input {:type :number
-                  :placeholder "HHH"
-                  :auto-focus "true"
-                  :value (:hr @duration)
-                  :style {:width "3em"}
-                  :on-change #(swap! duration assoc :hr (-> % .-target .-value))}]
-         ":"
-         [:input {:type :number
-                  :placeholder "MM"
-                  :value (:min @duration)
-                  :style {:width "3em"}
-                  :min 0
-                  :max 59
-                  :on-change #(swap! duration assoc :min (-> % .-target .-value))}]
-         ";"
-         [:input {:type :number
-                  :placeholder "SS.SSS"
-                  :value (:sec @duration)
-                  :style {:width "3em"}
-                  :min 0
-                  :max 59
-                  :on-change #(swap! duration assoc :sec (-> % .-target .-value))}]
-         [:button "✓"]
-         [:button {:on-click #(do
-                                (.preventDefault %) 
-                                (reset! duration 
-                                        (parse-duration 
-                                         @(rf/subscribe [:task/duration task])))
-                                (reset! editing? false))
-                   :on-blur #(do
-                               (.preventDefault %)
-                               (reset! editing? false))}
-          "X"]]
-        [:button {:style {:border-radius 100}
-                  :on-click #(do (.preventDefault %)
-                                 (reset! editing? true))}
-         [svg-clock]
-         (when @duration
-           (display-duration @duration))]))))
-
-(defn duration-editor [source update]
-  (let [duration (r/atom (parse-duration @source))
-        editing? (r/atom false)]
-    (fn []
-      (if @editing?
-        [:form {:on-submit #(do
-                              (.preventDefault %)
-                              (reset! editing? false)
-                              (update (->duration-string @duration)))}
-         [:input {:type :number
-                  :placeholder "HHH"
-                  :auto-focus "true"
-                  :value (:hr @duration)
-                  :style {:width "3em"}
-                  :on-change #(swap! duration assoc :hr (-> % .-target .-value))}]
-         ":"
-         [:input {:type :number
-                  :placeholder "MM"
-                  :value (:min @duration)
-                  :style {:width "3em"}
-                  :min 0
-                  :max 59
-                  :on-change #(swap! duration assoc :min (-> % .-target .-value))}]
-         ";"
-         [:input {:type :number
-                  :placeholder "SS"
-                  :value (:sec @duration)
-                  :style {:width "3em"}
-                  :min 0
-                  :max 59
-                  :on-change #(swap! duration assoc :sec (-> % .-target .-value))}]
-         [:button "✓"]
-         [:button {:on-click #(do
-                                (.preventDefault %) 
-                                (reset! duration (parse-duration @source))
-                                (reset! editing? false))
-                   :on-blur #(do
-                               (.preventDefault %)
-                               (reset! editing? false))}
-          "X"]]
-        [:button {:style {:border-radius 100}
-                  :on-click #(do (.preventDefault %)
-                                 (reset! editing? true))}
-         [svg-clock]
-         (when @source
-           (display-duration (parse-duration @source)))]))))
-
 
 (defn task-duration [task]
   (duration-editor (rf/subscribe [:task/duration task]) #(rf/dispatch [:task/set-duration task %])))
