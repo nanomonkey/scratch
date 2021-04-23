@@ -119,9 +119,9 @@
    (assoc-in db [:tasks task-id :name] name)))
 
 (rf/reg-event-db
-:task/new-duration 
+:task/set-duration 
 (fn [db [_ task-id duration]]
-  (assoc-in db [:task task-id :duration] duration)))
+  (assoc-in db [:tasks task-id :duration] duration)))
 
 (rf/reg-event-db
  :task/add-ingredient

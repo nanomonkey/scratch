@@ -27,7 +27,7 @@
                                  (on-update (:text @s))))}
            [:textarea {:rows (+ 2 @rows)
                        :style {:resize "none"
-                               :width "50%" 
+                               :width "100%" 
                                :margin "auto"
                                :overlfow "auto"}
                        :value (:text @s)
@@ -166,24 +166,30 @@
 
 ;; Durations of time
 (defn display-duration [{:keys [hr min sec] :as duration}]
-  [:time {:datetime (str "PT"
+  [:time {:dateTime (str "PT"
                          (when hr (str "H" hr))
                          (when min (str "M" min))
                          (when sec (str "S" sec)))}
    
-   (when hr (str hr " hour" (if (< 1 hr) "s " " ")))
-   (when min (str min " minute" (if (< 1 min) "s " " ")))
-   (when sec (str sec " second" (if (< 1 sec) "s " " ")))])
+   (when (> hr 0) (str hr " hour" (if (< 1 hr) "s " " ")))
+   (when (> min 0) (str min " minute" (if (< 1 min) "s " " ")))
+   (when (> sec 0) (str sec " second" (if (< 1 sec) "s " " ")))])
 
 (defn parse-duration [duration]
   "parse duration string of the form H100M59S59.123 into components"
-  (when duration
+  (if duration
     (let [[orig h m s]
-          (re-matches #"H*(\d+)*M*([1-5]\d)*S*([1-5]\d*[.]*\d+)*" duration)]
+          (re-matches #"H*(\d+)*M*(\d+)*S*(\d+)*" duration)]
       {:hr (int h)
        :min (int m)
-       :sec (float s)})
+       :sec (int s)})
     nil))
+
+(defn ->duration-string [{:keys [hr min sec]}]
+  (str 
+   (when hr (str "H" hr))
+   (when min (str "M" min)) 
+   (when sec (str "S" sec))))
 
 ;; Recipe Search
 (defn recipe-search []

@@ -27,3 +27,8 @@ To compile clojurescript to javascript:
 lein clean
 lein cljsbuild once min
 ```
+
+# Tutorials
+# How to Guides
+# Reference Guides
+# Explanations

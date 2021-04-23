@@ -25,9 +25,7 @@
                    :task-list ["t1" "t2" "t3"]}}
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
-                 :time {:min 4
-                        :max 8
-                        :units "min"}
+                 :duration "M1"
                  :equipment {:items ["i1"]
                              :qty {"i1" 1}
                              :units {"i1" "ea"}}
@@ -176,6 +174,20 @@
            "nanometer" {:id "nanometer" :name "Nanometer" :abbrev "nm" :type "length"}
            "picometer" {:id "picometer" :name "Picometer" :abbrev "pm" :type "length"}
            "rod" {:id "rod" :name "Rod" :abbrev "rod" :type "length"}
-           "yard" {:id "yard" :name "Yard" :abbrev "yrd" :type "length"}}})
+           "yard" {:id "yard" :name "Yard" :abbrev "yrd" :type "length"}}
+   :events ["e1" {:id "e1"
+                  :name "Reoccurring Event"
+                  :location "l1"
+                  :participants ["g1"]
+                  :tasks ["r1"]
+                  :duration {:start "yyyy-mm-ddTHH:MM:SS.sssZ."
+                             :end "yyyy-mm-ddTHH:MM:SS.sssZ."
+                             :reoccurring "weekly"}}
+            "e2" {:id "e2"
+                  :name "One-off Event"
+                  :location "l1"
+                  :participants ["g1"]
+                  :tasks ["t1"]
+                  :duration {:start "yyyy-mm-ddTHH:MM:SS.sssZ."}}]})
 
 
