@@ -246,7 +246,6 @@
          [svg-clock]
          (when @source
            (display-duration (parse-duration @source)))]))))
-
 ;; Recipe Search
 (defn recipe-search []
   (let [search-string (r/atom "")]
