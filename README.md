@@ -2,7 +2,7 @@
 
 A Decentralized Platform for Supply chain and Resource Management, which allows creation and sharing of production Recipes, Inventory management, scheduling and production costing with a Supplier and Customer Market place  built on [Secure Scuttlebutt](https://securescuttlebutt.nz) to provide securely signed cryptographic ledgers that are distributed via a gossip network.
 
-[[~/docs/recipe.gif][recipe.gif]]
+![recipe.gif](/docs/recipe.gif)
 
 ## Development Mode
 
