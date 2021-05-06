@@ -66,7 +66,7 @@
 (rf/reg-sub
  :item/names
  (fn [db]
-   (map val (:items db))))
+  (map val (:items db))))
 
 (rf/reg-sub  
  :item/search

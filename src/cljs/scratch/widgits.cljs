@@ -4,6 +4,7 @@
             [goog.string.format]))
 
 ;; Markdown
+
 (defonce converter (new js/showdown.Converter {:strikethrough true}))
 
 (defn ->html [s]
@@ -13,7 +14,9 @@
   [:span
    {:dangerouslySetInnerHTML {:__html (->html s)}}])
 
+
 ;; Inline Editor
+
 (defn inline-editor [txt {:keys [on-update on-remove markdown?]}]
   (let [s (r/atom {})
         rows (r/atom 0)]
@@ -60,7 +63,9 @@
                                    (on-remove))
                        :style {:font-size "small"}} "🗑"])])])))
 
+
 ;; Tag Editor
+
 (defn tag-icon []  
   [:svg {:class "icon icon-tags" 
          :xmlns "http://www.w3.org/2000/svg" 
@@ -106,6 +111,11 @@
 (defn has-tag? [col tag]
   (filter #(contains? (:tags %) tag) col))
 
+
+;; Search Field 
+;;
+;; displays drop down of results
+;; other options weren't working in Safari
 
 (defn item-search [{:keys [placeholder source add create find-by-name]}]
   (let [search-string (r/atom "")]
@@ -165,6 +175,7 @@
 
 
 ;; Durations of time
+
 (defn display-duration [{:keys [hr min sec] :as duration}]
   [:time {:dateTime (str "PT"
                          (when hr (str "H" hr))
@@ -176,7 +187,7 @@
    (when (> sec 0) (str sec " second" (if (< 1 sec) "s " " ")))])
 
 (defn parse-duration [duration]
-  "parse duration string of the form H100M59S59.123 into components"
+  "parse duration string of the form H100M59S59 into components"
   (if duration
     (let [[orig h m s]
           (re-matches #"H*(\d+)*M*(\d+)*S*(\d+)*" duration)]
@@ -198,7 +209,6 @@
          :viewBox "0 0 24 28" 
          :aria-hidden "true"}
    [:path  {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]])
-
 
 (defn duration-editor [source update]
   (let [duration (r/atom (parse-duration @source))
@@ -246,7 +256,11 @@
          [svg-clock]
          (when @source
            (display-duration (parse-duration @source)))]))))
+
+
 ;; Recipe Search
+;; should be replaced with more generalized Item Search above
+
 (defn recipe-search []
   (let [search-string (r/atom "")]
     (fn [] 
@@ -276,6 +290,7 @@
 
 
 ;; Modals
+
 (defn modal-panel
   [{:keys [child size show?]}]
   [:div {:class "modal-wrapper"}
@@ -324,6 +339,9 @@
     [:h4.modal-title title]]
    [:div.modal-body body]
    [:div.modal-footer footer]])
+
+
+;CSS
 
 (comment
   ;; available css

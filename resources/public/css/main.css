@@ -146,13 +146,13 @@ nav ul ul ul {
     padding: 10px;
 }
 .column.left {
-    width: 10%;
+    width: 25%;
 }
 .column.middle {
-    width: 75%;
+    width: 50%;
 }
 .column.right {
-    width: 10%;
+    width: 25%;
 }
 .row:after {
     content: "";
@@ -353,7 +353,7 @@ ul.items {
     color:white;
 }
 a{
-    color: #1781F1;
+    color: black;// #1781F1;
     text-decoration: none;
 }
 .arrow_box {
@@ -467,5 +467,64 @@ button.active {
 @keyframes fade-in-child {
   from {opacity: 0;}
   to   {opacity: 1;}
+}
+
+
+/*********************************/
+/*            calendar           */
+/*********************************/
+#calendar {
+    font-size: 8px;
+    font-weight: 600;
+    color: black;
+    background-color: #eee;
+    border: solid;
+    border-color: #7AB720;
+    //border-width: 1px;
+}
+
+#calendar td {
+    text-align: center;
+}
+
+.jan {
+background-color:#ff0000;
+}
+.feb {
+background-color:#ff8000;
+}
+.mar {
+background-color:#ffff00;
+}
+.apr {
+background-color:#80ff00;
+}
+.may {
+background-color:#00ff00;
+}
+.jun {
+background-color:#00ff80;
+}
+.jul {
+background-color:#00ffff;
+}
+.aug {
+background-color:#0080ff;
+}
+.sep {
+background-color:#0000ff;
+}
+.oct {
+background-color:#8000ff;
+}
+.nov {
+background-color:#ff00ff;
+}
+.dec {
+background-color:#ff0080;
+}
+.today {
+background-color:white;
+border: 3px dotted orange;
 }
 </style>

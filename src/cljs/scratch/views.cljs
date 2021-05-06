@@ -15,7 +15,8 @@
                                      display-rational
                                      parse-rational
                                      duration-editor]]
-            [goog.string :as gstring]))
+            [goog.string :as gstring]
+            [cljs-time.core :as dt]))
 
 
 (defn topnav []
@@ -26,8 +27,10 @@
                     :on-click #(rf/dispatch [:set-active-panel :inventory])} "Inventory"]]
           [:li [:a {:href "#"
                     :on-click #(rf/dispatch [:set-active-panel :supplier])} "Suppliers"]]
-          [:li [:a {:href "schedule"} "Schedule"]]
-          [:li [:a {:href "settings"} "Settings"]]]])
+          [:li [:a {:href  "#"
+                    :on-click #(rf/dispatch [:set-active-panel :schedule])} "Schedule"]]
+          [:li [:a {:href  "#"
+                    :on-click #(rf/dispatch [:set-active-panel :settings])} "Settings"]]]])
 
 (defn right-panel []
   [:div (rf/subscribe [:active-panel])])
@@ -320,7 +323,7 @@
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded])]
-    [:divg
+    [:div
      (topnav)
      [:div.row
       [:div.column.left
@@ -337,6 +340,82 @@
       [:div.column.right
        (right-panel)]]]))
 
+(def months ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"])
+
+(defn leap-year? [year] 
+  "The year must be evenly divisible by 4;
+   If the year can also be evenly divided by 100, it is not a leap year;
+	unless...
+  The year is also evenly divisible by 400. Then it is a leap year."
+  (condp #(zero? (mod %2 %1)) year
+      400 true
+      100 false
+      4 true
+      false))
+
+(defn =date [date1 date2]
+  "Checks to see if dates are the same day.
+   Sadly, equal? and = from cljs.time library are a different type of equality"
+  (and
+    (= (dt/year date1)  (dt/year date2))
+    (= (dt/month date1) (dt/month date2))
+    (= (dt/day date1)   (dt/day date2))))
+
+(defn days-in-months [year]
+  (conj [31]
+        (if (leap-year? year) 29 28)
+        31 30 31 30 31 31 30 31 30 31))
+
+(defn create-year [] 
+  (let [today (dt/today)
+        year  (dt/year today)
+        jan1 (dt/date-time year 1 1)
+        start (dt/minus jan1 (dt/days (dec (dt/day-of-week jan1))))]
+    [:div
+     [:H2 [:center [:a {:href "#"} "<  "] year "  >"]]
+     [:table#calendar
+      [:tbody
+        [:tr
+        (doall (for [day [" " "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"]]
+                 [:th [:div day]]))]
+       (for [week (partition-all 7 (map #(dt/plus start (dt/days %)) (range 1 365)))]
+         [:tr 
+          (let [month (get months (dec (dt/month (first week))))]
+            [:th {:class month} month])
+          (for [date week]
+            [:td {:class (if (=date date today) "today" (get months (dec (dt/month date))))}
+             [:a {:href "#" :on-click #(rf/dispatch [:loaded date])} (dt/day date)]])])]]]))
+
+
+(defn schedule-view []
+  (let [today (dt/today)]
+    [:div
+     [modal]
+     (topnav)
+     [:div.row
+      [:div.column.left
+       ;(calendar-view today)
+       (create-year)]
+      [:div.column.middle
+       [:div (str )]
+       [:div (str (dt/month today) "/"  (dt/day today) "/" (dt/year today) "  " (dt/day-of-week today)) ]]
+      [:div.column.right
+       [:div (str (dt/plus today (dt/days 7)))]]]]))
+
+
+(defn settings-view []
+  ;; Default Names
+  ; Recipes
+  ; Products
+  ; Agents
+  ; Groups
+  
+  ;; CSS attributes
+
+  ;; Themes
+
+  ;; 
+  )
 
 (defmacro left-bar [mode loaded]
   (let [source (str ":" mode "/source")]
@@ -406,7 +485,8 @@
         :recipe (recipe-view)
         :inventory (inventory-view)
         :supplier (supplier-view)
-        ))))
+        :schedule (schedule-view)
+        :settings (settings-view)))))
 
 (when-some [el (js/document.getElementById "scratch-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
