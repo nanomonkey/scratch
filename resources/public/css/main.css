@@ -475,56 +475,61 @@ button.active {
 /*********************************/
 #calendar {
     font-size: 8px;
-    font-weight: 600;
+    font-weight: 100;
     color: black;
-    background-color: #eee;
-    border: solid;
-    border-color: #7AB720;
+    background-color: #317eac;//#eee;
+    border:solid;
+    border-color: #317eac; //#7AB720;
     //border-width: 1px;
+    border-collapse: collapse;
 }
-
 #calendar td {
     text-align: center;
 }
-
-.jan {
+#calendar th {
+    font-weight:400;
+}
+.Jan {
 background-color:#ff0000;
 }
-.feb {
+.Feb {
 background-color:#ff8000;
 }
-.mar {
+.Mar {
 background-color:#ffff00;
 }
-.apr {
+.Apr {
 background-color:#80ff00;
 }
-.may {
+.May {
 background-color:#00ff00;
 }
-.jun {
+.Jun {
 background-color:#00ff80;
 }
-.jul {
+.Jul {
 background-color:#00ffff;
 }
-.aug {
+.Aug {
 background-color:#0080ff;
 }
-.sep {
+.Sep {
 background-color:#0000ff;
 }
-.oct {
+.Oct {
 background-color:#8000ff;
 }
-.nov {
+.Nov {
 background-color:#ff00ff;
 }
-.dec {
+.Dec {
 background-color:#ff0080;
 }
 .today {
 background-color:white;
 border: 3px dotted orange;
+}
+.past {
+    color:silver;
 }
 </style>

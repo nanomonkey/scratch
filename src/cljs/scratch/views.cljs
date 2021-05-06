@@ -340,7 +340,7 @@
       [:div.column.right
        (right-panel)]]]))
 
-(def months ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"])
+(def months ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
 
 (defn leap-year? [year] 
   "The year must be evenly divisible by 4;
@@ -372,7 +372,7 @@
         jan1 (dt/date-time year 1 1)
         start (dt/minus jan1 (dt/days (dec (dt/day-of-week jan1))))]
     [:div
-     [:H2 [:center [:a {:href "#"} "<  "] year "  >"]]
+     [:H2 [:center [:a {:href "#"} "<  "] year [:a {:href "#"} "  >"]]]
      [:table#calendar
       [:tbody
         [:tr
@@ -381,7 +381,7 @@
        (for [week (partition-all 7 (map #(dt/plus start (dt/days %)) (range 1 365)))]
          [:tr 
           (let [month (get months (dec (dt/month (first week))))]
-            [:th {:class month} month])
+            [:th {:class month} (when (> 8 (dt/day (first week))) month)])
           (for [date week]
             [:td {:class (if (=date date today) "today" (get months (dec (dt/month date))))}
              [:a {:href "#" :on-click #(rf/dispatch [:loaded date])} (dt/day date)]])])]]]))
