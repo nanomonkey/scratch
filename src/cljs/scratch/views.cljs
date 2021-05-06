@@ -340,8 +340,6 @@
       [:div.column.right
        (right-panel)]]]))
 
-(def months ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
-
 (defn leap-year? [year] 
   "The year must be evenly divisible by 4;
    If the year can also be evenly divided by 100, it is not a leap year;
@@ -361,12 +359,9 @@
     (= (dt/month date1) (dt/month date2))
     (= (dt/day date1)   (dt/day date2))))
 
-(defn days-in-months [year]
-  (conj [31]
-        (if (leap-year? year) 29 28)
-        31 30 31 30 31 31 30 31 30 31))
+(def months ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
 
-(defn create-year [] 
+(defn calendar-view [] 
   (let [today (dt/today)
         year  (dt/year today)
         jan1 (dt/date-time year 1 1)
@@ -378,7 +373,7 @@
         [:tr
         (doall (for [day [" " "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"]]
                  [:th [:div day]]))]
-       (for [week (partition-all 7 (map #(dt/plus start (dt/days %)) (range 1 365)))]
+       (for [week (partition-all 7 (map #(dt/plus start (dt/days %)) (range 1 372)))]
          [:tr 
           (let [month (get months (dec (dt/month (first week))))]
             [:th {:class month} (when (> 8 (dt/day (first week))) month)])
@@ -394,8 +389,7 @@
      (topnav)
      [:div.row
       [:div.column.left
-       ;(calendar-view today)
-       (create-year)]
+       (calendar-view)]
       [:div.column.middle
        [:div (str )]
        [:div (str (dt/month today) "/"  (dt/day today) "/" (dt/year today) "  " (dt/day-of-week today)) ]]
