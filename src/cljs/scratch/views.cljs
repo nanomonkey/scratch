@@ -33,7 +33,7 @@
                     :on-click #(rf/dispatch [:set-active-panel :settings])} "Settings"]]]])
 
 (defn right-panel []
-  [:div (rf/subscribe [:active-panel])])
+  [:div @(rf/subscribe [:active-panel])])
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -297,7 +297,7 @@
 
 
 (defn recipe-view []
-  (let [recipe-id (rf/subscribe [:loaded])]
+  (let [recipe-id (rf/subscribe [:loaded-recipe])]
     [:div
      [modal]
      (topnav)
@@ -322,7 +322,7 @@
        ]]]))
 
 (defn supplier-view []
-  (let [supplier-id (rf/subscribe [:loaded])]
+  (let [supplier-id (rf/subscribe [:loaded-supplier])]
     [:div
      (topnav)
      [:div.row
@@ -331,7 +331,7 @@
         (for [[name id] @(rf/subscribe [:supplier/source])]
           (if (not (= id @supplier-id))
             [:div [:a.supplier {:href "#"
-                                :on-click #(rf/dispatch [:loaded id])}
+                                :on-click #(rf/dispatch [:loaded-supplier id])}
                    name]])))]
       [:div.column.middle
        [:div
@@ -365,7 +365,7 @@
   (let [today (dt/today)
         year  (dt/year today)
         jan1 (dt/date-time year 1 1)
-        start (dt/minus jan1 (dt/days (dec (dt/day-of-week jan1))))]
+        start (dt/minus jan1 (dt/days (dt/day-of-week jan1)))]
     [:div
      [:H2 [:center [:a {:href "#"} "<  "] year [:a {:href "#"} "  >"]]]
      [:table#calendar
@@ -379,8 +379,11 @@
             [:th {:class month} (when (> 8 (dt/day (first week))) month)])
           (for [date week]
             [:td {:class (if (=date date today) "today" (get months (dec (dt/month date))))}
-             [:a {:href "#" :on-click #(rf/dispatch [:loaded date])} (dt/day date)]])])]]]))
+             [:a {:href "#" :on-click #(rf/dispatch [:loaded-date date])} (dt/day date)]])])]]]))
 
+(defn gant-chart []
+  
+)
 
 (defn schedule-view []
   (let [today (dt/today)]
@@ -391,10 +394,15 @@
       [:div.column.left
        (calendar-view)]
       [:div.column.middle
-       [:div (str )]
-       [:div (str (dt/month today) "/"  (dt/day today) "/" (dt/year today) "  " (dt/day-of-week today)) ]]
+       [:div
+        (let [current @(rf/subscribe [:loaded-date])]
+          [:div (str current)]
+          [:div (str (dt/month today) "/"  (dt/day today) "/" (dt/year today) "  " (dt/day-of-week today))]
+          [:div (str @(rf/subscribe [:loaded-date]))])]]
       [:div.column.right
-       [:div (str (dt/plus today (dt/days 7)))]]]]))
+       [:div
+        [:div (str (dt/now))]
+        [:div (str (dt/plus today (dt/days 7)))]]]]]))
 
 
 (defn settings-view []
@@ -437,7 +445,7 @@
               :markdown? true}])]])))
 
 (defn inventory-view []
-  (let [location-id (rf/subscribe [:loaded])]
+  (let [location-id (rf/subscribe [:loaded-location])]
     [:div 
      [modal]
      (topnav)
@@ -447,7 +455,7 @@
         (for [[name id] @(rf/subscribe [:location/source])]
           (if (not (= id @location-id))
             [:div [:a.location {:href "#"
-                                :on-click #(rf/dispatch [:loaded id])}
+                                :on-click #(rf/dispatch [:loaded-location id])}
                    name]])))
        ]
       [:div.column.middle
