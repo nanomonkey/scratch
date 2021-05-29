@@ -297,3 +297,11 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 - or parse out currency denominations (ie $) and convert automatically. 
 - convert the remainder to decimals. 
 - 
+* Sigils
+*** For lookup purposes it may be useful to use a sigil in front of hashes for datastructures. Alternatively, a 2 or 3 letter indicator (REC, TSK, ORD, ITM) could be used, matching the index names used in SSB.
+- + Recipes
+- ^ task
+- ! Items
+- $ Order
+- @ Person
+- % message

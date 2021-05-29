@@ -5,7 +5,10 @@
     (into {} (map (juxt key-fn identity) coll)))
 
 (def recipe-db
-  {:loaded "r1"
+  {:loaded {:recipe "r1"
+            :date 20210513
+            :location "l1"
+            :supplier "s1"}
    :active-panel :recipe
    :temp-id 0
    :recipes {"r1" {:id "r1"
@@ -106,6 +109,25 @@
                                    :units {"i1" "bottle"}
                                    :duration {:start "2/1/2018"
                                               :end "2/28/2018"}}}}}
+   :events {"e1" {:id "e1"
+                  :name "Reoccurring Event"
+                  :location "l1"
+                  :participants ["g1"]
+                  :tasks ["t1"]
+                  :start "20210515T173308"
+                  :reoccurring :weekly}
+            "e2" {:id "e2"
+                  :name "One-off Event"
+                  :location "l1"
+                  :participants ["g1"]
+                  :tasks ["t1"]
+                  :start "20210517T170000"}
+            "e3" {:id "e3"
+                  :name "Recipe making Event"
+                  :location "l1"
+                  :participants "g1"
+                  :recipes ["r1"]
+                  :starts "20210517T18000"}}
    :units {"beerbarrel" {:id "beerbarrel" :name "Beerbarrel" :abbrev "bbl" :type "volume"}
            "centilitre" {:id "centilitre" :name "Centilitre" :abbrev "L^3" :type "volume"}
            "cc" {:id "cc" :name "Cubic Centimeter" :abbrev "cm^3" :type "volume"}
@@ -174,20 +196,6 @@
            "nanometer" {:id "nanometer" :name "Nanometer" :abbrev "nm" :type "length"}
            "picometer" {:id "picometer" :name "Picometer" :abbrev "pm" :type "length"}
            "rod" {:id "rod" :name "Rod" :abbrev "rod" :type "length"}
-           "yard" {:id "yard" :name "Yard" :abbrev "yrd" :type "length"}}
-   :events ["e1" {:id "e1"
-                  :name "Reoccurring Event"
-                  :location "l1"
-                  :participants ["g1"]
-                  :tasks ["r1"]
-                  :duration {:start "yyyy-mm-ddTHH:MM:SS.sssZ."
-                             :end "yyyy-mm-ddTHH:MM:SS.sssZ."
-                             :reoccurring "weekly"}}
-            "e2" {:id "e2"
-                  :name "One-off Event"
-                  :location "l1"
-                  :participants ["g1"]
-                  :tasks ["t1"]
-                  :duration {:start "yyyy-mm-ddTHH:MM:SS.sssZ."}}]})
+           "yard" {:id "yard" :name "Yard" :abbrev "yrd" :type "length"}}})
 
 

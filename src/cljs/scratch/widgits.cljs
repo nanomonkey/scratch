@@ -202,6 +202,11 @@
    (when min (str "M" min)) 
    (when sec (str "S" sec))))
 
+(defn duration->sec [duration]
+  (let [{:keys [hr min sec]} (parse-duration duration)]
+    (+ sec (* 60 min) (* 360 hr))))
+
+
 (defn svg-clock []
   [:svg {:class "icon icon-clock" 
          :width "24"

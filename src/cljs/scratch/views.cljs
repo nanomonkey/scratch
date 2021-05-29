@@ -381,9 +381,59 @@
             [:td {:class (if (=date date today) "today" (get months (dec (dt/month date))))}
              [:a {:href "#" :on-click #(rf/dispatch [:loaded-date date])} (dt/day date)]])])]]]))
 
-(defn gant-chart []
-  
-)
+
+(defn time-cells [rows]
+  (for [row (range 1 (inc rows))
+        hr (range 0 24)]
+    [:div {:style {:grid-area (str row "/" (inc (* 4 hr)) "/"  (inc row) "/" (+ 5 (* 4 hr)))}} (if (= 1 row) (str hr) " ")]))
+
+(defn grid-cells [row]
+  (for [hr (range 0 24)]
+         [:div {:style {:grid-area (str row "/" (inc (* 4 hr)) "/"  (inc row) "/" (+ 5 (* 4 hr)))}} ""])) 
+
+(defn event-span [row event]
+"grid-area:grid-row-start / grid-column-start / grid-row-end / grid-column-end"
+  (let [name (:name event)
+        start (:starts event)
+        hr (dt/hour start)
+        min (dt/minute start)
+        cell-start (+ (* 4 hr) (quot min 15))
+        duration (:duration event)
+        cell-end (+ cell-start (quot duration 15))]
+    [:div.event {:style {:grid-area (str row "/" cell-start "/" row "/" cell-end)}} name]))
+
+
+(defn day-events [date]
+  (let [events [{:id "e1"
+                 :name "Reoccurring Event"
+                 :location "l1"
+                 :participants ["g1"]
+                 :tasks ["t1"]
+                 :start "20210515T173308"
+                 :reoccurring :weekly}
+                {:id "e2"
+                 :name "One-off Event"
+                 :location "l1"
+                 :participants ["g1"]
+                 :tasks ["t1"]
+                 :start "20210517T170000"}
+                {:id "e3"
+                 :name "Recipe making Event"
+                 :location "l1"
+                 :participants "g1"
+                 :recipes ["r1"]
+                 :starts "20210517T180000"}]]
+    [:div.events-container
+     (time-cells 4)
+     (let [row 2]
+       (grid-cells row)
+       (event-span row {:name "Task 4"
+                        :starts (dt/now) ;;#inst "2021-05-17T18:00:00"
+                        :duration 90}))
+     (let [row 3]
+       (for [hr (range 0 24)]
+         [:div {:style {:grid-area (str row "/" (inc (* 4 hr)) "/"  (inc row) "/" (+ 5 (* 4 hr)))}} ""])
+       [:div.event {:style {:grid-area (str row "/" 5 "/" (inc row) "/" 10)}} "Task 1"])]))
 
 (defn schedule-view []
   (let [today (dt/today)]
@@ -393,16 +443,9 @@
      [:div.row
       [:div.column.left
        (calendar-view)]
-      [:div.column.middle
-       [:div
-        (let [current @(rf/subscribe [:loaded-date])]
-          [:div (str current)]
-          [:div (str (dt/month today) "/"  (dt/day today) "/" (dt/year today) "  " (dt/day-of-week today))]
-          [:div (str @(rf/subscribe [:loaded-date]))])]]
+      [:div.column.middle (day-events today)]
       [:div.column.right
-       [:div
-        [:div (str (dt/now))]
-        [:div (str (dt/plus today (dt/days 7)))]]]]]))
+       [:div (str @(rf/subscribe [:loaded-date]))]]]]))
 
 
 (defn settings-view []

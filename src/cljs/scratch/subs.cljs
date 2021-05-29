@@ -1,5 +1,6 @@
 (ns scratch.subs
-  (:require [re-frame.core :as rf])
+  (:require [re-frame.core :as rf]
+            [scratch.widgets :refer [duration->sec]])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 ;;UI elements
@@ -16,6 +17,34 @@
  :loaded
  (fn [db]
    (:loaded db)))
+
+(rf/reg-sub
+ :loaded-recipe
+ (fn []
+   (rf/subscribe [:loaded]))
+ (fn [loaded]
+   (:recipe loaded)))
+
+(rf/reg-sub
+ :loaded-supplier
+ (fn []
+   (rf/subscribe [:loaded]))
+ (fn [loaded]
+   (:supplier loaded)))
+
+(rf/reg-sub
+ :loaded-location
+ (fn []
+   (rf/subscribe [:loaded]))
+ (fn [loaded]
+   (:location loaded)))
+
+(rf/reg-sub
+ :loaded-date
+ (fn []
+   (rf/subscribe [:loaded]))
+ (fn [loaded]
+   (:date loaded)))
 
 ;; Units
 (rf/reg-sub
@@ -266,30 +295,51 @@
 ;Supplers
 
 (rf/reg-sub
-:suppliers
-(fn [db]
-(:suppliers db)))
+ :suppliers
+ (fn [db]
+   (:suppliers db)))
 
 (rf/reg-sub
-  :supplier/source
-  (fn []
-    (rf/subscribe [:suppliers]))
-  (fn [supplier-index]
-    (into [] (for [[id supplier] supplier-index]
-               [(:name supplier) id]))))
+ :supplier/source
+ (fn []
+   (rf/subscribe [:suppliers]))
+ (fn [supplier-index]
+   (into [] (for [[id supplier] supplier-index]
+              [(:name supplier) id]))))
 
 (rf/reg-sub
-:supplier/name
-(fn [db [_ supplier-id]]
-  (get-in db [:suppliers supplier-id :name])))
+ :supplier/name
+ (fn [db [_ supplier-id]]
+   (get-in db [:suppliers supplier-id :name])))
 
 (rf/reg-sub
-:supplier/description
-(fn [db [_ supplier-id]]
-  (get-in db [:suppliers supplier-id :description])))
+ :supplier/description
+ (fn [db [_ supplier-id]]
+   (get-in db [:suppliers supplier-id :description])))
 
 (rf/reg-sub
-:supplier/address
-(fn [db [_ supplier-id]]
-  (get-in db [:suppliers supplier-id :address])))
+ :supplier/address
+ (fn [db [_ supplier-id]]
+   (get-in db [:suppliers supplier-id :address])))
 
+
+;; Schedule
+
+(rf/reg-sub
+ :events
+ (fn [db]
+   (:events db)))
+
+(rf/reg-sub
+:event/duration 
+(fn [db [_ event-id]]
+  (let [tasks (get-in db [:events event-id :tasks])]          ;;TODO determine if recipes are stored in :tasks field
+    (reduce + (map #(duration->sec (get-in db [:tasks % :duration] 0)))))))
+
+(comment
+  (rf/reg-sub
+   :events/in-range
+   (fn [start end]
+     (rf/subscribe [:events]))
+   (fn [start end events]
+     (filter (overlaps? start end (event-start event) (event-end end))))))

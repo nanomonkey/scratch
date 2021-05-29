@@ -15,14 +15,29 @@
 
 (rf/reg-event-db
  :load-recipe 
-(fn [db [_ recipe-id]]
-  (do (assoc-in db [:active-panel] :recipe)
-      (assoc-in db [:loaded] recipe-id))))
+ (fn [db [_ recipe-id]]
+   (do (assoc-in db [:active-panel] :recipe)
+       (assoc-in db [:loaded :recipe] recipe-id))))
 
 (rf/reg-event-db
- :loaded
-(fn [db [_ id]]
-  (assoc-in db [:loaded] id)))
+ :loaded-recipe
+ (fn [db [_ id]]
+  (assoc-in db [:loaded :recipe] id)))
+
+(rf/reg-event-db
+ :loaded-location
+ (fn [db [_ id]]
+   (assoc-in db [:loaded :location] id)))
+
+(rf/reg-event-db
+ :loaded-supplier
+ (fn [db [_ id]]
+   (assoc-in db [:loaded :supplier] id)))
+
+(rf/reg-event-db
+ :loaded-date
+ (fn [db [_ date]]
+   (assoc-in db [:loaded :date] date)))
 
 (rf/reg-event-db
  :modal

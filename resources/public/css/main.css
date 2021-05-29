@@ -143,7 +143,7 @@ nav ul ul ul {
 
 .column {
     float: left;
-    padding: 10px;
+    //padding: 10px;
 }
 .column.left {
     width: 25%;
@@ -531,5 +531,31 @@ border: 3px dotted orange;
 }
 .past {
     color:silver;
+}
+
+.events-container {
+  display: grid;
+  grid-template-columns: repeat(96, 1fr);
+  grid-template-rows: repeat(6, auto);
+  grid-gap: 1px;
+  background-color: silver;
+  //padding: 10px;
+}
+
+.events-container > div {
+  background-color: rgba(255, 255, 255, 0.8);
+  //text-align: center;
+  //border: solid 1px;
+  //border-color: grey;
+  //padding: 10px 0;
+  //font-size: 30px;
+}
+
+.event {
+  background-color: rgba(255, 255, 255, 0.8);
+  text-align:center;
+  border: solid 1px;
+  border-color: grey;
+  border-radius: 5px;
 }
 </style>
