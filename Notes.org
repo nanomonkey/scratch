@@ -305,3 +305,6 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 - $ Order
 - @ Person
 - % message
+* Contracts
+** Legal Domain Specific Language 
+- https://catala-lang.org/

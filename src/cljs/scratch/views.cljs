@@ -291,7 +291,7 @@
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]]]))
         [:tr ^{:key "Add_Task_row"}
-         [:td ^{:key "Add_Task"} 
+         [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
 
 
@@ -432,7 +432,7 @@
                         :duration 90}))
      (let [row 3]
        (for [hr (range 0 24)]
-         [:div {:style {:grid-area (str row "/" (inc (* 4 hr)) "/"  (inc row) "/" (+ 5 (* 4 hr)))}} ""])
+         [:div {:style {:grid-area (str row "/" (inc (* 4 hr)) "/" (inc row) "/" (+ 5 (* 4 hr)))}} ""])
        [:div.event {:style {:grid-area (str row "/" 5 "/" (inc row) "/" 10)}} "Task 1"])]))
 
 (defn schedule-view []
