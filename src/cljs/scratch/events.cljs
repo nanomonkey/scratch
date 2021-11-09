@@ -15,7 +15,7 @@
 
 (rf/reg-event-db
  :load-recipe 
- (fn [db [_ recipe-id]]
+ (fn [db [_ recipe-id] 
    (do (assoc-in db [:active-panel] :recipe)
        (assoc-in db [:loaded :recipe] recipe-id))))
 

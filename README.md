@@ -8,7 +8,7 @@ A Decentralized Platform for Supply chain and Resource Management, which allows 
 
 ### Run application:
 
-This application can be run in a Clojure development mode by using the [Leinegen](https://leiningen.org) build tool.
+This application can be run in a Clojure development mode by using the [Leinegen](https://leiningen.org) build tool. At the command line from this folder run the following:
 
 ```
 lein clean

@@ -4,7 +4,12 @@
 (defn index-by [key-fn coll]
     (into {} (map (juxt key-fn identity) coll)))
 
+
 (def recipe-db
+  "this in memory database is for graphical testing only, it doesn't represent the way in which transactions are stored on the 
+   scuttlebutt database, but instead how they are stored for the re-frame (react) pub/sub system.  Some of the storage methods 
+   below seem redundant in my eyes, so I'm likely to try and bring it closer to the way it's stored in transactions on ssb.
+   Also, all ids are simple strings instead of the normal hash ids that would be generated at runtime."
   {:loaded {:recipe "r1"
             :date 20210513
             :location "l1"
@@ -25,7 +30,13 @@
                    :name "Neti Pot solution"
                    :description "..."
                    :tags #{}
-                   :task-list ["t1" "t2" "t3"]}}
+                   :task-list ["t1" "t2" "t3"]}
+             "r4" {:id "r4"
+                   :name "Pizza Dough"
+                   :description "Pulled from varasanos.com"
+                   :tags #{"pizza" "dough"}
+                   :task-list ["t4"]}}
+   
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :duration "M1"
@@ -69,7 +80,15 @@
                           :qty {"i4" 6
                                 "i5" 1}
                           :units {"i4" "usquart"
-                                  "i5" "usquart"}}}}
+                                  "i5" "usquart"}}}
+           "t4" {:id "t4"
+                 :name "Autolyze Flour"
+                 :ingredients {:items ["i3" "i8"]
+                               :qty {"i3" 638
+                                     "i8" 550}
+                               :units {"i3" "gram"
+                                       "i8" "gram"}}
+                 :steps ["Mix flour and water in a bowl" "Cover and let rest for 20-60 min"]}}
    :items {"i1" {:id "i1" :name "6 Qt. Pot" :description "" :tags []}
            "i2" {:id "i2" :name "stove" :description "" :tags []} 
            "i3" {:id "i3" :name "water" :description "" :tags []} 
@@ -82,7 +101,8 @@
            "i10" {:id "i10" :name "yeast" :description "" :tags []}
            "i11" {:id "i11" :name "garlic" :description "" :tags []}
            "i12" {:id "i12" :name "red onions" :description "" :tags []}
-           "i13" {:id "i13" :name "olive oil" :description "" :tags []}}
+           "i13" {:id "i13" :name "olive oil" :description "" :tags []}
+           "i14" {:id "i13" :name "sourdough starter" :description "100% hydration sourdough starter (poolish)" :tags[]}}
    :locations {"l1" {:id "l1" :name "Location 1" :description "Storage area in front of house" :address "123 My St."}
                "l2" {:id "l2" :name "Location 2" :description "Storage area in kitchen" :address "234 Yr Rd."}
                "l3" {:id "l3" :name "Location 3" :description "Walk in fridge" :address "345 My St."}}
