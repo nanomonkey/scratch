@@ -8,24 +8,46 @@ A Decentralized Platform for Supply chain and Resource Management, which allows 
 
 ### Run application:
 
-This application can be run in a Clojure development mode by using the [Leinegen](https://leiningen.org) build tool. At the command line from this folder run the following:
-
+This application can be run in a Clojurescript developement mode by using [Shadow-cljs]( https://shadow-cljs.github.io/docs/UsersGuide.html) build tool. At the command line run the following, to install.
 ```
-lein clean
-lein figwheel dev
+npm install -g shadow-cljs
 ```
 
-Figwheel will automatically push cljs changes to the browser.
+Then compile and hot reload changes that you make to the source file:
+
+```
+shadow-cljs watch server
+```
+Launch the node server:
+```
+node out/main.js
+```
+and compile the client similarly
+```
+shadow-cljs watch client
+```
 
 Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 
-## Production Build
-
-To compile clojurescript to javascript:
-
+### Installing new npm dependencies:
 ```
-lein clean
-lein cljsbuild once min
+npm install the-thing
+```
+
+In Emacs connect with Cider to Clojurescript REPL use 'M-x cider-connect', 
+then run the following at the repl:
+```
+(shadow.cljs.devtools.api/nrepl-select :server) 
+```
+
+Then switch to the server.main namespace from REPL
+```
+(in-ns 'server.core)
+```
+
+Or connect to REPL for the build from the command line:
+```
+shadow-cljs cljs-repl app
 ```
 
 # Tutorials

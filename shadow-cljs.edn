@@ -8,7 +8,7 @@
                 [reagent "0.7.0"]
                 [re-frame "0.10.5"]
                 [com.andrewmcveigh/cljs-time "0.5.2"]]
- :nrepl {:port       43219}
+ :nrepl {:port 43219}
  :builds
  {:server {:id :server
         :target :node-script
