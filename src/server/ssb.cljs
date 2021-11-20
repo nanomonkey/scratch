@@ -83,7 +83,7 @@
   (let [key (gobj/get msg "key")
         content (gobj/getValueByKeys msg #js ["value" "content"])
         author (gobj/getValueByKeys msg #js ["value" "author"])
-        encrypted? (string? content)]
+        encrypted? (and (string? content)(includes? ".box"))]  ;;TODO more efficient way of checking for .box end of string
     (conj {:key key
            :author author}
           (if encrypted?

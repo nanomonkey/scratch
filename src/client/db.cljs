@@ -40,6 +40,7 @@
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :duration "M1"
+                 ;;TODO change to :equipment {"i1" {:quantity 4 :unit :kg}} ??
                  :equipment {:items ["i1"]
                              :qty {"i1" 1}
                              :units {"i1" "ea"}}

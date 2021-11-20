@@ -1,0 +1,22 @@
+;; shadow-cljs configuration
+{:source-paths ["src"]
+ :dependencies [[cider/cider-nrepl "0.23.0-SNAPSHOT"]
+                [org.clojure/core.async "0.4.490"]
+                [com.taoensso/timbre       "4.10.0"]
+                [com.taoensso/sente        "1.11.0"]
+                [hiccups                   "0.3.0"]
+                [reagent "0.7.0"]
+                [re-frame "0.10.5"]
+                [com.andrewmcveigh/cljs-time "0.5.2"]]
+ :nrepl {:port       43219}
+ :builds
+ {:server {:id :server
+        :target :node-script
+        :main server.core/main
+        :output-to "out/main.js"
+        :devtools {:after-load server.core/reload!}}
+  :client {:id :client
+           :target :browser
+           :output-dir "resources/public/js"
+           :asset-path "/js"
+           :modules {:main {:entries [client.core]}}}}}
