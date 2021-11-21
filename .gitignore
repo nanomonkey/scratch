@@ -2,5 +2,10 @@
 /target
 /*-init.clj
 /resources/public/js/compiled
-out
-.rebelreadlinehistory
+/resources/public/js/cljs-runtime
+/out
+/.rebelreadlinehistory
+/node_modules
+/.shadow-cljs
+/.nrepl-port
+

@@ -2,6 +2,7 @@
   (:require [cljs.core.async :refer (chan put! take! close! timeout >! <!)]
             [server.message-bus :refer (dispatch! handle!)]
             [goog.object :as gobj]
+            [clojure.string :refer (includes?)]
             ["ssb-server" :as ssb-server]
             ["ssb-server/plugins/master" :as ssb-master]
             ["ssb-gossip" :as ssb-gossip]
@@ -83,7 +84,7 @@
   (let [key (gobj/get msg "key")
         content (gobj/getValueByKeys msg #js ["value" "content"])
         author (gobj/getValueByKeys msg #js ["value" "author"])
-        encrypted? (and (string? content)(includes? ".box"))]  ;;TODO more efficient way of checking for .box end of string
+        encrypted? (and (string? content)(includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
     (conj {:key key
            :author author}
           (if encrypted?

@@ -33,6 +33,10 @@ Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 ```
 npm install the-thing
 ```
+Installing new npm dependencies:
+```
+npm install the-thing
+```
 
 In Emacs connect with Cider to Clojurescript REPL use 'M-x cider-connect', 
 then run the following at the repl:
@@ -48,6 +52,11 @@ Then switch to the server.main namespace from REPL
 Or connect to REPL for the build from the command line:
 ```
 shadow-cljs cljs-repl app
+```
+
+# Compile Release build
+```
+shadow-cljs release app
 ```
 
 # Tutorials
