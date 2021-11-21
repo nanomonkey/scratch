@@ -1,9 +1,9 @@
-(ns scratch.core
+(ns client.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [scratch.events :as events]
-            [scratch.views :as views]
-            [scratch.config :as config]))
+            [client.events :as events]
+            [client.views :as views]
+            [client.config :as config]))
 
 
 (defn dev-setup []

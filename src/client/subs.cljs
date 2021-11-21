@@ -1,6 +1,6 @@
-(ns scratch.subs
+(ns client.subs
   (:require [re-frame.core :as rf]
-            [scratch.widgets :refer [duration->sec]])
+            [client.widgets :refer [duration->sec]])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 ;;UI elements

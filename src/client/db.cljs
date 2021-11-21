@@ -1,4 +1,4 @@
-(ns scratch.db)
+(ns client.db)
 
 ;; useful fn's for later
 (defn index-by [key-fn coll]

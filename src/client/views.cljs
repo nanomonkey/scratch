@@ -1,8 +1,8 @@
-(ns scratch.views
+(ns client.views
   (:require [re-frame.core :as rf]
             [reagent.core :as r] 
-            [scratch.subs :as subs]
-            [scratch.widgets :refer [markdown-section 
+            [client.subs :as subs]
+            [client.widgets :refer [markdown-section 
                                      inline-editor 
                                      tag-editor
                                      recipe-search
@@ -533,6 +533,6 @@
         :schedule (schedule-view)
         :settings (settings-view)))))
 
-(when-some [el (js/document.getElementById "scratch-views")]
+(when-some [el (js/document.getElementById "client-views")]
     (defonce _init (rf/dispatch-sync [:initialize]))
     (r/render [main-panel] el))

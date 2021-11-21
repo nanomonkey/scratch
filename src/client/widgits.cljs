@@ -1,4 +1,4 @@
-(ns scratch.widgets
+(ns client.widgets
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
             [goog.string.format]))

@@ -1,6 +1,6 @@
-(ns scratch.events
+(ns client.events
   (:require [re-frame.core :as rf]
-            [scratch.db :as db]))
+            [client.db :as db]))
 
 (rf/reg-event-db
  ::initialize-db
