@@ -1,0 +1,19 @@
+{
+ :min-bb-version "0.3.6"
+ :tasks
+ {
+  watch-client {:task (shell "npx shadow-cljs watch client")}
+  watch-server {:task (shell "npx shadow-cljs watch server")}
+  compile-server {:task (shell "npx shadow-cljs compile server")}
+  release-server {:task (shell "npx shadow-cljs release server")}
+
+  ;;updates
+  update-npm {:task (shell "npx npm-check-updates -u")}
+  update-deps {:task (shell "clojure -Moutdated -a outdated --write")}
+ 
+ ;;shadow report
+  buildreport {:task (let [date (java.time.LocalDateTime/now)
+                           formatter (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd")
+                           file (str "buildreport_" (.format date formatter) ".html")]
+                       (shell (str "npx shadow-cljs run shadow.cljs.build-report server " file)))}
+}}

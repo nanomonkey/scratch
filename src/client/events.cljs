@@ -2,6 +2,18 @@
   (:require [re-frame.core :as rf]
             [client.db :as db]))
 
+(rf/reg-event-fx         
+   :load-localstore
+   (fn [cofx  _]          ;; cofx is a map containing inputs
+     (let [defaults (:local-store cofx)]  ;; <--  use it here
+       {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects map
+
+(reg-fx
+  :exit-fullscreen
+  (fn [_]             ;; we don't bother with that nil value
+     (.exitFullscreen js/document)))
+
+
 (rf/reg-event-db
  ::initialize-db
  (fn  [_ _]

@@ -6,10 +6,13 @@
 
 
 (def recipe-db
-  "this in memory database is for graphical testing only, it doesn't represent the way in which transactions are stored on the 
-   scuttlebutt database, but instead how they are stored for the re-frame (react) pub/sub system.  Some of the storage methods 
-   below seem redundant in my eyes, so I'm likely to try and bring it closer to the way it's stored in transactions on ssb.
-   Also, all ids are simple strings instead of the normal hash ids that would be generated at runtime."
+  "This sample data for the in memory database is for graphical testing only, 
+  it doesn't represent the way in which transactions are stored on the 
+   scuttlebutt database, but instead how they are stored for the re-frame (react) 
+  pub/sub system.  
+  Some of the storage methods below seem redundant in my eyes, 
+  so I'm likely to try and bring it closer to the way it's stored in ssb transactions.
+  Sample id's are made up strings instead of hash ids that would be generated."
   {:loaded {:recipe "r1"
             :date 20210513
             :location "l1"
