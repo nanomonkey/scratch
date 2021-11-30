@@ -5,12 +5,14 @@
    ;[cljs.core.async :as async  :refer (<! >! put! chan)]
    ;[taoensso.encore :as encore :refer ()]
    ;[taoensso.timbre :as timbre :refer-macros (tracef debugf infof warnf errorf)]
-   [taoensso.sente  :as sente  :refer (cb-success?)])
+   [taoensso.sente  :as sente  :refer (cb-success?)]
+   [re-frame.core :as rf])
 
   (:require-macros
    [cljs.core.async.macros :as asyncm :refer (go go-loop)]))
 
-;; Sente Channnels
+
+;; Sente Channels
 (let [{:keys [chsk ch-recv send-fn state]}
       (sente/make-channel-socket-client!
        "/chsk" ; Must match server Ring routing URL
@@ -25,6 +27,9 @@
 
 ;;;; Sente event handlers
 
+(defn log [message data]
+  (.log js/console message (.stringify js/JSON (clj->js data))))
+
 (defmulti -event-msg-handler
   "Multimethod to handle Sente `event-msg`s"
   :id ; Dispatch on event-id
@@ -38,66 +43,80 @@
 (defmethod -event-msg-handler
   :default ; Default/fallback case (no other matching handler)
   [{:as ev-msg :keys [event]}]
-  (->output! "Unhandled event: %s" event))
+  (log "Unhandled ws event: " event))
 
 (defmethod -event-msg-handler 
   :chsk/state
   [{:as ev-msg :keys [?data]}]
   (if (= ?data {:first-open? true})
-    (->output! "Channel socket successfully established!")
-    (->output! "Channel socket state change: %s" ?data)))
+    (rf/dispatch [:ws-established? true])
+    (log "Channel socket state change: %s" ?data)))
 
 (defmethod -event-msg-handler 
   :chsk/handshake
   [{:as ev-msg :keys [?data]}]
   (let [[?uid ?csrf-token ?handshake-data] ?data]
-    (->output! "Handshake: %s" ?data)))
+    (log "Handshake: %s" ?data)))
 
 (defmulti chsk-recv (fn [id ?data] id))
 
 (defmethod -event-msg-handler :chsk/recv
   [{:as ev-msg :keys [?data]}]
-  ;(->output! "Push event from server: %s" ?data)
   (chsk-recv (?data 0) (?data 1)))
 
-;; recieved message handlers
-(defmethod chsk-recv 
-  :post-event
-  [id {:as ev-msg :keys [?data]}]
-  (let [[?uid ?csrf-token ?handshake-data ?msg] ?data]
-    (->output! "Message Posted: %s" ?msg)))
+(comment
+  ;; recieved message handlers
+  (defmethod chsk-recv 
+    :post-event
+    [id {:as ev-msg :keys [?data]}]
+    (let [[?uid ?csrf-token ?handshake-data ?msg] ?data]
+      (log "Message Posted: %s" ?msg)))
 
-(defmethod chsk-recv 
-  :ssb/error-event
-  [id {:as ?data :keys [message]}]
-  (->errors-put! "Error: %s" message))
+  (defmethod chsk-recv 
+    :ssb/error-event
+    [id {:as ?data :keys [message]}]
+    (log "Error: %s" message))
 
-(defmethod chsk-recv 
-  :ssb/response
-  [id {:as ?data :keys [message]}]
-  (->output! "SSB-response: %s" message))
+  (defmethod chsk-recv 
+    :ssb/response
+    [id {:as ?data :keys [message]}]
+    (log "SSB-response: %s" message))
 
-(defmethod chsk-recv 
-  :ssb/feed
-  [id {:as ?data :keys [message]}]
-  (->feed! "* %s" message))
+  (defmethod chsk-recv 
+    :ssb/feed
+    [id {:as ?data :keys [message]}]
+    (log "* %s" message))
 
-(defmethod chsk-recv 
-  :ssb/contact-name
-  [id {:as ?data :keys [message]}]
-  (->feed! "* %s" message))
+  (defmethod chsk-recv 
+    :ssb/contact-name
+    [id {:as ?data :keys [message]}]
+    (log "* %s" message))
 
-(defmethod chsk-recv 
-  :ssb/blob
-  [id {:as ?data :keys [message]}]
-  (->image! message))
+  (defmethod chsk-recv 
+    :ssb/blob
+    [id {:as ?data :keys [message]}]
+    (log message))
+)
 
-(defmethod chsk-recv 
-  :ssb/display
-  [id {:as ?data :keys [message]}]
-  
-  (add-image "name" message 200 200 "alt"))
 
+(defn ssb-login! [user-id config]   
+  "Trigger an Ajax POST request that resets our server-side session. Then we ask
+ our channel socket to reconnect, thereby picking up the new  session" 
+  (sente/ajax-lite "/login"
+                   {:method :post
+                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
+                    :params {:user-id    (str user-id)
+                             :config     (str config)}}
+                   (fn [ajax-resp]
+                     (rf/dispatch [:ajax-login-response ajax-resp])
+                     (let [login-successful? true 
+                                        ; Your logic here
+                           ]
+                       (if-not login-successful?
+                         (rf/dispatch [:login-failed])
+                         (do
+                           (rf/dispatch [:login-successful])
+                           (sente/chsk-reconnect! chsk)))))))
 
 ;;;; Sente event router (our `event-msg-handler` loop)
 

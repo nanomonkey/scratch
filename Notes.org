@@ -308,3 +308,9 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 * Contracts
 ** Legal Domain Specific Language 
 - https://catala-lang.org/
+* Tutorials
+** Re-learn pop-up tutorials for re-frame
+- https://github.com/oliyh/re-learn
+* Cryptography in Clojure
+** Buddy.core
+- https://cljdoc.org/d/buddy/buddy-core/1.10.1/doc/user-guide

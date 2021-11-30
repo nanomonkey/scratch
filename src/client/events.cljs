@@ -1,18 +1,69 @@
 (ns client.events
   (:require [re-frame.core :as rf]
-            [client.db :as db]))
+            [client.db :as db]
+            [client.ws :as ws]))
+
+
+;;;;;;;;;;;;;
+;; Effects ;;
+;;;;;;;;;;;;;
+
+(rf/reg-cofx          
+ :now                
+ (fn [coeffects _]   
+   (assoc coeffects :now (js/Date.))))  
+
+
+(rf/reg-fx
+ :ssb-login
+ (fn [user-id config]             
+   (ws/ssb-login! user-id config))) 
+
+(rf/reg-fx
+ :ssb-query
+ (fn [user-id query]
+   (ws/chsk-send! [:ssb/query {:msg query}] 8000
+                  (fn [cb-reply] (rf/dispatch [:query-response cb-reply])))))
+
+(rf/reg-fx
+ :ssb-contact
+ (fn [contact-id]
+   (ws/chsk-send! [:ssb/contact {:msg contact-id}] 8000
+                  (fn [cb-reply] (rf/dispatch [:contact cb-reply])))))
+
+(rf/reg-cofx         
+ :local-store
+ (fn [cofx local-store-key]
+   (assoc cofx
+          :local-store
+          (js->clj (.getItem js/localStorage local-store-key)))))
+
+(defonce last-temp-id (atom 0))
+
+(rf/reg-cofx
+  :temp-id 
+  (fn [cofx _]
+    (assoc cofx :temp-id (str (swap! last-temp-id inc)))))
+
+(rf/reg-fx
+ :start-ws
+ (fn []
+   (ws/start-router!)))
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Event Handlers  ;;
+;;;;;;;;;;;;;;;;;;;;;
 
 (rf/reg-event-fx         
-   :load-localstore
-   (fn [cofx  _]          ;; cofx is a map containing inputs
-     (let [defaults (:local-store cofx)]  ;; <--  use it here
-       {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects map
+ :load-defaults-localstore
+ (fn [cofx  _data]          ;; cofx is a map containing inputs; _data unused
+   (let [defaults (:local-store cofx)]  ;; <--  use it here
+     {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects map
 
-(reg-fx
-  :exit-fullscreen
-  (fn [_]             ;; we don't bother with that nil value
-     (.exitFullscreen js/document)))
-
+(rf/reg-event-fx
+ ::load-from-ssb
+ (fn [cofx [_ conn]]
+   {:db (assoc (:db cofx) :ssb-conn conn)}))
 
 (rf/reg-event-db
  ::initialize-db
@@ -56,12 +107,6 @@
  (fn [db [_ data]]
    (assoc-in db [:modal] data)))
 
-(defonce last-temp-id (atom 0))
-
-(rf/reg-cofx
-  :temp-id 
-  (fn [cofx _]
-    (assoc cofx :temp-id (str (swap! last-temp-id inc)))))
 
 ;; Recipes
 (rf/reg-event-db

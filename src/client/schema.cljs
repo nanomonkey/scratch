@@ -1,8 +1,8 @@
 (ns client.schema
   (:require [clojure.spec.alpha :as s]))
-;; https://clojure.org/guides/spec
 
-(s/def ::id (s/and string? #(= (count %) 44)))          ;;better hash spec?
+
+(s/def ::id (s/and string? #(= (count %) 44)))     ;;better hash spec?
 (s/def ::name (s/and string? #(<= 1 (count %) 64)))
 (s/def ::description string?)
 (s/def ::dirty? boolean?)
@@ -50,3 +50,22 @@
 
 (s/def ::person (s/keys :req [::first-name ::last-name ::email]
                         :opt [::phone]))
+
+
+;;TODO figure out how to test these correctly
+(defn ed25519? [hash] (and (string? hash) (= (count hash) 80)))
+(defn sha256? [hash] (and (string? hash) (= (count hash) 44)))
+(defn json-object? [x] true)
+
+(s/def ::hash-id ed25519?)
+(s/def ::feed-id sha256?)
+(s/def ::signature sha256?)
+
+(s/def ::content (s/or string? json-object?))
+(s/def ::message (s/map-of :previous ::hash-id 
+                           :author ::feed-id
+                           :sequence int?
+                           :timestamp int?
+                           :hash "sha256"
+                           :content ::content
+                           :signature ::signature))
