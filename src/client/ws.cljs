@@ -45,3 +45,22 @@
 (defn start! []
   (create-client!)
   (start-router!))
+
+(defn ssb-login! [user-id config]   
+  "Trigger an Ajax POST request that resets our server-side session. Then we ask
+ our channel socket to reconnect, thereby picking up the new  session" 
+  (sente/ajax-lite "/login"
+                   {:method :post
+                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
+                    :params {:user-id    (str user-id)
+                             :config     (str config)}}
+                   (fn [ajax-resp]
+                     (rf/dispatch [:ajax-login-response ajax-resp])
+                     (let [login-successful? true 
+                                        ; Your logic here
+                           ]
+                       (if-not login-successful?
+                         (rf/dispatch [:login-failed])
+                         (do
+                           (rf/dispatch [:login-successful])
+                           (sente/chsk-reconnect! @ch-chsk)))))))

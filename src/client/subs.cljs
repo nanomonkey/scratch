@@ -3,8 +3,13 @@
             [client.widgets :refer [duration->sec]])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
+;; Server
+(rf/reg-sub
+ :server/connected
+ (fn [db _]
+   (true? (get-in db [:server :connected]))))
 
-;;UI elements
+;; UI elements
 (rf/reg-sub-raw
  :modal
  (fn [db _] (reaction (:modal @db))))

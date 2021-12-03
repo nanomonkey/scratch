@@ -38,6 +38,11 @@
           :local-store
           (js->clj (.getItem js/localStorage local-store-key)))))
 
+(rf/reg-fx
+:set-local-store
+(fn [local-store-key value]
+  (.setItem js/localStorage local-store-key (str value))))
+
 (defonce last-temp-id (atom 0))
 
 (rf/reg-cofx
@@ -54,14 +59,32 @@
 ;; Event Handlers  ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
+(rf/reg-event-db
+ :server/connected
+ (fn [db [_ value]]
+   (assoc-in db [:server :connected] value)))
+
+(rf/reg-event-fx
+ :server/connect
+ (fn [_ _]
+   (ws/start!)
+   {:dispatch [:server/connected true]}))
+
 (rf/reg-event-fx         
  :load-defaults-localstore
+ [ (rf/inject-cofx :local-store "defaults") ] 
  (fn [cofx  _data]          ;; cofx is a map containing inputs; _data unused
    (let [defaults (:local-store cofx)]  ;; <--  use it here
      {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects map
 
 (rf/reg-event-fx
- ::load-from-ssb
+ :save-defaults-localstore
+ (fn [cofx [_ defaults]]
+   {:db (assoc-in (:db cofx) [:defaults :saved?] true)
+    :set-local-store ["defaults" defaults]}))
+
+(rf/reg-event-fx
+ ::initialize-ssb
  (fn [cofx [_ conn]]
    {:db (assoc (:db cofx) :ssb-conn conn)}))
 

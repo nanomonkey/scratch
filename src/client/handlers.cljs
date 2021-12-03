@@ -1,5 +1,6 @@
 (ns client.handlers
- (:require [re-frame.core :as rf]))
+ (:require [re-frame.core :as rf]
+           [taoensso.sente  :as sente  :refer (cb-success?)]))
 
 
 ;;;; Sente event handlers
@@ -45,7 +46,7 @@
   ;; recieved message handlers
   (defmethod chsk-recv 
     :post-event
-x    [id {:as ev-msg :keys [?data]}]
+    [id {:as ev-msg :keys [?data]}]
     (let [[?uid ?csrf-token ?handshake-data ?msg] ?data]
       (log "Message Posted: %s" ?msg)))
 
@@ -74,25 +75,5 @@ x    [id {:as ev-msg :keys [?data]}]
     [id {:as ?data :keys [message]}]
     (log message))
 )
-
-
-(defn ssb-login! [user-id config]   
-  "Trigger an Ajax POST request that resets our server-side session. Then we ask
- our channel socket to reconnect, thereby picking up the new  session" 
-  (sente/ajax-lite "/login"
-                   {:method :post
-                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
-                    :params {:user-id    (str user-id)
-                             :config     (str config)}}
-                   (fn [ajax-resp]
-                     (rf/dispatch [:ajax-login-response ajax-resp])
-                     (let [login-successful? true 
-                                        ; Your logic here
-                           ]
-                       (if-not login-successful?
-                         (rf/dispatch [:login-failed])
-                         (do
-                           (rf/dispatch [:login-successful])
-                           (sente/chsk-reconnect! chsk)))))))
 
 
