@@ -1,16 +1,8 @@
 (ns client.ws
   (:require
-   ;[clojure.string  :as str]
-   ;[clojure.edn :as edn]
-   ;[cljs.core.async :as async  :refer (<! >! put! chan)]
-   ;[taoensso.encore :as encore :refer ()]
-   ;[taoensso.timbre :as timbre :refer-macros (tracef debugf infof warnf errorf)]
    [taoensso.sente  :as sente  :refer (cb-success?)]
    [re-frame.core :as rf]
-   [client.handlers :as handlers])
-
-  (:require-macros
-   [cljs.core.async.macros :as asyncm :refer (go go-loop)]))
+   [client.handlers :as handlers]))
 
 
 (def router_ (atom nil))
@@ -64,3 +56,4 @@
                          (do
                            (rf/dispatch [:login-successful])
                            (sente/chsk-reconnect! @ch-chsk)))))))
+ 

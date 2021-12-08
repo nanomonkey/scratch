@@ -20,7 +20,7 @@
 
 
 (defn topnav []
-  [:nav  [:ul [:li [recipe-search]]
+  [:nav  [:ul 
           [:li [:a {:href "#" 
                     :on-click #(rf/dispatch [:set-active-panel :recipe])} "Recipes"]]
           [:li [:a {:href "#" 
@@ -34,6 +34,26 @@
 
 (defn right-panel []
   [:div @(rf/subscribe [:active-panel])])
+
+(defn login-view []
+  (let [name (r/atom "")
+        password (r/atom "")]
+    [:div 
+     [:form {:on-submit #(do (.preventDefault %)
+                             (rf/dispatch [:ssb-login @name @password]))}
+      [:input {:type "text"
+               :placeholder "Name"
+               :name "login-name"
+               :auto-focus true
+               :value @name
+               :on-change #(reset! name (-> % .-target .-value))}]
+      [:div
+       [:input {:type "password"
+                :placeholder "Password"
+                :value @password
+                :on-change #(reset! description 
+                                    (-> % .-target .-value))}]]
+      [:button "Login"]]]))
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -182,9 +202,6 @@
   (duration-editor (rf/subscribe [:task/duration task]) #(rf/dispatch [:task/set-duration task %])))
 
 
-
-(defn price-field [price currency])
-
 (defn line-item 
   ([submit](line-item submit {})) 
   ([submit  {:keys [price?]}]
@@ -295,7 +312,6 @@
           [add-task recipe-id]]]]]))) 
 
 
-
 (defn recipe-view []
   (let [recipe-id (rf/subscribe [:loaded-recipe])]
     [:div
@@ -303,6 +319,7 @@
      (topnav)
      [:div.row
       [:div.column.left
+       [:div [recipe-search]]
        [:div [modal-button "Create Item" "Create New Item" 
               [create-item ""] "item-name"]]
        ]
@@ -445,22 +462,24 @@
        (calendar-view)]
       [:div.column.middle (day-events today)]
       [:div.column.right
-       [:div (str @(rf/subscribe [:loaded-date]))]]]]))
+       [:div [strong "Loaded: "] (str @(rf/subscribe [:loaded-date]))]]]]))
 
 
 (defn settings-view []
-  ;; Default Names
-  ; Recipes
-  ; Products
-  ; Agents
-  ; Groups
-  
-  ;; CSS attributes
-
-  ;; Themes
-
-  ;; 
-  )
+  [:div 
+   [modal]
+   (topnav)
+   [:div.row
+    [:div.column.left]
+    [:div.column.middle
+     [:h3 "Default Names"]
+     [:h3 "Recipes"]
+     [:h3 "Products"]
+     [:h3 "Agents"]
+     [:h3 "Groups"]
+     [:h3 "CSS attributes"]
+     [:h3 "Themes"]]
+    [:div.column.right]])
 
 (defmacro left-bar [mode loaded]
   (let [source (str ":" mode "/source")]
@@ -527,6 +546,7 @@
   (let [active (rf/subscribe [:active-panel])]
     (fn []
       (condp = @active
+        :login (login-view)
         :recipe (recipe-view)
         :inventory (inventory-view)
         :supplier (supplier-view)
