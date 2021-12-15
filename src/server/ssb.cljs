@@ -16,6 +16,7 @@
             ["ssb-serve-blobs/id-to-url" :as blob-id->url]
             ["ssb-config/inject" :as ssb-config]
             ["fs" :as fs]
+            ["os" :as os]
             ["pull-stream" :as pull]
             ["stream-to-pull-stream" :as to-pull]
             ["flumeview-reduce" :as fv-reduce]
@@ -27,9 +28,19 @@
 (defonce db-conns (atom {})) ;;ssb-db connections keyed by uid
 
 ;; Setup Server
+
+(defn expand-home [s]
+  (if (.startsWith s "~")
+    (clojure.string/replace-first s "~" (.homedir os))
+    s))
+
 (defn create-secret-key [filename] 
   "Creates secret key file if one doesn't alread exists at filename path."
-  (. ssb-keys loadOrCreateSync filename))
+  (. ssb-keys loadOrCreateSync (expand-home filename)))
+
+(defn create-account [username]
+  (if-let [key (create-secret-key (str "~/.scratch/" username))]
+    (gobj/get key "id")))
 
 (defonce plugins (do                           
                    (.use ssb-server ssb-master)
@@ -51,7 +62,8 @@
 (defn parse-json [msg] 
   (js->clj msg :keywordize-keys true))
 
-(defn decrypt [uid msg]
+; TODO: check to see if private needs to be pulled in as plugin (ssb-private), or use ssb-keys
+(defn decrypt [uid msg]  
   (if-let [^js db (get @db-conns uid)]
     (.private.unbox db msg
                     (fn [err, content]
@@ -80,18 +92,16 @@
       (js->clj content)))) 
 
 
-(defn flatten-msg [msg]
+(defn flatten-msg [uid msg]
   (let [key (gobj/get msg "key")
         content (gobj/getValueByKeys msg #js ["value" "content"])
         author (gobj/getValueByKeys msg #js ["value" "author"])
-        encrypted? (and (string? content)(includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
+        encrypted? (and (string? content) (includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
     (conj {:key key
-           :author author}
+           :author author
+           :encrypted encrypted?}
           (if encrypted?
-            (do
-              (println content)
-              {:type "encrypted"
-               :content content})
+            (destructure (decrypt uid content))
             (destructure content)))))
 
 ;; Publish to database 
@@ -109,7 +119,7 @@
   (if-let [^js db (get @db-conns uid)]
     (.private.publish db
                       (clj->js contents) 
-                      (clj->js recipients) ;array of hashes    
+                      (clj->js recipients) ;array of feed-ids    
                       (fn [err msg]
                         (if err
                           (dispatch! :error {:uid uid :message err})
@@ -170,7 +180,8 @@
                    (fn op? [val] (dispatch! bus-tag {:uid uid :message (parse-json val)}))
                    ;; this gets run when stream runs out
                    (fn done? [val] (when val 
-                                     (dispatch! bus-tag {:uid uid :message (str "Feed closed: " (parse-json val))})))))
+                                     (dispatch! bus-tag {:uid uid 
+                                                         :message (str "Feed closed: " (parse-json val))})))))
      (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )}))))
 
  
@@ -188,7 +199,8 @@
 (defn query-drain! [uid qry] (db-drain uid (fn [^js db] (.query.read db (clj->js qry))) :feed))
 
 (defn query-explain! [uid qry] 
-  (dispatch! :feed {:uid uid :message (str (parse-json (db-sync uid (fn [^js db] (.query.explain db (clj->js qry))))))}))
+  (dispatch! :feed {:uid uid 
+                    :message (str (parse-json (db-sync uid (fn [^js db] (.query.explain db (clj->js qry))))))}))
 
 (defn about [uid id]
   (db-async uid 
@@ -231,7 +243,9 @@
   (db-collect (fn [^js db] (.links db #js {:values true :rel 'root' :dest message-id})) :feed))
 
 
-;; Blobs
+;; *************
+;; **  Blobs  **
+;; *************
 
 (defn list-blobs [uid]
   (db-collect uid (fn [^js db] (.blobs.ls db (clj->js {:meta true}))) :response))
@@ -281,7 +295,8 @@
 (defn add-blob! 
   ([uid file]
    (prn file)
-   (add-blob! uid file (fn [err hash] (dispatch! :response {:uid uid :message {:blob-added hash}}))))
+   (add-blob! uid file 
+              (fn [err hash] (dispatch! :response {:uid uid :message {:blob-added hash}}))))
   ([uid file cb-fn]
    (if-let [^js db (get @db-conns uid)]
      (pull 
@@ -296,19 +311,12 @@
    (cb-fn (blob-id->url blob-id (clj->js {:unbox unbox-key})))))
 
 
-(defn display-blobs! [uid]
-  (if-let [^js db (get @db-conns uid)]
-    (pull (.blobs.ls db)
-          (.drain pull 
-                  (fn op? [value] (serve-blobs! uid value
-                                              #(dispatch! :display {:uid uid 
-                                                                                   :message %})))))))
-
 ;; Message bus Handlers
 ;; possible tags: :create, :update, :delete, :query, :get, :respond, :private
 
 (defonce message-handlers 
-  {:server-start (fn [[uid config]] (swap! db-conns assoc uid (start-server config)))
+  {:create-key (fn [uid filename] (create-secret-key filename))
+   :server-start (fn [[uid config]] (swap! db-conns assoc uid (start-server config)))
    :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))
@@ -321,7 +329,6 @@
    :serve-blob (fn [{:keys [uid blob-id]}]
                (serve-blobs! uid blob-id #(dispatch! :blob {:uid uid :message (js->clj %)})))
    :list-blobs (fn [{:keys [uid]}] (list-blobs! uid #(dispatch! :feed {:uid uid :message %})))
-   :display-blobs (fn [{:keys [uid]}] (display-blobs! uid))
    :thread (fn [{:keys [uid message-id]}] (msg-thread! uid message-id))
    :user-feed (fn [{:keys [uid user-id]}] (user-feed! uid user-id))
    :test (fn [message] (prn message))})

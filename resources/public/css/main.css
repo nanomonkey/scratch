@@ -558,4 +558,70 @@ border: 3px dotted orange;
   border-color: grey;
   border-radius: 5px;
 }
+
+/* Spinner(s) */
+
+/* Moon 
+<div class="moon">
+  <div class="disc"></div>
+</div> 
+*/
+
+.moon {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background-color: #fff;
+  transform: translateZ(0);
+  
+  &::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    background-color: #222;
+    width: 50%; height: 100%;
+    animation: flip 2s 1s steps(2) infinite alternate;
+  }
+}
+
+.disc {
+  transform-style: preserve-3d;
+  width: 100%;
+  height: 100%;
+  animation: rotate 4s linear infinite;
+  
+  &::before, &::after {
+    content: " ";
+    display: block;
+    transform-style: preserve-3d;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: transform 4s;
+    position: absolute;
+    backface-visibility: hidden;
+  }
+  &::before {
+    background-color: #222;
+  }
+  &::after {
+    background-color: #fff;
+    transform: rotateY(180deg);
+  }
+}
+
+@keyframes rotate {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+@keyframes flip {
+  0%   { left: 0; }
+  100% { left: 100%; }
+}
+
 </style>

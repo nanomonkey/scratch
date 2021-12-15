@@ -51,9 +51,11 @@
        [:input {:type "password"
                 :placeholder "Password"
                 :value @password
-                :on-change #(reset! description 
-                                    (-> % .-target .-value))}]]
-      [:button "Login"]]]))
+                :on-change #(reset! password (-> % .-target .-value))}]]
+      [:button "Login"]]]
+    [:div [:button {:on-click #(do
+                                 (.preventDefault %)
+                                 (rf/dispatch [:create-account @name @password]))} "Create New Account"]]))
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -201,6 +203,7 @@
 (defn task-duration [task]
   (duration-editor (rf/subscribe [:task/duration task]) #(rf/dispatch [:task/set-duration task %])))
 
+(defn price-field [price currency])
 
 (defn line-item 
   ([submit](line-item submit {})) 
@@ -462,7 +465,7 @@
        (calendar-view)]
       [:div.column.middle (day-events today)]
       [:div.column.right
-       [:div [strong "Loaded: "] (str @(rf/subscribe [:loaded-date]))]]]]))
+       [:div [:strong "Loaded: "] (str @(rf/subscribe [:loaded-date]))]]]]))
 
 
 (defn settings-view []
@@ -479,7 +482,7 @@
      [:h3 "Groups"]
      [:h3 "CSS attributes"]
      [:h3 "Themes"]]
-    [:div.column.right]])
+    [:div.column.right]]])
 
 (defmacro left-bar [mode loaded]
   (let [source (str ":" mode "/source")]

@@ -13,6 +13,10 @@
  (fn [coeffects _]   
    (assoc coeffects :now (js/Date.))))  
 
+(rf/reg-fx
+ :ssb-create-account
+ (fn [username filename]
+   (ws/chsk-send! [:ssb-create-account username filename])))
 
 (rf/reg-fx
  :ssb-login
@@ -53,11 +57,29 @@
 (rf/reg-fx
  :start-ws
  (fn []
-   (ws/start-router!)))
+   (ws/start!)))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Event Handlers  ;;
 ;;;;;;;;;;;;;;;;;;;;;
+
+(rf/reg-event-fx         
+ :load-defaults-localstore
+ [ (rf/inject-cofx :local-store "defaults") ] 
+ (fn [cofx  _data]          ;; cofx is a map containing inputs; _data unused
+   (let [defaults (:local-store cofx)]  ;; <--  use it here
+     {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects mapW
+
+(rf/reg-event-fx
+ :create-account
+ (fn [cofx [name password]]
+   {:db (assoc (:db cofx) :account :creating)
+    :ssb-create-account [name password]}))
+
+(rf/reg-event-db
+ :waiting-spinner
+ (fn [db _]        ;;TODO Add id of section?!
+   (assoc-in db [:waiting-spinner] true)))
 
 (rf/reg-event-db
  :server/connected
@@ -65,17 +87,10 @@
    (assoc-in db [:server :connected] value)))
 
 (rf/reg-event-fx
- :server/connect
- (fn [_ _]
-   (ws/start!)
-   {:dispatch [:server/connected true]}))
-
-(rf/reg-event-fx         
- :load-defaults-localstore
- [ (rf/inject-cofx :local-store "defaults") ] 
- (fn [cofx  _data]          ;; cofx is a map containing inputs; _data unused
-   (let [defaults (:local-store cofx)]  ;; <--  use it here
-     {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects map
+ :server/connect!
+ (fn [cofx [_]]
+   {:db (assoc-in (:db cofx)[:server/connected] :connecting)
+    :start-ws []}))
 
 (rf/reg-event-fx
  :save-defaults-localstore

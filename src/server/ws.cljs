@@ -20,7 +20,7 @@
    ["body-parser" :as body-parser]
    ["csurf" :as csurf]
    ["express-session" :as express-session]
-   ["formidable" :as formidable]
+   ["formidible" :as formidable]
 
    ;; Optional, for Transit encoding:
    ;[taoensso.sente.packers.transit :as sente-transit]
@@ -63,8 +63,22 @@
   (def ajax-get-or-ws-handshake ajax-get-or-ws-handshake-fn)
   (def ch-chsk                  ch-recv) ; ChannelSocket's receive channel
   (def chsk-send!               send-fn) ; ChannelSocket's send API fn
-  (def connected-uids           connected-uids) ; Watchable, read-only atomk
+  (def connected-uids           connected-uids) ; Watchable, read-only atom
   )
+
+(defn express-account-creation-handler
+  [req res]
+  (let [req-session (aget req "session")
+        body (aget req "body")
+        username (aget body "username")
+        password (aget body "password")]
+    ;(dispatch! :create-key username filename)
+    ;TODO decide if filename should be generated from username,
+    ;     check if it already exists, and encrypt it with a password.
+    (if-let [id (ssb/create-account username)]
+      (.send res {:username username
+                  :id id})
+      (.send res "There was a problem creating a new account."))))
 
 (defn express-login-handler
   "Here's where we'll add server-side login/auth procedure (Friend, etc.).
@@ -88,7 +102,7 @@
                                              name (.-name filename)
                                              path (.-path filename)]
                                          (debugf "Filename: %s Name: %s Path: %s" filename name path)
-                                         (ssb/add-blob! uid filename)))))))
+                                         (ssb/add-blob! uid filename)))))))  ; TODO get this to work?!
 
 (defn routes [^js express-app]
   (doto express-app
@@ -103,6 +117,7 @@
     (.get "/chsk" ajax-get-or-ws-handshake)
     (.post "/chsk" ajax-post)
     (.post "/login" express-login-handler)
+    (.post "/new_account" express-account-creation-handler)
     (.post "/upload" express-upload-handler)
     (.use (.static express "public"))
     (.use (fn [^js req res next]
