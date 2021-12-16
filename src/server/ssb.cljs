@@ -2,7 +2,7 @@
   (:require [cljs.core.async :refer (chan put! take! close! timeout >! <!)]
             [server.message-bus :refer (dispatch! handle!)]
             [goog.object :as gobj]
-            [clojure.string :refer (includes?)]
+            [clojure.string :as str]
             ["ssb-server" :as ssb-server]
             ["ssb-server/plugins/master" :as ssb-master]
             ["ssb-gossip" :as ssb-gossip]
@@ -31,14 +31,30 @@
 
 (defn expand-home [s]
   (if (.startsWith s "~")
-    (clojure.string/replace-first s "~" (.homedir os))
+    (str/replace-first s "~" (.homedir os))
     s))
+
+(defn read-file->channel [path]
+  (.readFile fs path "utf8" (fn [err data] (go (>! c data))))
+  c)
+
+(defn create-account [filename]
+  (let [file-path (expand-home filename)]
+    ; check to see if file already exists
+    (fs/open file-path "wx"
+             (fn [err fd] (if err (if (= "EEXIST" (gobj/get err "code"))
+                                    {:err "Account already exists!"}
+                                    {:err err})
+                            (fs/close fd))))
+    ; otherwise create it
+    (create-secret-key file-path)))
+
 
 (defn create-secret-key [filename] 
   "Creates secret key file if one doesn't alread exists at filename path."
   (. ssb-keys loadOrCreateSync (expand-home filename)))
 
-(defn create-account [username]
+(defn use-account [username]
   (if-let [key (create-secret-key (str "~/.scratch/" username))]
     (gobj/get key "id")))
 
@@ -96,7 +112,7 @@
   (let [key (gobj/get msg "key")
         content (gobj/getValueByKeys msg #js ["value" "content"])
         author (gobj/getValueByKeys msg #js ["value" "author"])
-        encrypted? (and (string? content) (includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
+        encrypted? (and (string? content) (str/includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
     (conj {:key key
            :author author
            :encrypted encrypted?}
@@ -315,8 +331,7 @@
 ;; possible tags: :create, :update, :delete, :query, :get, :respond, :private
 
 (defonce message-handlers 
-  {:create-key (fn [uid filename] (create-secret-key filename))
-   :server-start (fn [[uid config]] (swap! db-conns assoc uid (start-server config)))
+  {:server-start (fn [[uid config]] (swap! db-conns assoc uid (start-server config)))
    :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))

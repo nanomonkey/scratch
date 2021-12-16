@@ -75,7 +75,7 @@
     ;(dispatch! :create-key username filename)
     ;TODO decide if filename should be generated from username,
     ;     check if it already exists, and encrypt it with a password.
-    (if-let [id (ssb/create-account username)]
+    (if-let [id (ssb/use-account username)]
       (.send res {:username username
                   :id id})
       (.send res "There was a problem creating a new account."))))
