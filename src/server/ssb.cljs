@@ -4,7 +4,7 @@
             [goog.object :as gobj]
             [clojure.string :as str]
             ["ssb-server" :as ssb-server]
-            ["ssb-server/plugins/master" :as ssb-master]
+            ;["ssb-server/plugins/master" :as ssb-master]
             ["ssb-gossip" :as ssb-gossip]
             ["ssb-replicate" :as ssb-replicate] 
             ["ssb-backlinks" :as ssb-backlinks]
@@ -17,6 +17,7 @@
             ["ssb-config/inject" :as ssb-config]
             ["fs" :as fs]
             ["os" :as os]
+            ["path" :as path]
             ["pull-stream" :as pull]
             ["stream-to-pull-stream" :as to-pull]
             ["flumeview-reduce" :as fv-reduce]
@@ -35,8 +36,9 @@
     s))
 
 (defn read-file->channel [path]
-  (.readFile fs path "utf8" (fn [err data] (go (>! c data))))
-  c)
+  (let [c (chan)]
+    (.readFile fs path "utf8" (fn [err data] (go (>! c data))))
+    c))
 
 (defn create-account [filename]
   (let [file-path (expand-home filename)]
@@ -45,9 +47,9 @@
              (fn [err fd] (if err (if (= "EEXIST" (gobj/get err "code"))
                                     {:err "Account already exists!"}
                                     {:err err})
-                            (fs/close fd))))
-    ; otherwise create it
-    (create-secret-key file-path)))
+                              (do
+                                (let [key (.generate ssb-keys)])
+                                (fs/close fd)))))))
 
 
 (defn create-secret-key [filename] 
@@ -55,11 +57,11 @@
   (. ssb-keys loadOrCreateSync (expand-home filename)))
 
 (defn use-account [username]
-  (if-let [key (create-secret-key (str "~/.scratch/" username))]
+  (if-let [key (create-secret-key (.join path (.homedir os) ".scratch/" username))]
     (gobj/get key "id")))
 
 (defonce plugins (do                           
-                   (.use ssb-server ssb-master)
+                   ;(.use ssb-server ssb-master)
                    (.use ssb-server ssb-gossip)
                    (.use ssb-server ssb-replicate)
                    (.use ssb-server ssb-query)

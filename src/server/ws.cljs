@@ -20,7 +20,7 @@
    ["body-parser" :as body-parser]
    ["csurf" :as csurf]
    ["express-session" :as express-session]
-   ["formidible" :as formidable]
+   ["formidable" :as formidable]
 
    ;; Optional, for Transit encoding:
    ;[taoensso.sente.packers.transit :as sente-transit]

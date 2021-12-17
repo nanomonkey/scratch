@@ -1,7 +1,7 @@
 ;; shadow-cljs configuration
-{:source-paths ["src/client" "src/server"]
+{:source-paths ["src"]
  :dependencies [[cider/cider-nrepl "0.23.0-SNAPSHOT"]
-                [org.clojure/core.async "0.4.490"]
+                ;[org.clojure/core.async "0.4.490"]
                 [com.taoensso/timbre       "4.10.0"]
                 [com.taoensso/sente        "1.11.0"]
                 [hiccups                   "0.3.0"]
