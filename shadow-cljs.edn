@@ -19,4 +19,4 @@
            :target :browser
            :output-dir "resources/public/js"
            :asset-path "/js"
-           :modules {:main {:entries [client.core]}}}}}
+           :modules {:main {:init-fn client.core/init}}}}}
