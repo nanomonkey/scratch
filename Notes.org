@@ -314,3 +314,12 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 * Cryptography in Clojure
 ** Buddy.core
 - https://cljdoc.org/d/buddy/buddy-core/1.10.1/doc/user-guide
+** BB
+*** Get list of tasks
+#+BEGIN_SRC sh
+bb tasks
+#+END_SRC
+*** Run tasks
+#+BEGIN_SRC sh
+bb run taskname
+#+END_SRC
