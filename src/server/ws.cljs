@@ -20,8 +20,10 @@
    ["body-parser" :as body-parser]
    ["csurf" :as csurf]
    ["express-session" :as express-session]
+   ;["express-static" :as express-static]
    ["formidable" :as formidable]
-
+   ["path" :as path]
+   
    ;; Optional, for Transit encoding:
    ;[taoensso.sente.packers.transit :as sente-transit]
    )
@@ -38,15 +40,16 @@
 (defn landing-pg-handler [ring-req]
   (debugf "Landing page handler")
   (-> [:html
-       ;[:head "Content-Type: text/html"]
-       [:body       
-        [:h2 "Login"]
-        [:p
-         [:input#input-login {:type :text :placeholder "User-id"}]
-         [:input#input-ssb-config {:type :text :value "/.ssb"}] 
-         [:button#btn-login {:type "button"} "Secure login!"]]       
-        [:script {:src "js/main.js"}]]  ; Include our cljs target
-        ] 
+       [:head
+        [:meta {:Content-Type "text/html" :charset "utf-8"}]
+        [:link {:rel "stylesheet" :href "css/main.css"}]
+        [:link {:rel "stylesheet" 
+                :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]]
+       [:body  
+        [:div {:id "app"}]
+        [:script {:type "application/javascript" :src "js/showdown.min.js"}]
+        [:script {:type "application/javascript" :src "js/compiled/app.js"}]
+        [:script "scratch.core.init();"] ] ] 
       (hiccups/html)))
 
 
@@ -100,14 +103,14 @@
             (fn [err fields files] (if err (next err) 
                                        (let [filename (.-filename files)
                                              name (.-name filename)
-                                             path (.-path filename)]
-                                         (debugf "Filename: %s Name: %s Path: %s" filename name path)
+                                             filepath (.-path filename)]
+                                         (debugf "Filename: %s Name: %s Path: %s" filename name filepath)
                                          (ssb/add-blob! uid filename)))))))  ; TODO get this to work?!
 
 (defn routes [^js express-app]
   (doto express-app
-    (.get "/" (fn [req res] (.send res (landing-pg-handler req))))
-
+    ;(.get "/" (fn [req res] (.send res (landing-pg-handler req))))
+    ;(.get "/" (fn [req res] (.sendFile res (.join path (js* "__dirname") "../resources/public/index.html"))))
     (.ws "/chsk"
          (fn [ws req next]
            (ajax-get-or-ws-handshake req nil nil
@@ -119,7 +122,7 @@
     (.post "/login" express-login-handler)
     (.post "/new_account" express-account-creation-handler)
     (.post "/upload" express-upload-handler)
-    (.use (.static express "public"))
+    (.use (.static express "resources/public"))
     (.use (fn [^js req res next]
             (warnf "Unhandled request: %s" (.-originalUrl req))
             (next)))))
@@ -248,6 +251,7 @@
   :ssb/display-blobs
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (dispatch! :display-blobs {:uid uid}))
+
 
 ;; Message Bus Handlers
 ;; routes data to seperate processes via tagged async channels
