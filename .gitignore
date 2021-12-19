@@ -1,14 +1,12 @@
 /*.log
 /target
 /*-init.clj
-/resources/public/js/compiled
-/resources/public/js/cljs-runtime
+/resources/public/js/
 /out
 /.rebelreadlinehistory
 /node_modules
 /.shadow-cljs
 /.nrepl-*
 node_modules/
-public/js
 package-lock.json
 

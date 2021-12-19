@@ -35,27 +35,34 @@
 (defn right-panel []
   [:div @(rf/subscribe [:active-panel])])
 
+(defn server-status []
+  [:div
+   [:div (str "Websocket Connection: " @(rf/subscribe [:server/connected]))]
+   [:div (str "Account: " @(rf/subscribe [:account]))]])
+
 (defn login-view []
   (let [name (r/atom "")
         password (r/atom "")]
-    [:div 
-     [:form {:on-submit #(do (.preventDefault %)
-                             (rf/dispatch [:ssb-login @name @password]))}
-      [:input {:type "text"
-               :placeholder "Name"
-               :name "login-name"
-               :auto-focus true
-               :value @name
-               :on-change #(reset! name (-> % .-target .-value))}]
-      [:div
-       [:input {:type "password"
-                :placeholder "Password"
-                :value @password
-                :on-change #(reset! password (-> % .-target .-value))}]]
-      [:button "Login"]]]
-    [:div [:button {:on-click #(do
-                                 (.preventDefault %)
-                                 (rf/dispatch [:create-account @name @password]))} "Create New Account"]]))
+    (fn []
+      [:div 
+       (server-status)
+       [:form {:on-submit #(do (.preventDefault %)
+                               (rf/dispatch [:ssb-login @name @password]))}
+        [:input {:type "text"
+                 :placeholder "Feed Name"
+                 :name "login-name"
+                 :auto-focus true
+                 :value @name
+                 :on-change #(reset! name (-> % .-target .-value))}]
+        [:div
+         [:input {:type "password"
+                  :placeholder "Password"
+                  :value @password
+                  :on-change #(reset! password (-> % .-target .-value))}]]
+        [:button "Login to Existing Account"]]
+       [:div [:button {:on-click #(do
+                                    (.preventDefault %)
+                                    (rf/dispatch [:create-account @name @password]))} "Create New Account"]]])))
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]

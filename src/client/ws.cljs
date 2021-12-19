@@ -19,6 +19,7 @@
 
 (defn state-watcher [_key _atom _old-state new-state]
   (reset! chsk-state new-state)
+  (rf/dispatch [:server/connected new-state])
   (.warn js/console "New state" new-state))
 
 (defn create-client! []
@@ -37,6 +38,20 @@
 (defn start! []
   (create-client!)
   (start-router!))
+
+(defn ssb-create-account! [username password]   
+  (sente/ajax-lite "/new_account"
+                   {:method :post
+                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
+                    :params {:username    (str username)
+                             :password   (str password)}}
+                   (fn [resp]
+                     (let [account-created? true 
+                                        ; Your logic here
+                           ]
+                       (if-not account-created?
+                         (rf/dispatch [:account :creation-failed])
+                         (rf/dispatch [:account resp]))))))
 
 (defn ssb-login! [user-id config]   
   "Trigger an Ajax POST request that resets our server-side session. Then we ask

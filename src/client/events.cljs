@@ -15,8 +15,8 @@
 
 (rf/reg-fx
  :ssb-create-account
- (fn [username filename]
-   (ws/chsk-send! [:ssb-create-account username filename])))
+ (fn [{:keys [name password]}]
+   (ws/ssb-create-account! name password)))
 
 (rf/reg-fx
  :ssb-login
@@ -72,9 +72,15 @@
 
 (rf/reg-event-fx
  :create-account
- (fn [cofx [name password]]
+ (fn [cofx [_ name password]]
    {:db (assoc (:db cofx) :account :creating)
-    :ssb-create-account [name password]}))
+    :ssb-create-account {:name name
+                         :password password}}))
+
+(rf/reg-event-db
+ :account
+ (fn [db [_ status]]
+   (assoc-in db [:account] status)))
 
 (rf/reg-event-db
  :waiting-spinner

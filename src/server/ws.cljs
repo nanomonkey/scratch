@@ -37,22 +37,6 @@
 
 ;;;; Ring handlers
 
-(defn landing-pg-handler [ring-req]
-  (debugf "Landing page handler")
-  (-> [:html
-       [:head
-        [:meta {:Content-Type "text/html" :charset "utf-8"}]
-        [:link {:rel "stylesheet" :href "css/main.css"}]
-        [:link {:rel "stylesheet" 
-                :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]]
-       [:body  
-        [:div {:id "app"}]
-        [:script {:type "application/javascript" :src "js/showdown.min.js"}]
-        [:script {:type "application/javascript" :src "js/compiled/app.js"}]
-        [:script "scratch.core.init();"] ] ] 
-      (hiccups/html)))
-
-
 (let [;; Serialization format, must use same val for client + server:
       packer :edn ; Default packer, a good choice in most cases
       ;; (sente-transit/get-flexi-packer :edn) ; Experimental, needs Transit dep
@@ -75,9 +59,9 @@
         body (aget req "body")
         username (aget body "username")
         password (aget body "password")]
-    ;(dispatch! :create-key username filename)
     ;TODO decide if filename should be generated from username,
     ;     check if it already exists, and encrypt it with a password.
+    (.log js/console body)
     (if-let [id (ssb/use-account username)]
       (.send res {:username username
                   :id id})
@@ -109,14 +93,11 @@
 
 (defn routes [^js express-app]
   (doto express-app
-    ;(.get "/" (fn [req res] (.send res (landing-pg-handler req))))
-    ;(.get "/" (fn [req res] (.sendFile res (.join path (js* "__dirname") "../resources/public/index.html"))))
     (.ws "/chsk"
          (fn [ws req next]
            (ajax-get-or-ws-handshake req nil nil
                                      {:websocket? true
                                       :websocket  ws})))
-
     (.get "/chsk" ajax-get-or-ws-handshake)
     (.post "/chsk" ajax-post)
     (.post "/login" express-login-handler)
@@ -147,7 +128,6 @@
       (routes))))
 
 (defn main-ring-handler [express-app]
-  ;; Can we even call this a ring handler?
   (wrap-defaults express-app routes))
 
 (defn start-selected-web-server! [ring-handler port]
@@ -304,4 +284,3 @@
 (defn stop!  []  (stop-router!)  (stop-web-server!))
 
 (defn start! [] (start-router!) (start-web-server!))
-

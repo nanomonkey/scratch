@@ -14,10 +14,11 @@
   so I'm likely to try and bring it closer to the way it's stored in ssb transactions.
   Sample id's are made up strings instead of hash ids that would be generated."
   {:loaded {:recipe "r1"
-            :date 20210513
+            :date 20210513 ;(rf/subscribe [:now])
             :location "l1"
             :supplier "s1"}
-   :active-panel :recipe
+   :server {:connected :none-tried}
+   :active-panel :login
    :temp-id 0
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"

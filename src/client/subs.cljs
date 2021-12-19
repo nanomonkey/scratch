@@ -7,7 +7,12 @@
 (rf/reg-sub
  :server/connected
  (fn [db _]
-   (true? (get-in db [:server :connected]))))
+    (get-in db [:server :connected])))
+
+(rf/reg-sub
+ :account
+ (fn [db _]
+   (get-in db [:account])))
 
 ;; UI elements
 (rf/reg-sub-raw

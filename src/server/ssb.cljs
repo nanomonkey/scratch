@@ -48,17 +48,22 @@
                                     {:err "Account already exists!"}
                                     {:err err})
                               (do
-                                (let [key (.generate ssb-keys)])
+                                (let [key (.generate ssb-keys)]
+                                  (fs/write fd key 
+                                            (fn [err bytes-written] (if err (.log js/console err)
+                                                                        (.log js/console bytes-written)))))
                                 (fs/close fd)))))))
-
 
 (defn create-secret-key [filename] 
   "Creates secret key file if one doesn't alread exists at filename path."
   (. ssb-keys loadOrCreateSync (expand-home filename)))
 
 (defn use-account [username]
-  (if-let [key (create-secret-key (.join path (.homedir os) ".scratch/" username))]
-    (gobj/get key "id")))
+  (let [filename (.join path (.homedir os) ".scratch" username)
+        key (create-secret-key filename)]
+    (do
+      (.log js/console filename)
+      (gobj/get key "id"))))
 
 (defonce plugins (do                           
                    ;(.use ssb-server ssb-master)
