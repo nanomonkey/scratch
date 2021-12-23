@@ -17,6 +17,7 @@
             ["ssb-config/inject" :as ssb-config]
             ["fs" :as fs]
             ["os" :as os]
+            ["sodium" :as sodium]
             ["path" :as path]
             ["pull-stream" :as pull]
             ["stream-to-pull-stream" :as to-pull]
@@ -40,6 +41,10 @@
     (.readFile fs path "utf8" (fn [err data] (go (>! c data))))
     c))
 
+(defn encrypt [msg password]
+
+)
+
 (defn create-account [filename]
   (let [file-path (expand-home filename)]
     ; check to see if file already exists
@@ -61,9 +66,9 @@
 (defn use-account [username]
   (let [filename (.join path (.homedir os) ".scratch" username)
         key (create-secret-key filename)]
-    (do
-      (.log js/console filename)
-      (gobj/get key "id"))))
+    (let [id (gobj/get key "id")]
+      (println id)
+      id)))
 
 (defonce plugins (do                           
                    ;(.use ssb-server ssb-master)

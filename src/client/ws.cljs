@@ -45,13 +45,16 @@
                     :headers {:x-csrf-token (:csrf-token @chsk-state)}
                     :params {:username    (str username)
                              :password   (str password)}}
-                   (fn [resp]
-                     (let [account-created? true 
+                   (fn [ajax-resp]
+                     (let [content (:?content (js->clj ajax-resp))
+                           account-created? true 
                                         ; Your logic here
                            ]
                        (if-not account-created?
                          (rf/dispatch [:account :creation-failed])
-                         (rf/dispatch [:account resp]))))))
+                         (do (.warn js/console ajax-resp)
+                             (rf/dispatch [:account (:id content)]) 
+                             (sente/chsk-reconnect! @ch-chsk)))))))
 
 (defn ssb-login! [user-id config]   
   "Trigger an Ajax POST request that resets our server-side session. Then we ask

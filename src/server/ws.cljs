@@ -59,13 +59,15 @@
         body (aget req "body")
         username (aget body "username")
         password (aget body "password")]
+    (aset req-session "uid" username)
     ;TODO decide if filename should be generated from username,
     ;     check if it already exists, and encrypt it with a password.
-    (.log js/console body)
     (if-let [id (ssb/use-account username)]
-      (.send res {:username username
-                  :id id})
-      (.send res "There was a problem creating a new account."))))
+      (-> res
+          (.status 200)
+          (.json (clj->js {:username username
+                           :id id})))
+      (.send res "ERR_making_account"))))
 
 (defn express-login-handler
   "Here's where we'll add server-side login/auth procedure (Friend, etc.).
