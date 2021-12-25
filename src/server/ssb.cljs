@@ -354,7 +354,7 @@
 ;; possible tags: :create, :update, :delete, :query, :get, :respond, :private
 
 (defonce message-handlers 
-  {:ssb-login (fn [[username password]] (swap! db-conns assoc username (start-server username password)))
+  {:ssb-login (fn [{:keys [username password]}] (swap! db-conns assoc username (start-server username password)))
    :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))

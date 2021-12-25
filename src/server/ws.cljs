@@ -76,10 +76,10 @@
   [req res]
   (let [req-session (aget req "session")
         body        (aget req "body")
-        uid     (aget body "user-id")
-        config      (aget body "config")]
-    (aset req-session "uid" uid)
-    (dispatch! :server-start [uid config]) ;;TODO create login
+        username     (aget body "username")
+        password      (aget body "password")]
+    (aset req-session "uid" username)
+    (dispatch! :ssb-login {:username username :password password}) ;;TODO create login
     (.send res "Success")))
 
 (defn express-upload-handler [req res next]
