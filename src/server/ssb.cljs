@@ -17,7 +17,6 @@
             ["ssb-config/inject" :as ssb-config]
             ["fs" :as fs]
             ["os" :as os]
-            ["sodium" :as sodium]
             ["path" :as path]
             ["pull-stream" :as pull]
             ["stream-to-pull-stream" :as to-pull]
@@ -26,6 +25,9 @@
             ["flumedb" :as flumedb])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
+(def scratch-caps (clj->js {:shs "SecugSsSNct6tgFyepgEFCE07p5q+OCAAKusgEb/Jwc="
+                            :sign nil
+                            :invite "HT0wIYuk3OWc2FtaCfHNnakV68jSGRrjRMP9Kos7IQc="}))
 
 (defonce db-conns (atom {})) ;;ssb-db connections keyed by uid
 
@@ -41,20 +43,28 @@
     (.readFile fs path "utf8" (fn [err data] (go (>! c data))))
     c))
 
-(defn encrypt [msg password]
+(defn secret-box [data key]
+  "password should be a digest of the original password, made on the client side, possibly with a salt provided
+  by the server.  secretBox only takes the first 24 characters of the key."
+  (let [key-buf (.from js/Buffer key)]
+    (.secretBox ssb-keys (clj->js data) key-buf)))
 
-)
+(defn secret-unbox [encrypted-data key]
+  "decrypt an object created by encrypt fn"
+  (js->clj
+   (.secretUnbox ssb-keys encrypted-data key)))
 
-(defn create-account [filename]
-  (let [file-path (expand-home filename)]
+(defn create-account [username password]
+  (let [file-path (.join path (.homedir os) ".scratch" username)]
     ; check to see if file already exists
     (fs/open file-path "wx"
              (fn [err fd] (if err (if (= "EEXIST" (gobj/get err "code"))
                                     {:err "Account already exists!"}
                                     {:err err})
                               (do
-                                (let [key (.generate ssb-keys)]
-                                  (fs/write fd key 
+                                (let [key-pair (.generate ssb-keys)
+                                      encrypted-pair (secret-box key-pair password)]
+                                  (fs/write fd encrypted-pair 
                                             (fn [err bytes-written] (if err (.log js/console err)
                                                                         (.log js/console bytes-written)))))
                                 (fs/close fd)))))))
@@ -80,9 +90,10 @@
                    (.use ssb-server ssb-blobs)
                    (.use ssb-server ssb-serve-blobs)))
 
-(defn start-server [^String config-path]
+(defn start-server [username password]
   "returns db connection"
-  (let [config (ssb-config config-path nil)
+  (let [file-path (.join path (.homedir os) ".scratch" username)
+        config (ssb-config "scratch" scratch-caps)
         server (ssb-server config)]
     server))
  
@@ -343,7 +354,7 @@
 ;; possible tags: :create, :update, :delete, :query, :get, :respond, :private
 
 (defonce message-handlers 
-  {:server-start (fn [[uid config]] (swap! db-conns assoc uid (start-server config)))
+  {:ssb-login (fn [[username password]] (swap! db-conns assoc username (start-server username password)))
    :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))

@@ -20,8 +20,8 @@
 
 (rf/reg-fx
  :ssb-login
- (fn [user-id config]             
-   (ws/ssb-login! user-id config))) 
+ (fn [username password]             
+   (ws/ssb-login! username password))) 
 
 (rf/reg-fx
  :ssb-query
@@ -97,6 +97,11 @@
  (fn [cofx [_]]
    {:db (assoc-in (:db cofx)[:server/connected] :connecting)
     :start-ws []}))
+
+(rf/reg-event-fx
+ :login-successful
+ (fn [cofx [_ account]]
+   {:db (assoc-in (:db cofx) [:account] account)}))
 
 (rf/reg-event-fx
  :save-defaults-localstore

@@ -46,32 +46,36 @@
                     :params {:username    (str username)
                              :password   (str password)}}
                    (fn [ajax-resp]
-                     (let [content (:?content (js->clj ajax-resp))
+                     (let [content (:?content (js->clj ajax-resp :keywordize-keys true))
                            account-created? true 
                                         ; Your logic here
                            ]
                        (if-not account-created?
                          (rf/dispatch [:account :creation-failed])
-                         (do (.warn js/console ajax-resp)
-                             (rf/dispatch [:account (:id content)]) 
-                             (sente/chsk-reconnect! @ch-chsk)))))))
+                         (do
+                           (rf/dispatch [:set-active-panel :recipe])
+                           (rf/dispatch [:account content])
+                           
+                           ;(sente/chsk-reconnect! @ch-chsk)
+                           ))))))
 
-(defn ssb-login! [user-id config]   
+(defn ssb-login! [username password]   
   "Trigger an Ajax POST request that resets our server-side session. Then we ask
  our channel socket to reconnect, thereby picking up the new  session" 
   (sente/ajax-lite "/login"
                    {:method :post
                     :headers {:x-csrf-token (:csrf-token @chsk-state)}
-                    :params {:user-id    (str user-id)
-                             :config     (str config)}}
+                    :params {:username    (str username)
+                             :password    (str password)}}
                    (fn [ajax-resp]
-                     (rf/dispatch [:ajax-login-response ajax-resp])
+                     (rf/dispatch [:server/connected ajax-resp])
                      (let [login-successful? true 
                                         ; Your logic here
                            ]
                        (if-not login-successful?
                          (rf/dispatch [:login-failed])
                          (do
-                           (rf/dispatch [:login-successful])
+                           (rf/dispatch [:login-successful username])
+                           (rf/dispatch [:set-active-panel :recipe])
                            (sente/chsk-reconnect! @ch-chsk)))))))
  
