@@ -18,8 +18,8 @@
 
 (defn ^:export init []
   (re-frame/dispatch-sync [::events/initialize-db])
-; (re-frame/dispatch-sync [::events/load-localstore])
- ; (re-frame/dispatch-sync [::events/load-from-ssb])
+ ;(re-frame/dispatch-sync [::events/load-localstore])
+ ;(re-frame/dispatch-sync [::events/load-from-ssb])
   (dev-setup)
   (mount-root)
   (re-frame/dispatch-sync [:server/connect!]))

@@ -79,6 +79,7 @@
         username     (aget body "username")
         password      (aget body "password")]
     (aset req-session "uid" username)
+    (println "Got " (str username ", " password))
     (dispatch! :ssb-login {:username username :password password}) ;;TODO create login
     (.send res "Success")))
 
@@ -93,8 +94,24 @@
                                          (debugf "Filename: %s Name: %s Path: %s" filename name filepath)
                                          (ssb/add-blob! uid filename)))))))  ; TODO get this to work?!
 
+(defn landing-pg-handler [^js ring-req]
+  (hiccups/html
+   [:html
+    [:head
+     [:div#sente-csrf-token {:data-csrf-token (.csrfToken  ring-req)}]
+     [:meta {:charset "utf-8"}]
+     [:link {:rel "stylesheet"
+             :href "css/main.css"}]
+     [:link {:rel "stylesheet"
+             :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]]
+    [:body
+     [:div {:id "app"}]
+     [:script {:src "js/showdown.min.js"}]
+     [:script {:src "js/main.js"}]]]))
+
 (defn routes [^js express-app]
   (doto express-app
+    (.get "/" (fn [req res] (.send res (landing-pg-handler req))))
     (.ws "/chsk"
          (fn [ws req next]
            (ajax-get-or-ws-handshake req nil nil
@@ -124,8 +141,8 @@
                   :saveUninitialized true}))
       (.use (.urlencoded body-parser
                          #js {:extended false}))
-      (.use (cookie-parser cookie-secret))
-      (.use (csurf
+      ; (.use (cookie-parser cookie-secret))
+      (.use (csurf                                                 ;; CSRF protection middleware
              #js {:cookie false}))
       (routes))))
 
@@ -150,10 +167,7 @@
 
 ;;;; Sente event handlers
 
-(defmulti -event-msg-handler
-  "Multimethod to handle Sente `event-msg`s"
-  :id ; Dispatch on event-id
-  )
+(defmulti -event-msg-handler :id)
 
 (defn event-msg-handler
   "Wraps `-event-msg-handler` with logging, error catching, etc."

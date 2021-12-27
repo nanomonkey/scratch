@@ -23,7 +23,9 @@
   (.warn js/console "New state" new-state))
 
 (defn create-client! []
-  (let [{:keys [ch-recv send-fn state]} (sente/make-channel-socket-client! "/chsk" nil config)]
+  (let [?csrf-token (when-let [el (.getElementById js/document "sente-csrf-token")]
+                      (.getAttribute el "data-csrf-token"))
+        {:keys [ch-recv send-fn state]} (sente/make-channel-socket-client! "/chsk" ?csrf-token config)]
     (reset! ch-chsk ch-recv)
     (reset! chsk-send! send-fn)
     (add-watch state :state-watcher state-watcher)))
@@ -36,6 +38,7 @@
   (reset! router_ (sente/start-client-chsk-router! @ch-chsk handlers/event-msg-handler)))
 
 (defn start! []
+  (println "Start WS client..")
   (create-client!)
   (start-router!))
 
@@ -68,14 +71,10 @@
                     :params {:username    (str username)
                              :password    (str password)}}
                    (fn [ajax-resp]
-                     (rf/dispatch [:server/connected ajax-resp])
                      (let [login-successful? true 
                                         ; Your logic here
                            ]
                        (if-not login-successful?
                          (rf/dispatch [:login-failed])
-                         (do
-                           (rf/dispatch [:login-successful username])
-                           (rf/dispatch [:set-active-panel :recipe])
-                           (sente/chsk-reconnect! @ch-chsk)))))))
+                         (rf/dispatch [:login-successful username @ch-chsk]))))))
  

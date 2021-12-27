@@ -20,7 +20,7 @@
 
 (rf/reg-fx
  :ssb-login
- (fn [username password]             
+ (fn [{:keys [username password]}]             
    (ws/ssb-login! username password))) 
 
 (rf/reg-fx
@@ -77,6 +77,12 @@
     :ssb-create-account {:name name
                          :password password}}))
 
+(rf/reg-event-fx
+ :login
+ (fn [cofx [_ username password]]
+   {:db (assoc-in (:db cofx) [:server] :verifying)
+    :ssb-login {:username username :password password}}))
+
 (rf/reg-event-db
  :account
  (fn [db [_ status]]
@@ -95,13 +101,14 @@
 (rf/reg-event-fx
  :server/connect!
  (fn [cofx [_]]
-   {:db (assoc-in (:db cofx)[:server/connected] :connecting)
+   {:db (assoc-in (:db cofx) [:server/connected] :connecting)
     :start-ws []}))
 
 (rf/reg-event-fx
  :login-successful
  (fn [cofx [_ account]]
-   {:db (assoc-in (:db cofx) [:account] account)}))
+   {:db (assoc-in (:db cofx) [:account] account)
+    :dispatch [:set-active-panel :recipe]}))
 
 (rf/reg-event-fx
  :save-defaults-localstore

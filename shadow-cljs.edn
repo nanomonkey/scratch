@@ -3,10 +3,10 @@
  :dependencies [[cider/cider-nrepl "0.23.0-SNAPSHOT"]
                 ;[org.clojure/core.async "0.4.490"]
                 [com.taoensso/timbre       "4.10.0"]
-                [com.taoensso/sente        "1.11.0"]
+                [com.taoensso/sente        "1.16.2"]
                 [hiccups                   "0.3.0"]
-                [reagent "0.7.0"]
-                [re-frame "0.10.5"]
+                [reagent                     "1.1.0"]
+                [re-frame                "1.3.0-rc2"]
                 [com.andrewmcveigh/cljs-time "0.5.2"]]
  :nrepl {:port 43219}
  :builds

@@ -92,12 +92,14 @@
 
 (defn start-server [username password]
   "returns db connection"
-  (let [file-path (.join path (.homedir os) ".scratch" username)
+  (let [file-path (.join path (.homedir os) ".scratch" username) ;; TODO: grab password protected pub-priv keys
         config (ssb-config "scratch" scratch-caps)
         server (ssb-server config)]
     server))
+
  
-;; Utility functions 
+;; Message contents
+ 
 (defn parse-json [msg] 
   (js->clj msg :keywordize-keys true))
 
@@ -143,6 +145,7 @@
             (destructure (decrypt uid content))
             (destructure content)))))
 
+
 ;; Publish to database 
 
 (defn publish! [uid contents]
@@ -165,7 +168,9 @@
                           (dispatch! :response {:uid uid :message (parse-json msg)}))))
     (dispatch! {:uid uid :error "Unable to get server with User-id"})))
 
+
 ;; Feed stream
+
 (defn feed [uid]
   (if-let [^js db (get @db-conns uid)]
     (pull (.createFeedStream db #js {:reverse true})
@@ -181,6 +186,7 @@
   
 ;; get message or entry
 (defn get-message [uid msg-id]
+  "Get message by hash id"
   (if-let [^js db (get @db-conns uid)]
     (.get db msg-id
           (fn [err msg] 
@@ -317,9 +323,9 @@
                                          (get-blob! uid hash-id cb-fn))))
     (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
 
-(defn atob [str] 
+(defn atob [b64-str] 
   "base64-encoded ascii data to binary"
-  (.toString (.from js/Buffer str "base64" ) "binary"))
+  (.toString (.from js/Buffer b64-str "base64" ) "binary"))
 
 ;(assert (base64->binary 'SGVsbG8sIFdvcmxkIQ==') "Hello, World!")
 
@@ -354,7 +360,8 @@
 ;; possible tags: :create, :update, :delete, :query, :get, :respond, :private
 
 (defonce message-handlers 
-  {:ssb-login (fn [{:keys [username password]}] (swap! db-conns assoc username (start-server username password)))
+  {:ssb-login (fn [{:keys [username password]}] 
+                (swap! db-conns assoc username (start-server username password)))
    :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))

@@ -47,7 +47,7 @@
       [:div 
        (server-status)
        [:form {:on-submit #(do (.preventDefault %)
-                               (rf/dispatch [:ssb-login @name @password]))}
+                               (rf/dispatch [:login @name @password]))}
         [:input {:type "text"
                  :placeholder "Feed Name"
                  :name "login-name"
@@ -59,7 +59,7 @@
                   :placeholder "Password"
                   :value @password
                   :on-change #(reset! password (-> % .-target .-value))}]]
-        [:button "Login to Existing Account"]]
+        [:button {:type "submit"} "Login to Existing Account"]]
        [:div [:button {:on-click #(do
                                     (.preventDefault %)
                                     (rf/dispatch [:create-account @name @password]))} "Create New Account"]]])))
@@ -555,14 +555,12 @@
 (defn main-panel []
   (let [active (rf/subscribe [:active-panel])]
     (fn []
-      (condp = @active
-        :login (login-view)
-        :recipe (recipe-view)
-        :inventory (inventory-view)
-        :supplier (supplier-view)
-        :schedule (schedule-view)
-        :settings (settings-view)))))
-
-(when-some [el (js/document.getElementById "client-views")]
-    (defonce _init (rf/dispatch-sync [:initialize]))
-    (r/render [main-panel] el))
+      (do
+        (println "Active Panel: " @active)
+        (condp = @active
+          :login (login-view)
+          :recipe (recipe-view)
+          :inventory (inventory-view)
+          :supplier (supplier-view)
+          :schedule (schedule-view)
+          :settings (settings-view))))))
