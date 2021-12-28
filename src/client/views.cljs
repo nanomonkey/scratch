@@ -278,6 +278,10 @@
                          }])
          [:button "+ Line Item"]]]))))
 
+(defn sync-task [task-id]
+  (fn [task-id]
+    [:div [:a.sync {:href "#" :on-click #(rf/dispatch [:task/sync task-id])}
+                   "Sync to Database"]]))
 
 (defn task-table [recipe-id]
   (fn [recipe-id]

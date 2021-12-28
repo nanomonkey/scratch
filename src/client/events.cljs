@@ -80,13 +80,13 @@
 (rf/reg-event-fx
  :login
  (fn [cofx [_ username password]]
-   {:db (assoc-in (:db cofx) [:server] :verifying)
+   {:db (assoc-in (:db cofx) [:server] "verifying")
     :ssb-login {:username username :password password}}))
 
 (rf/reg-event-db
  :account
  (fn [db [_ status]]
-   (assoc-in db [:account] status)))
+   (assoc-in db [:server :account] status)))
 
 (rf/reg-event-db
  :waiting-spinner
@@ -94,21 +94,26 @@
    (assoc-in db [:waiting-spinner] true)))
 
 (rf/reg-event-db
- :server/connected
+ :server/status
  (fn [db [_ value]]
-   (assoc-in db [:server :connected] value)))
+   (assoc-in db [:server :status] value)))
 
 (rf/reg-event-fx
  :server/connect!
  (fn [cofx [_]]
-   {:db (assoc-in (:db cofx) [:server/connected] :connecting)
+   {:db (assoc-in (:db cofx) [:server :account] :connecting)
     :start-ws []}))
 
 (rf/reg-event-fx
  :login-successful
  (fn [cofx [_ account ch-chsk]]
-   {:db (assoc-in (:db cofx) [:account] account)
+   {:db (assoc-in (:db cofx) [:server :account] account)
     :dispatch [:set-active-panel :recipe]}))
+
+(rf/reg-event-fx
+ :login-failed
+ (fn [cofx [_]]
+   {:db (assoc-in (:db cofx) [:server :account] :login-failed)}))
 
 (rf/reg-event-fx
  :save-defaults-localstore
@@ -204,6 +209,12 @@
               (:temp-id cofx) {:id (:temp-id cofx)
                                :name name})
       :dispatch [:recipe/add-task recipe id]})))
+
+(rf/reg-event-fx
+ :task/sync
+ (fn [cofx [_ task-id]]
+   {:db (update-in (:db cofx) [:tasks task-id :sync] :syncing)
+    :dispatch [:ssb/update task-id]}))
 
 (rf/reg-event-fx
  :recipe/new

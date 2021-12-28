@@ -42,26 +42,6 @@
   (create-client!)
   (start-router!))
 
-(defn ssb-create-account! [username password]   
-  (sente/ajax-lite "/new_account"
-                   {:method :post
-                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
-                    :params {:username    (str username)
-                             :password   (str password)}}
-                   (fn [ajax-resp]
-                     (let [content (:?content (js->clj ajax-resp :keywordize-keys true))
-                           account-created? true 
-                                        ; Your logic here
-                           ]
-                       (if-not account-created?
-                         (rf/dispatch [:account :creation-failed])
-                         (do
-                           (rf/dispatch [:set-active-panel :recipe])
-                           (rf/dispatch [:account content])
-                           
-                           ;(sente/chsk-reconnect! @ch-chsk)
-                           ))))))
-
 (defn ssb-login! [username password]   
   "Trigger an Ajax POST request that resets our server-side session. Then we ask
  our channel socket to reconnect, thereby picking up the new  session" 
@@ -76,5 +56,27 @@
                            ]
                        (if-not login-successful?
                          (rf/dispatch [:login-failed])
-                         (rf/dispatch [:login-successful username @ch-chsk]))))))
+                         (do
+                           (rf/dispatch [:login-successful username @ch-chsk])
+                           (sente/chsk-reconnect! @ch-chsk)))))))
+
+
+(defn ssb-create-account! [username password]   
+  (sente/ajax-lite "/new_account"
+                   {:method :post
+                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
+                    :params {:username    (str username)
+                             :password   (str password)}}
+                   (fn [ajax-resp]
+                     (let [content (:?content (js->clj ajax-resp :keywordize-keys true))
+                           account-created? true 
+                                        ; Your logic here
+                           ]
+                       (if-not account-created?
+                         (rf/dispatch [:account :creation-failed])
+                         (do
+                           (rf/dispatch [:account content])
+                           (ssb-login! username password)))))))
+
+
  

@@ -5,9 +5,9 @@
 
 ;; Server
 (rf/reg-sub
- :server/connected
+ :server/status
  (fn [db _]
-    (get-in db [:server :connected])))
+    (get-in db [:server :status])))
 
 (rf/reg-sub
  :account

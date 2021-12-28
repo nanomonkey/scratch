@@ -79,7 +79,6 @@
         username     (aget body "username")
         password      (aget body "password")]
     (aset req-session "uid" username)
-    (println "Got " (str username ", " password))
     (dispatch! :ssb-login {:username username :password password}) ;;TODO create login
     (.send res "Success")))
 
