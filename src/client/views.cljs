@@ -40,7 +40,7 @@
    [:div (str "Websocket Connection: " @(rf/subscribe [:server/connected]))]
    [:div (str "Account: " @(rf/subscribe [:account]))]])
 
-(defn login-view []
+(defn login []
   (let [name (r/atom "")
         password (r/atom "")]
     (fn []
@@ -63,6 +63,14 @@
        [:div [:button {:on-click #(do
                                     (.preventDefault %)
                                     (rf/dispatch [:create-account @name @password]))} "Create New Account"]]])))
+
+(defn login-view []
+[:div
+ [:div.row
+  [:div.column.left]
+  [:div.column.middle
+   [login]]
+  [:div.column.right]]])
 
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
@@ -329,10 +337,7 @@
      (topnav)
      [:div.row
       [:div.column.left
-       [:div [recipe-search]]
-       [:div [modal-button "Create Item" "Create New Item" 
-              [create-item ""] "item-name"]]
-       ]
+       [:div [recipe-search]]]
       [:div.column.middle
        [:h1 [inline-editor @(rf/subscribe [:recipe/name @recipe-id])
              {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]]
@@ -343,10 +348,8 @@
               @(rf/subscribe [:recipe/tags @recipe-id]) 
               #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
               #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
-       [:div [task-table @recipe-id]]
-       ]
-      [:div.column.right
-       ]]]))
+       [:div [task-table @recipe-id]]]
+      [:div.column.right ]]]))
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded-supplier])]

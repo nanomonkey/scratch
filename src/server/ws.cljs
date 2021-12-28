@@ -98,7 +98,7 @@
   (hiccups/html
    [:html
     [:head
-     [:div#sente-csrf-token {:data-csrf-token (.csrfToken  ring-req)}]
+     [:div#sente-csrf-token {:data-csrf-token (str (.csrfToken  ring-req))}]
      [:meta {:charset "utf-8"}]
      [:link {:rel "stylesheet"
              :href "css/main.css"}]

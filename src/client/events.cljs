@@ -106,7 +106,7 @@
 
 (rf/reg-event-fx
  :login-successful
- (fn [cofx [_ account]]
+ (fn [cofx [_ account ch-chsk]]
    {:db (assoc-in (:db cofx) [:account] account)
     :dispatch [:set-active-panel :recipe]}))
 
