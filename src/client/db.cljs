@@ -17,7 +17,8 @@
             :date 20210513 ;(rf/subscribe [:now])
             :location "l1"
             :supplier "s1"}
-   :server {:connected :none-tried}
+   :server {:account ""
+            :status "not-connected"}
    :active-panel :login
    :temp-id 0
    :recipes {"r1" {:id "r1"

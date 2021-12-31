@@ -3,6 +3,19 @@
             [client.db :as db]
             [client.ws :as ws]))
 
+;;;;;;;;;;;
+;; Utils ;;
+;;;;;;;;;;;
+
+(defn vec-remove
+  "remove element at pos(ition) in vector"
+  [coll pos]
+  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
+
+(defn vec-replace
+  "replace element at pos(ition) in a vector with new-item"
+  [coll new-item pos]
+  (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
 
 ;;;;;;;;;;;;;
 ;; Effects ;;
@@ -73,18 +86,18 @@
 (rf/reg-event-fx
  :create-account
  (fn [cofx [_ name password]]
-   {:db (assoc (:db cofx) :account :creating)
+   {:db (assoc-in (:db cofx) [:server :account] "creating")
     :ssb-create-account {:name name
                          :password password}}))
 
 (rf/reg-event-fx
  :login
  (fn [cofx [_ username password]]
-   {:db (assoc-in (:db cofx) [:server] "verifying")
+   {:db (assoc-in (:db cofx) [:server :status] "verifying")
     :ssb-login {:username username :password password}}))
 
 (rf/reg-event-db
- :account
+ :server/account
  (fn [db [_ status]]
    (assoc-in db [:server :account] status)))
 
@@ -101,7 +114,7 @@
 (rf/reg-event-fx
  :server/connect!
  (fn [cofx [_]]
-   {:db (assoc-in (:db cofx) [:server :account] :connecting)
+   {:db (assoc-in (:db cofx) [:server :account] "connecting")
     :start-ws []}))
 
 (rf/reg-event-fx
@@ -113,7 +126,7 @@
 (rf/reg-event-fx
  :login-failed
  (fn [cofx [_]]
-   {:db (assoc-in (:db cofx) [:server :account] :login-failed)}))
+   {:db (assoc-in (:db cofx) [:server :account] "login failed")}))
 
 (rf/reg-event-fx
  :save-defaults-localstore
@@ -177,7 +190,7 @@
 
 (rf/reg-event-db
  :recipe/update-description
- (fn [db [_  recipe-id description]]
+ (fn [db [_ recipe-id description]]
    (assoc-in db [:recipes recipe-id :description] description)))
 
 (rf/reg-event-db
@@ -199,6 +212,24 @@
  (fn [db [_ recipe-id task-id]]
    (update-in db [:recipes recipe-id :task-list] (fnil conj []) task-id)))
 
+(rf/reg-event-db
+ :recipe/move-task-up
+ (fn [db [_ recipe-id task-id]]
+   (let [tasklist (rf/subscribe :recipe/task-list recipe-id)
+         task-pos (.indexOf tasklist task-id)]
+     (if (> 0 task-pos)
+       (update-in db [:recipes recipe-id :task-list] 
+                  #(vec-replace (vec-remove % task-pos) task-id (- task-pos 1)))))))
+
+(rf/reg-event-db
+ :recipe/move-task-down
+ (fn [db [_ recipe-id task-id]]
+   (let [tasklist (rf/subscribe :recipe/task-list recipe-id)
+         task-pos (.indexOf tasklist task-id)]
+     (if (> (count tasklist) task-pos)
+       (update-in db [:recipes recipe-id :task-list] 
+                  #(vec-replace (vec-remove % task-pos) task-id task-pos))))))
+
 (rf/reg-event-fx
  :recipe/new-task
  [(rf/inject-cofx :temp-id)]
@@ -213,7 +244,7 @@
 (rf/reg-event-fx
  :task/sync
  (fn [cofx [_ task-id]]
-   {:db (update-in (:db cofx) [:tasks task-id :sync] :syncing)
+   {:db (assoc-in (:db cofx) [:tasks task-id :sync] :syncing)
     :dispatch [:ssb/update task-id]}))
 
 (rf/reg-event-fx
@@ -236,9 +267,9 @@
    {:db 
     (update (:db cofx) :items assoc
              (:temp-id cofx) {:id (:temp-id cofx) 
-                                   :name name 
-                                   :description description
-                                   :tags tags})}))
+                              :name name 
+                              :description description
+                              :tags tags})}))
 
 (rf/reg-event-fx
  :unit/new
@@ -359,16 +390,6 @@
  :task/update-all-steps
  (fn [db [_ task-id steps]]
    (assoc-in db [:tasks task-id :steps] steps)))
-
-(defn vec-remove
-  "remove element at pos(ition) in vector"
-  [coll pos]
-  (vec (concat (subvec coll 0 pos) (subvec coll (inc pos)))))
-
-(defn vec-replace
-  "replace element at pos(ition) in a vector with new-item"
-  [coll new-item pos]
-  (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
 
 (rf/reg-event-db
  :task/replace-step

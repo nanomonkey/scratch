@@ -37,8 +37,8 @@
 
 (defn server-status []
   [:div
-   [:div (str "Websocket Connection: " @(rf/subscribe [:server/connected]))]
-   [:div (str "Account: " @(rf/subscribe [:account]))]])
+   [:div (str "Websocket Connection: " @(rf/subscribe [:server/status]))]
+   [:div (str "Account: " @(rf/subscribe [:server/account]))]])
 
 (defn login []
   (let [name (r/atom "")
@@ -323,12 +323,17 @@
              [task-duration task]
              [display-steps task]]
             [:td ^{:key (str (:id task) "products")}
+             
+             [:div " UP" {:href "#"
+                           :on-click #(rf/dispatch [:recipe/move-task-up recipe-id task])}]
              ;;Yielded products:
              [modal-button "Add Product Item" "Yields:"
               [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
               "optional-qty"]
               [list-items @(rf/subscribe [:task/yields task])
-               :task/remove-product task]]]))
+               :task/remove-product task]
+             [:div " Down" {:href "#"
+                           :on-click #(rf/dispatch [:recipe/move-task-down recipe-id task])}]]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 

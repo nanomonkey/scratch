@@ -10,9 +10,9 @@
     (get-in db [:server :status])))
 
 (rf/reg-sub
- :account
+ :server/account
  (fn [db _]
-   (get-in db [:account])))
+   (get-in db [:server :account])))
 
 ;; UI elements
 (rf/reg-sub-raw
