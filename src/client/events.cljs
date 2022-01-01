@@ -236,6 +236,13 @@
          task-pos (.indexOf tasklist task-id)]
      (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist (inc task-pos))))))
 
+(rf/reg-event-db
+ :recipe/remove-task
+ (fn [db [_ recipe-id task-id]]
+   (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
+         task-pos (.indexOf tasklist task-id)]
+     (update-in db [:recipes recipe-id] assoc :task-list (vec-remove tasklist task-pos)))))
+
 (rf/reg-event-fx
  :recipe/new-task
  [(rf/inject-cofx :temp-id)]
