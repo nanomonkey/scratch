@@ -19,7 +19,7 @@
 
 (defn state-watcher [_key _atom _old-state new-state]
   (reset! chsk-state new-state)
-  (rf/dispatch [:server/connected new-state])
+  (rf/dispatch [:server/status new-state])
   (.warn js/console "New state" new-state))
 
 (defn create-client! []

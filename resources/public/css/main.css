@@ -146,13 +146,13 @@ nav ul ul ul {
     //padding: 10px;
 }
 .column.left {
-    width: 25%;
+    width: 20%;
 }
 .column.middle {
-    width: 50%;
+    width: 60%;
 }
 .column.right {
-    width: 25%;
+    width: 20%;
 }
 .row:after {
     content: "";

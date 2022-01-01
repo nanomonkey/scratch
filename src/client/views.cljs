@@ -3,18 +3,20 @@
             [reagent.core :as r] 
             [client.subs :as subs]
             [client.widgets :refer [markdown-section 
-                                     inline-editor 
-                                     tag-editor
-                                     recipe-search
-                                     item-search
-                                     modal
-                                     modal-button
-                                     full-modal 
-                                     display-line-item
-                                     display-duration
-                                     display-rational
-                                     parse-rational
-                                     duration-editor]]
+                                    inline-editor 
+                                    tag-editor
+                                    recipe-search
+                                    item-search
+                                    modal
+                                    modal-button
+                                    full-modal 
+                                    display-line-item
+                                    display-duration
+                                    display-rational
+                                    parse-rational
+                                    duration-editor
+                                    arrow-up-icon
+                                    arrow-down-icon]]
             [goog.string :as gstring]
             [cljs-time.core :as dt]))
 
@@ -323,17 +325,19 @@
              [task-duration task]
              [display-steps task]]
             [:td ^{:key (str (:id task) "products")}
-             
-             [:div " UP" {:href "#"
-                           :on-click #(rf/dispatch [:recipe/move-task-up recipe-id task])}]
+             [:button.hidden {:on-click #(do (.preventDefault %)
+                                             (rf/dispatch [:recipe/move-task-up recipe-id task]))} 
+               "Move Up"]
              ;;Yielded products:
              [modal-button "Add Product Item" "Yields:"
               [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
               "optional-qty"]
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]
-             [:div " Down" {:href "#"
-                           :on-click #(rf/dispatch [:recipe/move-task-down recipe-id task])}]]]))
+             [:button.hidden 
+              {:on-click #(do (.preventDefault %)
+                              (rf/dispatch [:recipe/move-task-down recipe-id task]))} 
+               "Move Down"]]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
@@ -349,7 +353,7 @@
        [:div [recipe-search]]]
       [:div.column.middle
        [:h1 [inline-editor @(rf/subscribe [:recipe/name @recipe-id])
-             {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]]
+             {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
        [inline-editor @(rf/subscribe [:recipe/description @recipe-id])
         {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
          :markdown? true}]

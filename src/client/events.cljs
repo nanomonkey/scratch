@@ -17,6 +17,16 @@
   [coll new-item pos]
   (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
 
+(defn vec-swap 
+  "move element in pos(ition) up one"
+  [coll pos]
+  (if (and (< pos (count coll))
+           (> pos 0))
+    (vec (concat (subvec coll 0 (dec pos)) 
+                 (vector (nth coll pos) (nth coll (dec pos))) 
+                 (subvec coll (inc pos))))
+    coll))
+
 ;;;;;;;;;;;;;
 ;; Effects ;;
 ;;;;;;;;;;;;;
@@ -215,20 +225,16 @@
 (rf/reg-event-db
  :recipe/move-task-up
  (fn [db [_ recipe-id task-id]]
-   (let [tasklist (rf/subscribe :recipe/task-list recipe-id)
+   (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
          task-pos (.indexOf tasklist task-id)]
-     (if (> 0 task-pos)
-       (update-in db [:recipes recipe-id :task-list] 
-                  #(vec-replace (vec-remove % task-pos) task-id (- task-pos 1)))))))
+     (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist task-pos)))))
 
 (rf/reg-event-db
  :recipe/move-task-down
  (fn [db [_ recipe-id task-id]]
-   (let [tasklist (rf/subscribe :recipe/task-list recipe-id)
+   (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
          task-pos (.indexOf tasklist task-id)]
-     (if (> (count tasklist) task-pos)
-       (update-in db [:recipes recipe-id :task-list] 
-                  #(vec-replace (vec-remove % task-pos) task-id task-pos))))))
+     (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist (inc task-pos))))))
 
 (rf/reg-event-fx
  :recipe/new-task
