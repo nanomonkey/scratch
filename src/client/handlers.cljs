@@ -62,7 +62,7 @@
 
   (defmethod chsk-recv 
     :ssb/feed
-    [id {:as ?data :keys [message]}]
+    [id :keys [message]]
     (log "* %s" message))
 
   (defmethod chsk-recv 

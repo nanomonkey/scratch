@@ -57,6 +57,7 @@
                           :qty {"i5" 1}
                           :units {"i5" "ea"}}}
            "t2" {:id "t2"
+                 :state :mew
                  :name "Bring to Boil"
                  :duration "M12S45"
                  :equipment {:items ["i2"]
@@ -73,6 +74,7 @@
                           :units {"i4" "usquart"
                                   "i5" "usquart"}}}
            "t3" {:id "t3"
+                 :state :mew
                  :name "Add Salt"
                  :ingredients {:items ["i6"]
                                :qty {"i6" {:whole 1 :numer 1 :denom 2}}
@@ -88,6 +90,7 @@
                           :units {"i4" "usquart"
                                   "i5" "usquart"}}}
            "t4" {:id "t4"
+                 :state :new
                  :name "Autolyze Flour"
                  :ingredients {:items ["i3" "i8"]
                                :qty {"i3" 638

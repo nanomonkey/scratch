@@ -333,18 +333,25 @@
                :task/remove-product task]
              ]
             [:td ^{:key (str task " arrange")}
-             [:button.wide {:on-click #(do (.preventDefault %)
+             (if-not (= task (first tasks))
+               [:button.wide {:on-click #(do (.preventDefault %)
                                              (rf/dispatch [:recipe/move-task-up recipe-id task]))} 
-               "Move Up"]
+                "Move Up"])
+             (if-not (= task (last tasks))
+               [:button.wide
+                {:on-click #(do (.preventDefault %)
+                                (rf/dispatch [:recipe/move-task-down recipe-id task]))} 
+                "Move Down"])
              [:button.wide 
-              {:on-click #(do (.preventDefault %)
-                              (rf/dispatch [:recipe/remove-task recipe-id task]))} 
-               "Remove"]
-             [:button.wide
-              {:on-click #(do (.preventDefault %)
-                              (rf/dispatch [:recipe/move-task-down recipe-id task]))} 
-               "Move Down"]]
-            ]))
+                {:on-click #(do (.preventDefault %)
+                                (rf/dispatch [:recipe/remove-task recipe-id task]))} 
+                "Remove"]
+             (case @(rf/subscribe [:task-status task])
+               :new [:button.wide {:on-click #(do (.preventDefault %)
+                                                  (rf/dispatch [:task/save task]))} "Save Task"]
+               :dirty [:button.wide {:on-click #(do (.preventDefault %)
+                                                    (rf/dispatch [:task/update task]))} "Update Task"]
+               :saved nil)]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 

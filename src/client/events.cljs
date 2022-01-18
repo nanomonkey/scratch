@@ -17,6 +17,12 @@
   [coll new-item pos]
   (vec (concat (subvec coll 0 pos)  (vector new-item) (subvec coll (inc pos)))))
 
+(defn vec-replace-items
+  "replace an item with another in a vector"
+  [coll old-item new-item]
+  (let [pos (.indexOf coll old-item)]
+    (vec-replace coll new-item pos)))
+
 (defn vec-swap 
   "move element in pos(ition) up one"
   [coll pos]
@@ -45,6 +51,45 @@
  :ssb-login
  (fn [{:keys [username password]}]             
    (ws/ssb-login! username password))) 
+
+(rf/reg-fx
+ :ssb/create
+ (fn [{:keys [type content]}]
+   (let [old-id (:id content)]
+     (ws/chsk-send! [:ssb/create {:type type :content content}] 5000
+                    (fn [cb-reply] (rf/dispatch [:saved type old-id (:new-id cb-reply)]))))))
+
+(rf/reg-fx
+ :ssb/update 
+ (fn [{:keys [id content]}]
+   (ws/chsk-send! [:ssb/update {:id id :content content}] 5000
+                  (fn [cb-reply] (rf/dispatch [:task/updated id (:new-id cb-reply)])))))
+
+
+(def changed-fields (atom {}))  ; {id #{fieldnames ...}}
+
+(rf/reg-fx
+ :updated
+ (fn [{:keys [id field]}]
+   (update changed-fields [id] (fnil conj field #{}))))
+
+(rf/reg-fx
+ :clear-updates
+ (fn [id]
+   (dissoc changed-fields id)))
+
+(rf/reg-cofx
+ :task/update
+ (fn [cofx id]
+   (let [update-keys @(rf/subscribe [:updates id])
+         changes (select-keys update-keys @(rf/subscribe [:task id]))]
+     (rf/dispatch [:ssb/update id]))))
+
+(rf/reg-fx 
+ :ssb/tombstone
+ (fn [{:keys [id reason]}]
+   (ws/chsk-send! [:ssb/tombstone {:id id :reason reason}] 5000
+                  (fn [cb-reply] (rf/dispatch [:tombstoned id])))))
 
 (rf/reg-fx
  :ssb-query
@@ -154,6 +199,17 @@
  (fn  [_ _]
    db/recipe-db))
 
+(defn pluralize-keyword [keyword]
+  (keyword (str (symbol keyword) "s")))
+
+
+(rf/reg-event-db
+ :saved
+ (fn [db [_ type old-id new-id]]
+   (case type
+     :task (rf/dispatch [:task/updated old-id new-id])
+     )))
+
 ;; UI elements
 (rf/reg-event-db
   :set-active-panel
@@ -163,8 +219,9 @@
 (rf/reg-event-db
  :load-recipe 
  (fn [db [_ recipe-id]]
-   (do (assoc-in db [:active-panel] :recipe)
-       (assoc-in db [:loaded :recipe] recipe-id))))
+   (-> db 
+       (assoc-in [:active-panel] :recipe)
+       (assoc-in [:loaded :recipe] recipe-id))))
 
 (rf/reg-event-db
  :loaded-recipe
@@ -226,21 +283,21 @@
  :recipe/move-task-up
  (fn [db [_ recipe-id task-id]]
    (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
-         task-pos (.indexOf tasklist task-id)]
+         task-pos @(rf/subscribe [:recipe/task-pos recipe-id task-id])]
      (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist task-pos)))))
 
 (rf/reg-event-db
  :recipe/move-task-down
  (fn [db [_ recipe-id task-id]]
    (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
-         task-pos (.indexOf tasklist task-id)]
+         task-pos @(rf/subscribe [:recipe/task-pos recipe-id task-id])]
      (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist (inc task-pos))))))
 
 (rf/reg-event-db
  :recipe/remove-task
  (fn [db [_ recipe-id task-id]]
    (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
-         task-pos (.indexOf tasklist task-id)]
+         task-pos @(rf/subscribe [:recipe/task-pos recipe-id task-id])]
      (update-in db [:recipes recipe-id] assoc :task-list (vec-remove tasklist task-pos)))))
 
 (rf/reg-event-fx
@@ -255,10 +312,13 @@
       :dispatch [:recipe/add-task recipe id]})))
 
 (rf/reg-event-fx
- :task/sync
- (fn [cofx [_ task-id]]
-   {:db (assoc-in (:db cofx) [:tasks task-id :sync] :syncing)
-    :dispatch [:ssb/update task-id]}))
+ :task/save
+ (fn [cofx [_ id]]
+   (let [status  @(rf/subscribe [:task/status id])]
+         (if (= :new status)
+           (rf/dispatch [:ssb/create :task @(rf/subscribe [:task id])])
+           (println "Trying to save" id "with status" status)))))
+
 
 (rf/reg-event-fx
  :recipe/new
@@ -267,6 +327,7 @@
    {:db
     (update (:db cofx) :recipes assoc
             (:temp-id cofx) {:id (:temp-id cofx)
+                             :statis :new
                              :name name
                              :description "..."
                              :tags #{}
@@ -295,6 +356,20 @@
                        :name name 
                        :abbrev abbrev 
                        :type type})})))
+
+
+; Tasks
+
+(rf/reg-event-db
+ :task/updated
+ (fn [db [_ old-id new-id]]
+   (let [recipe @(rf/subscribe [:loaded-recipe])
+         task-list @(rf/subscribe [:recipe/task-list recipe])
+         task-pos (.indexOf task-list old-id)]
+     (-> db
+         (update-in [:tasks] assoc new-id (merge @(rf/subscribe [:task old-id]) {:id new-id}))
+         (update-in [:tasks] dissoc old-id)
+         (update-in [:recipes recipe :task-list] assoc (vec-replace task-list task-pos new-id))))))
 
 (rf/reg-event-db 
  :task/update-name

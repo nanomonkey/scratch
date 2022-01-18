@@ -50,7 +50,7 @@
     (.secretBox ssb-keys (clj->js data) key-buf)))
 
 (defn secret-unbox [encrypted-data key]
-  "decrypt an object created by encrypt fn"
+  "decrypt an object created by secret-box using the same key"
   (js->clj
    (.secretUnbox ssb-keys encrypted-data key)))
 
@@ -81,7 +81,7 @@
       id)))
 
 (defonce plugins (do                           
-                   ;(.use ssb-server ssb-master)
+                   ;(.use ssb-server ssb-master)  TODO: check to see if this is still needed
                    (.use ssb-server ssb-gossip)
                    (.use ssb-server ssb-replicate)
                    (.use ssb-server ssb-query)
@@ -379,4 +379,3 @@
    :test (fn [message] (prn message))})
 
 (doall (map (fn [[k v]] (handle! k v)) message-handlers))
- 

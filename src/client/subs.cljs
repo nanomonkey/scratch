@@ -57,6 +57,11 @@
  (fn [loaded]
    (:date loaded)))
 
+(rf/reg-sub
+ :updates
+ (fn [db [_ id]]
+   (get-in db [:updates id])))
+
 ;; Units
 (rf/reg-sub
  :units
@@ -194,6 +199,13 @@
  (fn [db [_ id]]
    (get-in db [:recipes id :task-list])))
 
+(rf/reg-sub
+ :recipe/task-pos
+ (fn [ [_ recipe task]]
+   (rf/subscribe [:recipe/task-list recipe]))
+ (fn [task-list [_ recipe task]]
+   (.indexOf task-list task)))
+
 ;; Tasks
 (rf/reg-sub
  :tasks
@@ -266,6 +278,16 @@
               :item item-id})
            (get-in db [:tasks task-id :yields :items]))))
 
+(rf/reg-sub
+ :task/status
+ (fn [db [_ task-id]]
+   (if (int? task-id)            ; only temp-ids should be ints
+     :nwe
+     (if (> 0 (count @(rf/subscribe [:task/updates task-id])))
+       :dirty
+       :saved))))
+
+;; Locations
 (rf/reg-sub
 :locations
 (fn [db]
