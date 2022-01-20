@@ -34,8 +34,58 @@
           [:li [:a {:href  "#"
                     :on-click #(rf/dispatch [:set-active-panel :settings])} "Settings"]]]])
 
+(defn query []
+  (let [query-map (r/atom nil)
+        query-filter (r/atom {:value {:content {:type "task"}}})
+        query-reduce (r/atom nil)
+        query-reverse? (r/atom false)
+        query-limit (r/atom 5)]
+    [:form {:on-submit #(do (.preventDefault %)
+                            (rf/dispatch [:query {:$map @query-map
+                                                  :$filter @query-filter
+                                                  :$reduce @query-reduce
+                                                  :reverse @query-reverse?
+                                                  :limit @query-limit}]))}
+     [:div
+      [:label "Map"]
+      [:input {:type "text"
+               :name "query-map"
+               :value @query-map
+               :on-change #(reset! query-map (-> % .-target .-value))}]]
+     [:div
+      [:label "Filter"]
+      [:input {:type "string"
+               :value @query-filter
+               :on-change #(reset! query-filter (-> % .-target .-value))}]]
+     [:div
+      [:label "Reduce"]
+      [:input {:type "string"
+               :value @query-reduce
+               :on-change #(reset! query-reduce (-> % .-target .-value))}]]
+     [:div
+      [:label "Reverse"]
+      [:input {:type "radio"
+               :value @query-reverse?
+               :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
+     [:div
+      [:label "Limit"]
+      [:input {:type "integer"
+               :value @query-limit
+               :on-change #(reset! query-limit (-> % .-target .-value))}]]     
+     [:div
+      [:button {:type "submit"} "Query"]]]))
+
 (defn right-panel []
-  [:div @(rf/subscribe [:active-panel])])
+  [:div
+   (query)
+   [:h4 "Feed:"]
+   (doall
+    (for [message @(rf/subscribe [:feed])]
+      [:div (str message)]))
+   [:h4 "Errors:"]
+   (doall
+    (for [error @(rf/subscribe [:errors])]
+      [:div (str error)]))])
 
 (defn server-status []
   [:div
@@ -82,7 +132,7 @@
         [:button.hidden
          {:title "Remove"
           :on-click #(do (.preventDefault %)
-                         (rf/dispatch [remove-event task (:item i)]))} "X"]])]))
+                         (rf/dispatch [:remove-event task (:item i)]))} "X"]])]))
 
 (defn add-step [task {:keys [on-add]}]
   (let [s (r/atom "")]
@@ -346,7 +396,7 @@
                 {:on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/remove-task recipe-id task]))} 
                 "Remove"]
-             (case @(rf/subscribe [:task-status task])
+             (case @(rf/subscribe [:task/status task])
                :new [:button.wide {:on-click #(do (.preventDefault %)
                                                   (rf/dispatch [:task/save task]))} "Save Task"]
                :dirty [:button.wide {:on-click #(do (.preventDefault %)

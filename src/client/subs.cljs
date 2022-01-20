@@ -58,9 +58,21 @@
    (:date loaded)))
 
 (rf/reg-sub
+ :errors
+ (fn [db]
+   (get db :errors [])))
+
+(rf/reg-sub
+ :feed
+ (fn [db]
+   (get db :feed [])))
+
+
+(rf/reg-sub
  :updates
  (fn [db [_ id]]
-   (get-in db [:updates id])))
+   (get-in db [:updates id] [])))
+
 
 ;; Units
 (rf/reg-sub
@@ -282,8 +294,8 @@
  :task/status
  (fn [db [_ task-id]]
    (if (int? task-id)            ; only temp-ids should be ints
-     :nwe
-     (if (> 0 (count @(rf/subscribe [:task/updates task-id])))
+     :new
+     (if (> 0 (count @(rf/subscribe [:updates task-id])))
        :dirty
        :saved))))
 

@@ -33,6 +33,11 @@
                  (subvec coll (inc pos))))
     coll))
 
+(defn index-by
+  "Transform a coll to a map with a given key as a lookup value"
+  [key coll]
+  (into {} (map (juxt key identity))))
+
 ;;;;;;;;;;;;;
 ;; Effects ;;
 ;;;;;;;;;;;;;
@@ -64,26 +69,6 @@
  (fn [{:keys [id content]}]
    (ws/chsk-send! [:ssb/update {:id id :content content}] 5000
                   (fn [cb-reply] (rf/dispatch [:task/updated id (:new-id cb-reply)])))))
-
-
-(def changed-fields (atom {}))  ; {id #{fieldnames ...}}
-
-(rf/reg-fx
- :updated
- (fn [{:keys [id field]}]
-   (update changed-fields [id] (fnil conj field #{}))))
-
-(rf/reg-fx
- :clear-updates
- (fn [id]
-   (dissoc changed-fields id)))
-
-(rf/reg-cofx
- :task/update
- (fn [cofx id]
-   (let [update-keys @(rf/subscribe [:updates id])
-         changes (select-keys update-keys @(rf/subscribe [:task id]))]
-     (rf/dispatch [:ssb/update id]))))
 
 (rf/reg-fx 
  :ssb/tombstone
@@ -152,6 +137,16 @@
     :ssb-login {:username username :password password}}))
 
 (rf/reg-event-db
+ :error
+ (fn [db [_ error]]
+   (update-in db [:errors] (fnil conj error []))))
+
+(rf/reg-event-db
+ :feed
+ (fn [db [_ message]]
+   (update-in db [:feed] (fnil conj message []))))
+
+(rf/reg-event-db
  :server/account
  (fn [db [_ status]]
    (assoc-in db [:server :account] status)))
@@ -202,13 +197,23 @@
 (defn pluralize-keyword [keyword]
   (keyword (str (symbol keyword) "s")))
 
-
 (rf/reg-event-db
  :saved
  (fn [db [_ type old-id new-id]]
    (case type
      :task (rf/dispatch [:task/updated old-id new-id])
      )))
+
+
+(rf/reg-event-db
+ :updated
+ (fn [db [_ id field]]
+   (update-in db [:updates id] (fnil conj field #{}))))
+
+(rf/reg-event-db
+ :clear-updates
+ (fn [db [_ id]]
+   (update-in db [:updates] dissoc id)))
 
 ;; UI elements
 (rf/reg-event-db
@@ -312,15 +317,6 @@
       :dispatch [:recipe/add-task recipe id]})))
 
 (rf/reg-event-fx
- :task/save
- (fn [cofx [_ id]]
-   (let [status  @(rf/subscribe [:task/status id])]
-         (if (= :new status)
-           (rf/dispatch [:ssb/create :task @(rf/subscribe [:task id])])
-           (println "Trying to save" id "with status" status)))))
-
-
-(rf/reg-event-fx
  :recipe/new
  [(rf/inject-cofx :temp-id)]
  (fn [cofx [_ name]]
@@ -359,6 +355,22 @@
 
 
 ; Tasks
+
+
+(rf/reg-event-fx
+ :task/save
+ (fn [cofx [_ id]]
+   (let [status  @(rf/subscribe [:task/status id])]
+         (if (= :new status)
+           (rf/dispatch [:ssb/create :task @(rf/subscribe [:task id])])
+           (println "Trying to save" id "with status" status)))))
+
+(rf/reg-cofx
+ :task/update
+ (fn [cofx id]
+   (let [update-keys @(rf/subscribe [:updates id])
+         changes (select-keys update-keys @(rf/subscribe [:task id]))]
+     (rf/dispatch [:ssb/update id]))))
 
 (rf/reg-event-db
  :task/updated
