@@ -44,8 +44,8 @@
 
 (rf/reg-cofx          
  :now                
- (fn [coeffects _]   
-   (assoc coeffects :now (js/Date.))))  
+ (fn [cofx _]   
+   (assoc cofx :now (js/Date.))))  
 
 (rf/reg-fx
  :ssb-create-account
@@ -61,7 +61,7 @@
  :ssb/create
  (fn [{:keys [type content]}]
    (let [old-id (:id content)]
-     (ws/chsk-send! [:ssb/create {:type type :content content}] 5000
+     (ws/chsk-send! [:ssb/create {:type type :content (dissoc content :id)}] 5000
                     (fn [cb-reply] (rf/dispatch [:saved type old-id (:new-id cb-reply)]))))))
 
 (rf/reg-fx
@@ -105,7 +105,7 @@
 (rf/reg-cofx
   :temp-id 
   (fn [cofx _]
-    (assoc cofx :temp-id (str (swap! last-temp-id inc)))))
+    (assoc cofx :temp-id (swap! last-temp-id inc))))
 
 (rf/reg-fx
  :start-ws
@@ -356,13 +356,12 @@
 
 ; Tasks
 
-
 (rf/reg-event-fx
  :task/save
  (fn [cofx [_ id]]
    (let [status  @(rf/subscribe [:task/status id])]
          (if (= :new status)
-           (rf/dispatch [:ssb/create :task @(rf/subscribe [:task id])])
+           {:ssb/create {:type "task" :content @(rf/subscribe [:task id])}}
            (println "Trying to save" id "with status" status)))))
 
 (rf/reg-cofx

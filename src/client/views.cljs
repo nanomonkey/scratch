@@ -132,7 +132,7 @@
         [:button.hidden
          {:title "Remove"
           :on-click #(do (.preventDefault %)
-                         (rf/dispatch [:remove-event task (:item i)]))} "X"]])]))
+                         (rf/dispatch [remove-event task (:item i)]))} "X"]])]))
 
 (defn add-step [task {:keys [on-add]}]
   (let [s (r/atom "")]
@@ -395,13 +395,13 @@
              [:button.wide 
                 {:on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/remove-task recipe-id task]))} 
-                "Remove"]
+                "Remove Task from Recipe"]
              (case @(rf/subscribe [:task/status task])
                :new [:button.wide {:on-click #(do (.preventDefault %)
                                                   (rf/dispatch [:task/save task]))} "Save Task"]
                :dirty [:button.wide {:on-click #(do (.preventDefault %)
                                                     (rf/dispatch [:task/update task]))} "Update Task"]
-               :saved nil)]]))
+               :saved [:div "Saved: " (str (type task)) ])]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 
@@ -426,7 +426,8 @@
               #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
               #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
        [:div [task-table @recipe-id]]]
-      [:div.column.right ]]]))
+      [:div.column.right
+       (right-panel)]]]))
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded-supplier])]

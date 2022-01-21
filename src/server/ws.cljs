@@ -141,7 +141,7 @@
       (.use (.urlencoded body-parser
                          #js {:extended false}))
       ; (.use (cookie-parser cookie-secret))
-      (.use (csurf                                                 ;; CSRF protection middleware
+      (.use (csurf       ; CSRF protection middleware
              #js {:cookie false}))
       (routes))))
 

@@ -293,7 +293,7 @@
 (rf/reg-sub
  :task/status
  (fn [db [_ task-id]]
-   (if (int? task-id)            ; only temp-ids should be ints
+   (if (integer? task-id)            ; only temp-ids should be ints
      :new
      (if (> 0 (count @(rf/subscribe [:updates task-id])))
        :dirty
