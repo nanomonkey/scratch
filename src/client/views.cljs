@@ -36,7 +36,7 @@
 
 (defn query []
   (let [query-map (r/atom nil)
-        query-filter (r/atom {:value {:content {:type "task"}}})
+        query-filter (r/atom "{:value {:content {:type \"task\"}}}")
         query-reduce (r/atom nil)
         query-reverse? (r/atom false)
         query-limit (r/atom 5)]
@@ -331,9 +331,14 @@
          [:button "+ Line Item"]]]))))
 
 (defn sync-task [task-id]
-  (fn [task-id]
-    [:div [:a.sync {:href "#" :on-click #(rf/dispatch [:task/sync task-id])}
-                   "Sync to Database"]]))
+  (fn [task]
+    [:div
+     (case @(rf/subscribe [:task/status task])
+       :new [:button.wide {:on-click #(do (.preventDefault %)
+                                          (rf/dispatch [:task/save task]))} "Save Task"]
+       :dirty [:button.wide {:on-click #(do (.preventDefault %)
+                                            (rf/dispatch [:task/update task]))} "Update Task"]
+       :saved [:div "Saved"])]))
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -396,12 +401,8 @@
                 {:on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/remove-task recipe-id task]))} 
                 "Remove Task from Recipe"]
-             (case @(rf/subscribe [:task/status task])
-               :new [:button.wide {:on-click #(do (.preventDefault %)
-                                                  (rf/dispatch [:task/save task]))} "Save Task"]
-               :dirty [:button.wide {:on-click #(do (.preventDefault %)
-                                                    (rf/dispatch [:task/update task]))} "Update Task"]
-               :saved [:div "Saved: " (str (type task)) ])]]))
+             (sync-task task)
+             ]]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]]]]))) 

@@ -3,9 +3,9 @@
             [client.db :as db]
             [client.ws :as ws]))
 
-;;;;;;;;;;;
-;; Utils ;;
-;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Utility Functions  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn vec-remove
   "remove element at pos(ition) in vector"
@@ -38,14 +38,15 @@
   [key coll]
   (into {} (map (juxt key identity))))
 
+
 ;;;;;;;;;;;;;
 ;; Effects ;;
 ;;;;;;;;;;;;;
 
-(rf/reg-cofx          
- :now                
- (fn [cofx _]   
-   (assoc cofx :now (js/Date.))))  
+(rf/reg-fx
+ :start-ws
+ (fn []
+   (ws/start!)))
 
 (rf/reg-fx
  :ssb-create-account
@@ -78,7 +79,7 @@
 
 (rf/reg-fx
  :ssb-query
- (fn [user-id query]
+ (fn [query]
    (ws/chsk-send! [:ssb/query {:msg query}] 8000
                   (fn [cb-reply] (rf/dispatch [:query-response cb-reply])))))
 
@@ -88,17 +89,27 @@
    (ws/chsk-send! [:ssb/contact {:msg contact-id}] 8000
                   (fn [cb-reply] (rf/dispatch [:contact cb-reply])))))
 
+(rf/reg-fx
+:set-local-store
+(fn [local-store-key value]
+  (.setItem js/localStorage local-store-key (str value))))
+
+
+;;;;;;;;;;;;;;;;
+;; Coeffects  ;;
+;;;;;;;;;;;;;;;;
+
+(rf/reg-cofx          
+ :now                
+ (fn [cofx _]   
+   (assoc cofx :now (js/Date.))))  
+
 (rf/reg-cofx         
  :local-store
  (fn [cofx local-store-key]
    (assoc cofx
           :local-store
           (js->clj (.getItem js/localStorage local-store-key)))))
-
-(rf/reg-fx
-:set-local-store
-(fn [local-store-key value]
-  (.setItem js/localStorage local-store-key (str value))))
 
 (defonce last-temp-id (atom 0))
 
@@ -107,14 +118,15 @@
   (fn [cofx _]
     (assoc cofx :temp-id (swap! last-temp-id inc))))
 
-(rf/reg-fx
- :start-ws
- (fn []
-   (ws/start!)))
-
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Event Handlers  ;;
 ;;;;;;;;;;;;;;;;;;;;;
+
+(rf/reg-event-fx
+ :query
+ (fn [cofx [_ {:keys [:$map :$filter :$reduce :reduce :limit]}]]
+   {:db (:db cofx) ;set a spinner?
+    :ssb/query query}))
 
 (rf/reg-event-fx         
  :load-defaults-localstore
@@ -135,31 +147,6 @@
  (fn [cofx [_ username password]]
    {:db (assoc-in (:db cofx) [:server :status] "verifying")
     :ssb-login {:username username :password password}}))
-
-(rf/reg-event-db
- :error
- (fn [db [_ error]]
-   (update-in db [:errors] (fnil conj error []))))
-
-(rf/reg-event-db
- :feed
- (fn [db [_ message]]
-   (update-in db [:feed] (fnil conj message []))))
-
-(rf/reg-event-db
- :server/account
- (fn [db [_ status]]
-   (assoc-in db [:server :account] status)))
-
-(rf/reg-event-db
- :waiting-spinner
- (fn [db _]        ;;TODO Add id of section?!
-   (assoc-in db [:waiting-spinner] true)))
-
-(rf/reg-event-db
- :server/status
- (fn [db [_ value]]
-   (assoc-in db [:server :status] value)))
 
 (rf/reg-event-fx
  :server/connect!
@@ -188,6 +175,32 @@
  ::initialize-ssb
  (fn [cofx [_ conn]]
    {:db (assoc (:db cofx) :ssb-conn conn)}))
+
+
+(rf/reg-event-db
+ :error
+ (fn [db [_ error]]
+   (update-in db [:errors] (fnil conj error []))))
+
+(rf/reg-event-db
+ :feed
+ (fn [db [_ message]]
+   (update-in db [:feed] (fnil conj message []))))
+
+(rf/reg-event-db
+ :server/account
+ (fn [db [_ status]]
+   (assoc-in db [:server :account] status)))
+
+(rf/reg-event-db
+ :waiting-spinner
+ (fn [db _]        ;;TODO Add id of section?!
+   (assoc-in db [:waiting-spinner] true)))
+
+(rf/reg-event-db
+ :server/status
+ (fn [db [_ value]]
+   (assoc-in db [:server :status] value)))
 
 (rf/reg-event-db
  ::initialize-db
@@ -254,7 +267,10 @@
    (assoc-in db [:modal] data)))
 
 
-;; Recipes
+;;;;;;;;;;;;;;
+;;  Recipes  ;
+;;;;;;;;;;;;;;
+
 (rf/reg-event-db
  :recipe/update-name
  (fn [db [_ recipe-id name]]
@@ -330,6 +346,11 @@
                              :task-list []})
     :dispatch [:load-recipe (:temp-id cofx)]}))
 
+
+;;;;;;;;;;;
+;  Items  ;
+;;;;;;;;;;;
+
 (rf/reg-event-fx
  :item/new
  [(rf/inject-cofx :temp-id)]
@@ -340,6 +361,10 @@
                               :name name 
                               :description description
                               :tags tags})}))
+
+;;;;;;;;;;;
+;  Units  ;
+;;;;;;;;;;;
 
 (rf/reg-event-fx
  :unit/new
@@ -353,15 +378,16 @@
                        :abbrev abbrev 
                        :type type})})))
 
-
-; Tasks
+;;;;;;;;;;;
+;  Tasks  ;
+;;;;;;;;;;;
 
 (rf/reg-event-fx
  :task/save
  (fn [cofx [_ id]]
    (let [status  @(rf/subscribe [:task/status id])]
          (if (= :new status)
-           {:ssb/create {:type "task" :content @(rf/subscribe [:task id])}}
+           {:ssb/create {:type "task" :content (dissoc @(rf/subscribe [:task id]) :id)}}
            (println "Trying to save" id "with status" status)))))
 
 (rf/reg-cofx
@@ -369,7 +395,9 @@
  (fn [cofx id]
    (let [update-keys @(rf/subscribe [:updates id])
          changes (select-keys update-keys @(rf/subscribe [:task id]))]
-     (rf/dispatch [:ssb/update id]))))
+     {:db (:db cofx) 
+      :ssb/update {:id id
+                   :content changes}})))
 
 (rf/reg-event-db
  :task/updated
@@ -500,7 +528,11 @@
  (fn [db [_ task-id step-pos]]
    (update-in db [:tasks task-id :steps] #(vec-remove % step-pos))))
 
-;;Locations
+
+;;;;;;;;;;;;;;;;
+;;  Locations  ;
+;;;;;;;;;;;;;;;;
+
 (rf/reg-event-db
  :location/update-name 
  (fn [db [_ location-id name]]
@@ -516,7 +548,11 @@
  (fn [db [_ location-id address]]
    (assoc-in db [:locations location-id :address] address)))
 
-;;Inventory
+
+;;;;;;;;;;;;;;;;
+;;  Inventory  ;
+;;;;;;;;;;;;;;;;
+
 (rf/reg-event-db
  :inventory/add
  (fn [db [_ location-id item-id qty unit]]
@@ -528,9 +564,13 @@
          (assoc-in [:inventory location-id  :units item-id] unit)
          (update-in [:inventory location-id :items] (fnil conj []) item-id))
      ;; in the inventory, add to existing qty
-     (update-in db [:inventory location-id :qty item-id] + qty))))
+     (update-in db [:inventory location-id :qty item-id] + qty)))) ;TODO seperate out by units or use base units
 
-;;Suppliers
+
+;;;;;;;;;;;;;;;
+;  Suppliers  ;
+;;;;;;;;;;;;;;;
+
 (rf/reg-event-db
  :supplier/update-name 
  (fn [db [_ supplier-id name]]

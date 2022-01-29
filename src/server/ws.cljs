@@ -44,6 +44,7 @@
               connected-uids]}
       (sente-express/make-express-channel-socket-server! {:packer packer
                                                           :user-id-fn 
+                                                          :csrf-token-fn nil
                                                           (fn [ring-req] 
                                                             (aget (:body ring-req) "session" "uid"))})]
   (def ajax-post                ajax-post-fn)
@@ -101,8 +102,9 @@
      [:meta {:charset "utf-8"}]
      [:link {:rel "stylesheet"
              :href "css/main.css"}]
-     [:link {:rel "stylesheet"
-             :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}]]
+     (comment ; TODO remove if this isn't being used 
+       [:link {:rel "stylesheet"
+                      :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}])]
     [:body
      [:div {:id "app"}]
      [:script {:src "js/showdown.min.js"}]
@@ -135,12 +137,12 @@
       (.use (express-session
              #js {:secret            cookie-secret
                   :resave            true
-                  :cookie            {}
+                  :cookie            #js {:sameSite false}
                   :store             (.MemoryStore express-session)
                   :saveUninitialized true}))
       (.use (.urlencoded body-parser
                          #js {:extended false}))
-      ; (.use (cookie-parser cookie-secret))
+      ;(.use (cookie-parser cookie-secret))
       (.use (csurf       ; CSRF protection middleware
              #js {:cookie false}))
       (routes))))
