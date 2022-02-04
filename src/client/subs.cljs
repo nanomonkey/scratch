@@ -246,8 +246,8 @@
 
 (rf/reg-sub
  :task/equipment
-(fn [db [_ id]]
-  (get-in db [:tasks id :equipment])))
+(fn [db [_ task-id]]
+  (get-in db [:tasks task-id :equipment])))
 
 (rf/reg-sub
   :task/ingredients-items

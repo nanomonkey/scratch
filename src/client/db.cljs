@@ -45,17 +45,10 @@
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :duration "M1"
-                 ;;TODO change to :equipment {"i1" {:quantity 4 :unit :kg}} ??
-                 :equipment {:items ["i1"]
-                             :qty {"i1" 1}
-                             :units {"i1" "ea"}}
-                 :ingredients {:items ["i3"]
-                               :qty {"i3" 2}
-                               :units {"i3" "usquart"}}
+                 :equipment [{:item "i1" :quantity 4 :unit "ea"}]
+                 :ingredients [{:item "i3" :quantity 2 :unit "usquart"}]
                  :steps ["fill pot with water"]
-                 :yields {:items ["i5"]
-                          :qty {"i5" 1}
-                          :units {"i5" "ea"}}}
+                 :yields [{:item "i5" :quantity 1 :unit each}]}
            "t2" {:id "t2"
                  :state :mew
                  :name "Bring to Boil"

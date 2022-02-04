@@ -69,7 +69,7 @@
  :ssb/update 
  (fn [{:keys [id content]}]
    (ws/chsk-send! [:ssb/update {:id id :content content}] 5000
-                  (fn [cb-reply] (rf/dispatch [:task/updated id (:new-id cb-reply)])))))
+                  (fn [cb-reply] (rf/dispatch [:clear-updates id])))))
 
 (rf/reg-fx 
  :ssb/tombstone
@@ -124,9 +124,10 @@
 
 (rf/reg-event-fx
  :query
- (fn [cofx [_ {:keys [:$map :$filter :$reduce :reduce :limit]}]]
-   {:db (:db cofx) ;set a spinner?
-    :ssb/query query}))
+ (fn [cofx [_ {:keys [:map :filter :reduce :reverse :limit]}]]
+   (let [query {:$map map :$filter filter :$reduce reduce :reverse reverse :limit limit}]
+     {:db (:db cofx) ;set a spinner?
+      :ssb/query query})))
 
 (rf/reg-event-fx         
  :load-defaults-localstore
@@ -217,9 +218,8 @@
      :task (rf/dispatch [:task/updated old-id new-id])
      )))
 
-
 (rf/reg-event-db
- :updated
+ :field-updated
  (fn [db [_ id field]]
    (update-in db [:updates id] (fnil conj field #{}))))
 

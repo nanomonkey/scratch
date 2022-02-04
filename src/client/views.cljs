@@ -41,9 +41,9 @@
         query-reverse? (r/atom false)
         query-limit (r/atom 5)]
     [:form {:on-submit #(do (.preventDefault %)
-                            (rf/dispatch [:query {:$map @query-map
-                                                  :$filter @query-filter
-                                                  :$reduce @query-reduce
+                            (rf/dispatch [:query {:map @query-map
+                                                  :filter @query-filter
+                                                  :reduce @query-reduce
                                                   :reverse @query-reverse?
                                                   :limit @query-limit}]))}
      [:div
@@ -331,14 +331,13 @@
          [:button "+ Line Item"]]]))))
 
 (defn sync-task [task-id]
-  (fn [task]
-    [:div
-     (case @(rf/subscribe [:task/status task])
-       :new [:button.wide {:on-click #(do (.preventDefault %)
-                                          (rf/dispatch [:task/save task]))} "Save Task"]
-       :dirty [:button.wide {:on-click #(do (.preventDefault %)
-                                            (rf/dispatch [:task/update task]))} "Update Task"]
-       :saved [:div "Saved"])]))
+  [:div
+   (case @(rf/subscribe [:task/status task-id])
+     :new [:button.wide {:on-click #(do (.preventDefault %)
+                                        (rf/dispatch [:task/save task-id]))} "Save Task"]
+     :dirty [:button.wide {:on-click #(do (.preventDefault %)
+                                          (rf/dispatch [:task/update task-id]))} "Update Task"]
+     :saved [:div "Task Saved"])])
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
@@ -374,12 +373,12 @@
               [list-items @(rf/subscribe [:task/optional-line-items task])
                :task/remove-optional task]]
             ;;Steps for task
-            [:td#task ^{:key (str task "steps")}
+            [:td#task ^{:key (str task "-steps")}
              [:h2 [inline-editor @(rf/subscribe [:task/name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
              [task-duration task]
              [display-steps task]]
-            [:td ^{:key (str task "products")}
+            [:td ^{:key (str task "-products")}
              ;;Yielded products:
              [modal-button "Add Product Item" "Yields:"
               [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
@@ -389,18 +388,21 @@
              ]
             [:td ^{:key (str task " arrange")}
              (if-not (= task (first tasks))
-               [:button.wide {:on-click #(do (.preventDefault %)
+               [:button {:title "Move Task up"
+                         :on-click #(do (.preventDefault %)
                                              (rf/dispatch [:recipe/move-task-up recipe-id task]))} 
-                "Move Up"])
+                [arrow-up-icon]])
              (if-not (= task (last tasks))
-               [:button.wide
-                {:on-click #(do (.preventDefault %)
+               [:button
+                {:title "Move Task Down"
+                 :on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/move-task-down recipe-id task]))} 
-                "Move Down"])
-             [:button.wide 
-                {:on-click #(do (.preventDefault %)
+                [arrow-down-icon]])
+             [:button 
+                {:title "Remove Task from Recipe"
+                 :on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/remove-task recipe-id task]))} 
-                "Remove Task from Recipe"]
+                "Remove"]
              (sync-task task)
              ]]))
         [:tr ^{:key "Add_Task_row"}
