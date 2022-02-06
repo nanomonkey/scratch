@@ -357,7 +357,6 @@
 
 
 ;; Message bus Handlers
-;; possible tags: :create, :update, :delete, :query, :get, :respond, :private
 
 (defonce message-handlers 
   {:ssb-login (fn [{:keys [username password]}] 

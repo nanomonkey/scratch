@@ -202,19 +202,24 @@
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (let [type (:type ?data)
         content (:content ?data)]
-    (debugf "Create event: %s" event)
-    (debugf "ev-msg: %s" ev-msg)
-    (dispatch! :create {:uid uid :type type :content content})))
+    ;(dispatch! :create {:uid uid :type type :content content})
+    (ssb/publish! uid {:type type :content content})))
 
+(defmethod -event-msg-handler
+  :ssb/update
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
+  (let [id (:id ?data)
+        changes (:changes ?data)]
+    ;(dispatch! :update {:uid uid :id :changes changes})
+    (ssb/publish! uid {:type "update" :root id :content changes})))
 
-(comment
-  ;; CRUT messages
-  {:create (fn [{:keys [uid type content]}] (publish! uid {:type type :val val}))
-   :update (fn [{:keys [uid id changes]}] (publish! uid {:type "update"
-                                                         :root id 
-                                                         :content changes}))
-   :tombstone (fn [{:keys [uid id]}] (publish! uid {:type :tombstone :root id}))})
-
+(defmethod -event-msg-handler
+  :ssb/tombstone
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
+  (let [type (:type ?data)
+        content (:content ?data)]
+    ;(dispatch! :tombstone {:uid uid :id id})
+    (ssb/publish! uid {:type "tombstone" :root id})))
 
 (defmethod -event-msg-handler
   :ssb/query

@@ -49,12 +49,12 @@
    (ws/start!)))
 
 (rf/reg-fx
- :ssb-create-account
+ :ssb/create-account
  (fn [{:keys [name password]}]
    (ws/ssb-create-account! name password)))
 
 (rf/reg-fx
- :ssb-login
+ :ssb/login
  (fn [{:keys [username password]}]             
    (ws/ssb-login! username password))) 
 
@@ -78,13 +78,13 @@
                   (fn [cb-reply] (rf/dispatch [:tombstoned id])))))
 
 (rf/reg-fx
- :ssb-query
+ :ssb/query
  (fn [query]
    (ws/chsk-send! [:ssb/query {:msg query}] 8000
                   (fn [cb-reply] (rf/dispatch [:query-response cb-reply])))))
 
 (rf/reg-fx
- :ssb-contact
+ :ssb/contact
  (fn [contact-id]
    (ws/chsk-send! [:ssb/contact {:msg contact-id}] 8000
                   (fn [cb-reply] (rf/dispatch [:contact cb-reply])))))
@@ -140,14 +140,14 @@
  :create-account
  (fn [cofx [_ name password]]
    {:db (assoc-in (:db cofx) [:server :account] "creating")
-    :ssb-create-account {:name name
+    :ssb/create-account {:name name
                          :password password}}))
 
 (rf/reg-event-fx
  :login
  (fn [cofx [_ username password]]
    {:db (assoc-in (:db cofx) [:server :status] "verifying")
-    :ssb-login {:username username :password password}}))
+    :ssb/login {:username username :password password}}))
 
 (rf/reg-event-fx
  :server/connect!

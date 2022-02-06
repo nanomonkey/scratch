@@ -7,6 +7,7 @@
 
 (def router_ (atom nil))
 
+(def socket (atom nil))
 (def ch-chsk (atom nil))    ; ChannelSocket's receive channel
 (def chsk-send! (atom nil)) ; ChannelSocket's send API fn
 (def chsk-state (atom nil)) ; Watchable, read-only atom
@@ -25,7 +26,8 @@
 (defn create-client! []
   (let [?csrf-token (when-let [el (.getElementById js/document "sente-csrf-token")]
                       (.getAttribute el "data-csrf-token"))
-        {:keys [ch-recv send-fn state]} (sente/make-channel-socket-client! "/chsk" ?csrf-token config)]
+        {:keys [chsk ch-recv send-fn state]} (sente/make-channel-socket-client! "/chsk" ?csrf-token config)]
+    (reset! socket chsk)
     (reset! ch-chsk ch-recv)
     (reset! chsk-send! send-fn)
     (add-watch state :state-watcher state-watcher)))
@@ -35,7 +37,7 @@
 
 (defn start-router! []
   (stop-router!)
-  (reset! router_ (sente/start-client-chsk-router! @ch-chsk handlers/event-msg-handler)))
+  (reset! router_ (sente/start-client-chsk-router! @socket handlers/event-msg-handler)))
 
 (defn start! []
   (println "Start WS client..")
@@ -58,8 +60,7 @@
                          (rf/dispatch [:login-failed])
                          (do
                            (rf/dispatch [:login-successful username @ch-chsk])
-                           (sente/chsk-reconnect! @ch-chsk)))))))
-
+                           (sente/chsk-reconnect! @socket)))))))
 
 (defn ssb-create-account! [username password]   
   (sente/ajax-lite "/new_account"

@@ -48,7 +48,7 @@
                  :equipment [{:item "i1" :quantity 4 :unit "ea"}]
                  :ingredients [{:item "i3" :quantity 2 :unit "usquart"}]
                  :steps ["fill pot with water"]
-                 :yields [{:item "i5" :quantity 1 :unit each}]}
+                 :yields [{:item "i5" :quantity 1 :unit "each"}]}
            "t2" {:id "t2"
                  :state :mew
                  :name "Bring to Boil"

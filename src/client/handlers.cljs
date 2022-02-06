@@ -42,38 +42,42 @@
   [{:as ev-msg :keys [?data]}]
   (chsk-recv (?data 0) (?data 1)))
 
-(comment
-  ;; recieved message handlers
-  (defmethod chsk-recv 
-    :post-event
-    [id {:as ev-msg :keys [?data]}]
-    (let [[?uid ?csrf-token ?handshake-data ?msg] ?data]
-      (log "Message Posted: %s" ?msg)))
 
-  (defmethod chsk-recv 
-    :ssb/error-event
-    [id {:as ?data :keys [message]}]
-    (log "Error: %s" message))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; recieved message handlers ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (defmethod chsk-recv 
-    :ssb/response
-    [id {:as ?data :keys [message]}]
-    (log "SSB-response: %s" message))
+(defmethod chsk-recv 
+  :post-event
+  [id {:as ev-msg :keys [?data]}]
+  (let [[?uid ?csrf-token ?handshake-data ?msg] ?data]
+    (log "Message Posted: %s" ?msg)))
 
-  (defmethod chsk-recv 
-    :ssb/feed
-    [id :keys [message]]
-    (log "* %s" message))
+(defmethod chsk-recv 
+  :ssb/error-event
+  [id {:as ?data :keys [message]}]
+  (rf/dispatch [:error message])
+  (log "Error: %s" message))
 
-  (defmethod chsk-recv 
-    :ssb/contact-name
-    [id {:as ?data :keys [message]}]
-    (log "* %s" message))
+(defmethod chsk-recv 
+  :ssb/response
+  [id {:as ?data :keys [message]}]
+  (log "SSB-response: %s" message))
 
-  (defmethod chsk-recv 
-    :ssb/blob
-    [id {:as ?data :keys [message]}]
-    (log message))
-)
+(defmethod chsk-recv 
+  :ssb/feed
+  [id {:keys [message]}]
+  (rf/dispatch [:feed message]))
+
+(defmethod chsk-recv 
+  :ssb/contact-name
+  [id {:as ?data :keys [message]}]
+  (log "* %s" message))
+
+(defmethod chsk-recv 
+  :ssb/blob
+  [id {:as ?data :keys [message]}]
+  (log "Blob: %" message))
+
 
 
