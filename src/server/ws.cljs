@@ -44,7 +44,7 @@
               connected-uids]}
       (sente-express/make-express-channel-socket-server! {:packer packer
                                                           :user-id-fn 
-                                                          :csrf-token-fn nil
+                                                          ;:csrf-token-fn nil
                                                           (fn [ring-req] 
                                                             (aget (:body ring-req) "session" "uid"))})]
   (def ajax-post                ajax-post-fn)
@@ -142,7 +142,7 @@
                   :saveUninitialized true}))
       (.use (.urlencoded body-parser
                          #js {:extended false}))
-      ;(.use (cookie-parser cookie-secret))
+      (.use (cookie-parser cookie-secret))
       (.use (csurf       ; CSRF protection middleware
              #js {:cookie false}))
       (routes))))

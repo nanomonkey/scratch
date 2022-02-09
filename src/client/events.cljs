@@ -133,7 +133,7 @@
  :load-defaults-localstore
  [ (rf/inject-cofx :local-store "defaults") ] 
  (fn [cofx  _data]          ;; cofx is a map containing inputs; _data unused
-   (let [defaults (:local-store cofx)]  ;; <--  use it here
+   (stt [defaults (:local-store cofx)]  ;; <--  use it here
      {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects mapW
 
 (rf/reg-event-fx
