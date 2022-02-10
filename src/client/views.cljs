@@ -127,12 +127,13 @@
 (defn list-items [items remove-event task]
   (fn [items remove-event task]
     [:ul.items
-     (for [i items]
-       [:li {:key (:item i)} [:span.removable (display-line-item i )]
-        [:button.hidden
-         {:title "Remove"
-          :on-click #(do (.preventDefault %)
-                         (rf/dispatch [remove-event task (:item i)]))} "X"]])]))
+     (doall
+      (for [i items]
+        [:li {:key (:item i)} [:span.removable (display-line-item i )]
+         [:button.hidden
+          {:title "Remove"
+           :on-click #(do (.preventDefault %)
+                          (rf/dispatch [remove-event task (:item i)]))} "X"]]))]))
 
 (defn add-step [task {:keys [on-add]}]
   (let [s (r/atom "")]

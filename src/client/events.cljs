@@ -81,7 +81,7 @@
  :ssb/query
  (fn [query]
    (ws/chsk-send! [:ssb/query {:msg query}] 8000
-                  (fn [cb-reply] (rf/dispatch [:query-response cb-reply])))))
+                  (fn [cb-reply] (rf/dispatch [:feed cb-reply])))))
 
 (rf/reg-fx
  :ssb/contact
@@ -133,7 +133,7 @@
  :load-defaults-localstore
  [ (rf/inject-cofx :local-store "defaults") ] 
  (fn [cofx  _data]          ;; cofx is a map containing inputs; _data unused
-   (stt [defaults (:local-store cofx)]  ;; <--  use it here
+   (let [defaults (:local-store cofx)]  ;; <--  use it here
      {:db (assoc (:db cofx) :defaults defaults)})))  ;; returns effects mapW
 
 (rf/reg-event-fx
