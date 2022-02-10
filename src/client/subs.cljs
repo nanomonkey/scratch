@@ -14,6 +14,11 @@
  (fn [db _]
    (get-in db [:server :account])))
 
+(rf/reg-sub
+ :server/id
+ (fn [db _]
+   (get-in db [:server :id])))
+
 ;; UI elements
 (rf/reg-sub-raw
  :modal

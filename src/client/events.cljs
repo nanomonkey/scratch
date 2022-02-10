@@ -1,5 +1,6 @@
 (ns client.events
   (:require [re-frame.core :as rf]
+            [taoensso.sente  :as sente  :refer (cb-success?)]
             [client.db :as db]
             [client.ws :as ws]))
 
@@ -59,11 +60,23 @@
    (ws/ssb-login! username password))) 
 
 (rf/reg-fx
+ :ssb/get-id
+ (fn []
+   (ws/chsk-send! [:ssb/get-id] 5000
+                  (fn [reply] 
+                    (if (cb-success? reply) 
+                      (rf/dispatch [:ssb/id (:id reply)])
+                      (rf/dispatch [:error reply]))))))
+
+(rf/reg-fx
  :ssb/create
  (fn [{:keys [type content]}]
    (let [old-id (:id content)]
      (ws/chsk-send! [:ssb/create {:type type :content (dissoc content :id)}] 5000
-                    (fn [cb-reply] (rf/dispatch [:saved type old-id (:new-id cb-reply)]))))))
+                    (fn [reply] 
+                      (if (cb-success? reply) 
+                        (rf/dispatch [:saved type old-id (:new-id reply)])
+                        (rf/dispatch [:error reply])))))))
 
 (rf/reg-fx
  :ssb/update 
@@ -81,7 +94,10 @@
  :ssb/query
  (fn [query]
    (ws/chsk-send! [:ssb/query {:msg query}] 8000
-                  (fn [cb-reply] (rf/dispatch [:feed cb-reply])))))
+                  (fn [reply] 
+                    (if (cb-success? reply) 
+                      (rf/dispatch [:feed reply])
+                      (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
  :ssb/contact
@@ -157,8 +173,9 @@
 
 (rf/reg-event-fx
  :login-successful
- (fn [cofx [_ account ch-chsk]]
-   {:db (assoc-in (:db cofx) [:server :account] account)
+ (fn [cofx [_ account state]]
+   {:db (assoc-in (:db cofx) [:server] {:account  account
+                                        :status state})
     :dispatch [:set-active-panel :recipe]}))
 
 (rf/reg-event-fx
@@ -177,11 +194,15 @@
  (fn [cofx [_ conn]]
    {:db (assoc (:db cofx) :ssb-conn conn)}))
 
-
 (rf/reg-event-db
  :error
  (fn [db [_ error]]
    (update-in db [:errors] (fnil conj error []))))
+
+(rf/reg-event-db
+ :ssb/id 
+ (fn [db [_ id]]
+   (update-in db [:server :id] id)))
 
 (rf/reg-event-db
  :feed

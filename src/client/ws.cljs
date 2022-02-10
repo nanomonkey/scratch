@@ -47,7 +47,7 @@
                        (if-not login-successful?
                          (rf/dispatch [:login-failed])
                          (do
-                           (rf/dispatch [:login-successful username ch-chsk])
+                           (rf/dispatch [:login-successful username @chsk-state])
                            (sente/chsk-reconnect! chsk)))))))
 
 (defn ssb-create-account! [username password]   

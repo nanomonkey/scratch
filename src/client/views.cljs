@@ -133,7 +133,7 @@
          [:button.hidden
           {:title "Remove"
            :on-click #(do (.preventDefault %)
-                          (rf/dispatch [remove-event task (:item i)]))} "X"]]))]))
+                          (rf/dispatch [remove-event task (:item i)]))} "X "]]))]))
 
 (defn add-step [task {:keys [on-add]}]
   (let [s (r/atom "")]
@@ -567,6 +567,10 @@
    [:div.row
     [:div.column.left]
     [:div.column.middle
+     [:h3 "Profile"]
+     [:div "Logged in as: " @(rf/subscribe [ :server/account])]
+     [:div "Connection status: " @(rf/subscribe [:server/status])]
+     [:div "ID: " @(rf/subscribe [:server/id])]
      [:h3 "Default Names"]
      [:h3 "Recipes"]
      [:h3 "Products"]

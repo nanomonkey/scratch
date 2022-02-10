@@ -233,6 +233,16 @@
     ))
 
 (defmethod -event-msg-handler
+  :ssb/get-id
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
+  (let [msg (:msg ?data)]
+    ;(debugf "Query event: %s" event)
+    ;(debugf "msg: %s" msg)
+    ;(dispatch! :query {:uid uid :msg msg}) 
+    (let id (ssb/get-id uid)
+         (when ?reply-fn (?reply-fn {:id id})))))
+
+(defmethod -event-msg-handler
   :ssb/query-explain
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (let [msg (:msg ?data)]
