@@ -62,11 +62,11 @@
 (rf/reg-fx
  :ssb/get-id
  (fn []
-   (ws/chsk-send! [:ssb/get-id] 5000
+   (ws/chsk-send! [:ssb/get-id] 10000
                   (fn [reply] 
-                    (if (cb-success? reply) 
+                    (if (cb-success? reply)
                       (rf/dispatch [:ssb/id (:id reply)])
-                      (rf/dispatch [:error reply]))))))
+                      (rf/dispatch [:error (str reply)]))))))
 
 (rf/reg-fx
  :ssb/create
@@ -82,13 +82,19 @@
  :ssb/update 
  (fn [{:keys [id content]}]
    (ws/chsk-send! [:ssb/update {:id id :content content}] 5000
-                  (fn [cb-reply] (rf/dispatch [:clear-updates id])))))
+                                    (fn [reply] 
+                      (if (cb-success? reply) 
+                        (rf/dispatch [:clear-updates id])
+                        (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx 
  :ssb/tombstone
  (fn [{:keys [id reason]}]
    (ws/chsk-send! [:ssb/tombstone {:id id :reason reason}] 5000
-                  (fn [cb-reply] (rf/dispatch [:tombstoned id])))))
+                  (fn [reply] 
+                      (if (cb-success? reply) 
+                        (rf/dispatch [:tombstoned id])
+                        (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
  :ssb/query
@@ -100,10 +106,13 @@
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
- :ssb/contact
- (fn [contact-id]
-   (ws/chsk-send! [:ssb/contact {:msg contact-id}] 8000
-                  (fn [cb-reply] (rf/dispatch [:contact cb-reply])))))
+ :ssb/comment
+ (fn [root comment]
+   (ws/chsk-send! [:ssb/publish {:root root :comment comment}] 8000
+                  (fn [reply] 
+                    (if (cb-success? reply) 
+                      (rf/dispatch [:add-comment root comment])
+                      (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
 :set-local-store
@@ -184,6 +193,11 @@
    {:db (assoc-in (:db cofx) [:server :account] "login failed")}))
 
 (rf/reg-event-fx
+ :get-id
+ (fn [cofx [_ username password]]
+   {:ssb/get-id []}))
+
+(rf/reg-event-fx
  :save-defaults-localstore
  (fn [cofx [_ defaults]]
    {:db (assoc-in (:db cofx) [:defaults :saved?] true)
@@ -202,7 +216,7 @@
 (rf/reg-event-db
  :ssb/id 
  (fn [db [_ id]]
-   (update-in db [:server :id] id)))
+   (assoc-in db [:server :id] id)))
 
 (rf/reg-event-db
  :feed

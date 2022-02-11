@@ -570,7 +570,10 @@
      [:h3 "Profile"]
      [:div "Logged in as: " @(rf/subscribe [ :server/account])]
      [:div "Connection status: " @(rf/subscribe [:server/status])]
-     [:div "ID: " @(rf/subscribe [:server/id])]
+     [:div "ID: " @(rf/subscribe [:server/id])] 
+     [:div [:button {:on-click #(do
+                                    (.preventDefault %)
+                                    (rf/dispatch [:get-id]))} "Get Id"]]
      [:h3 "Default Names"]
      [:h3 "Recipes"]
      [:h3 "Products"]
