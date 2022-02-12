@@ -36,6 +36,13 @@
   (let [[?uid ?csrf-token ?handshake-data] ?data]
     (log "Handshake: %s" ?data)))
 
+(defmethod -event-msg-handler 
+  :chsk/timeout 
+  [{:as ev-msg :keys [?data]}]
+  (let [[?uid ?csrf-token ?handshake-data] ?data]
+    (rf/dispatch [:error (str ?data)])
+    (log "Handshake: %s" ?data)))
+ 
 (defmulti chsk-recv (fn [id ?data] id))
 
 (defmethod -event-msg-handler :chsk/recv
@@ -62,7 +69,7 @@
 (defmethod chsk-recv 
   :ssb/response
   [id {:as ?data :keys [message]}]
-  (rf/dispatch [:feed message]))
+  (rf/dispatch [:feed (str message)]))
 
 (defmethod chsk-recv 
   :ssb/feed

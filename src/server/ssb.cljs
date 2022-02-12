@@ -200,7 +200,7 @@
     (pull (.query.read db (clj->js query))
           (.collect pull  (fn [err ary] (if err
                                           (dispatch! :error {:uid uid :message err})
-                                          (dispatch! :feed {:uid uid :message  ary})))))
+                                          (dispatch! :feed {:uid uid :message  (parse-json ary)})))))
     (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )}))) 
 
 

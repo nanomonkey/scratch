@@ -21,6 +21,8 @@
             :status "not-connected"}
    :active-panel :login
    :temp-id 0
+   :feed []
+   :errors []
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
                    :description "Soup made by friends"

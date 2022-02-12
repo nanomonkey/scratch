@@ -39,6 +39,8 @@
   [key coll]
   (into {} (map (juxt key identity))))
 
+(defn parse-json [msg] 
+  (js->clj msg :keywordize-keys true))
 
 ;;;;;;;;;;;;;
 ;; Effects ;;
@@ -102,7 +104,7 @@
    (ws/chsk-send! [:ssb/query {:msg query}] 8000
                   (fn [reply] 
                     (if (cb-success? reply) 
-                      (rf/dispatch [:feed reply])
+                      (rf/dispatch [:feed (parse-json reply)])
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
@@ -211,7 +213,7 @@
 (rf/reg-event-db
  :error
  (fn [db [_ error]]
-   (update-in db [:errors] (fnil conj error []))))
+   (update-in db [:errors] (fnil conj []) error)))
 
 (rf/reg-event-db
  :ssb/id 
@@ -221,7 +223,7 @@
 (rf/reg-event-db
  :feed
  (fn [db [_ message]]
-   (update-in db [:feed] (fnil conj message []))))
+   (update-in db [:feed] (fnil conj []) message)))
 
 (rf/reg-event-db
  :server/account
