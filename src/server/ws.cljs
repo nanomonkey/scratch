@@ -203,7 +203,7 @@
   (let [type (:type ?data)
         content (:content ?data)]
     ;(dispatch! :create {:uid uid :type type :content content})
-    (ssb/publish! uid {:type type :content content})))
+    (ssb/publish! uid (merge content {:type type}))))
 
 (defmethod -event-msg-handler
   :ssb/update

@@ -72,7 +72,7 @@
  :ssb/create
  (fn [{:keys [type content]}]
    (let [old-id (:id content)]
-     (ws/chsk-send! [:ssb/create {:type type :content (dissoc content :id)}] 5000
+     (ws/chsk-send! [:ssb/create {:type type :content (dissoc content :id)}] 15000
                     (fn [reply] 
                       (if (cb-success? reply) 
                         (rf/dispatch [:saved type old-id (:new-id reply)])
@@ -622,4 +622,21 @@
    (assoc-in db [:suppliers supplier-id :address] address)))
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Comments, Posts and Replies  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(rf/reg-event-fx
+ :post/save
+ (fn [cofx [_ text]]
+   {:ssb/create {:type "post" :content {:text text}}}))
+
+(comment  ;; To Add
+
+  (rf/reg-event-fx
+   :reply/save
+   (fn [cofx [_ reply-to text]]
+     {:ssb/create {:type "post" :content {:root reply-to
+                                          :text text}}})))
 

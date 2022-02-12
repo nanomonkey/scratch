@@ -1,5 +1,6 @@
 (ns client.views
   (:require [re-frame.core :as rf]
+            [clojure.edn :as edn]
             [reagent.core :as r] 
             [client.subs :as subs]
             [client.widgets :refer [markdown-section 
@@ -34,50 +35,69 @@
           [:li [:a {:href  "#"
                     :on-click #(rf/dispatch [:set-active-panel :settings])} "Settings"]]]])
 
+(defn post []
+  (let [content (r/atom "")]
+    (fn []
+      [:form {:on-submit #(do (.preventDefault %)
+                              (rf/dispatch [:post/save @content]))}
+       [:div
+        [:label "Content:"]
+        [:input {:type "text"
+                 :name "content"
+                 :value @content
+                 :on-change #(reset! content (-> % .-target .-value))}]]
+       [:div
+        [:button {:type "submit"} "Post"]]])))
+
+
 (defn query []
   (let [query-map (r/atom nil)
         query-filter (r/atom "{:value {:content {:type \"task\"}}}")
         query-reduce (r/atom nil)
         query-reverse? (r/atom false)
         query-limit (r/atom 5)]
-    [:form {:on-submit #(do (.preventDefault %)
-                            (rf/dispatch [:query {:map @query-map
-                                                  :filter @query-filter
-                                                  :reduce @query-reduce
-                                                  :reverse @query-reverse?
-                                                  :limit @query-limit}]))}
-     [:div
-      [:label "Map"]
-      [:input {:type "text"
-               :name "query-map"
-               :value @query-map
-               :on-change #(reset! query-map (-> % .-target .-value))}]]
-     [:div
-      [:label "Filter"]
-      [:input {:type "string"
-               :value @query-filter
-               :on-change #(reset! query-filter (-> % .-target .-value))}]]
-     [:div
-      [:label "Reduce"]
-      [:input {:type "string"
-               :value @query-reduce
-               :on-change #(reset! query-reduce (-> % .-target .-value))}]]
-     [:div
-      [:label "Reverse"]
-      [:input {:type "radio"
-               :value @query-reverse?
-               :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
-     [:div
-      [:label "Limit"]
-      [:input {:type "integer"
-               :value @query-limit
-               :on-change #(reset! query-limit (-> % .-target .-value))}]]     
-     [:div
-      [:button {:type "submit"} "Query"]]]))
+    (fn []
+      [:form {:on-submit #(do (.preventDefault %)
+                              (rf/dispatch [:query {:query 
+                                                    (into [] 
+                                                          (remove nil? [(edn/read-string @query-map) 
+                                                                        (edn/read-string @query-filter) 
+                                                                        (edn/read-string @query-reduce)])) 
+                                                    :limit @query-limit
+                                                    :reverse @query-reverse?}]))}
+       [:div
+        [:label "Map"]
+        [:input {:type "text"
+                 :name "query-map"
+                 :value @query-map
+                 :on-change #(reset! query-map (-> % .-target .-value))}]]
+       [:div
+        [:label "Filter"]
+        [:input {:type "string"
+                 :value @query-filter
+                 :on-change #(reset! query-filter (-> % .-target .-value))}]]
+       [:div
+        [:label "Reduce"]
+        [:input {:type "string"
+                 :value @query-reduce
+                 :on-change #(reset! query-reduce (-> % .-target .-value))}]]
+       [:div
+        [:label "Reverse"]
+        [:input {:type "radio"
+                 :value @query-reverse?
+                 :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
+       [:div
+        [:label "Limit"]
+        [:input {:type "integer"
+                 :value @query-limit
+                 :on-change #(reset! query-limit (-> % .-target .-value))}]]     
+       [:div
+        [:button {:type "submit"} "Query"]]])))
 
 (defn right-panel []
   [:div
-   (query)
+   [post]
+   [query]
    [:h4 "Feed:"]
    (doall
     (for [message @(rf/subscribe [:feed])]
@@ -479,7 +499,7 @@
         jan1 (dt/date-time year 1 1)
         start (dt/minus jan1 (dt/days (dt/day-of-week jan1)))]
     [:div
-     [:H2 [:center [:a {:href "#"} "<  "] year [:a {:href "#"} "  >"]]]
+     [:h2 [:center [:a {:href "#"} "<  "] year [:a {:href "#"} "  >"]]]
      [:table#calendar
       [:tbody
         [:tr

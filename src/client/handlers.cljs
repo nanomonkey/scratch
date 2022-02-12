@@ -62,7 +62,7 @@
 (defmethod chsk-recv 
   :ssb/response
   [id {:as ?data :keys [message]}]
-  (log "SSB-response: %s" message))
+  (rf/dispatch [:feed message]))
 
 (defmethod chsk-recv 
   :ssb/feed
