@@ -634,6 +634,11 @@
  (fn [cofx [_ text]]
    {:ssb/create {:type "post" :content {:text text}}}))
 
+(rf/reg-event-fx
+ :create-transaction
+ (fn [cofx [_ type content]]
+   {:ssb/create {:type type :content content}}))
+
 (comment  ;; To Add
 
   (rf/reg-event-fx

@@ -293,8 +293,8 @@
    :query-response (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/query-response {:message message}]))
    :name (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/contact-name {:message message}]))
    :blob (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/blob {:message message}]))
-   :display (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/display {:message message}]))})
-
+   :display (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/display {:message message}]))}
+)
 (doall (map (fn [[k v]] (handle! k v)) message-handlers))
 
 ;;;; Sente event router (our `event-msg-handler` loop)

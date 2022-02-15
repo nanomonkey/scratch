@@ -35,11 +35,38 @@
           [:li [:a {:href  "#"
                     :on-click #(rf/dispatch [:set-active-panel :settings])} "Settings"]]]])
 
+
+(defn create-transaction []
+  (let [type (r/atom "")
+        content (r/atom "")]
+    (fn []
+      [:form {:on-submit #(do (.preventDefault %)
+                              (rf/dispatch [:create-transaction @type @content])
+                              (reset! type "")
+                              (reset! content ""))}
+       [:h2 "Create Transaction"]
+       [:div
+        [:label "Type"]
+        [:input {:type "text"
+                 :name "type"
+                 :value @type
+                 :on-change #(reset! type (-> % .-target .-value))}]]
+       [:div
+        [:label "Content:"]
+        [:input {:type "text"
+                 :name "content"
+                 :value @content
+                 :on-change #(reset! content (-> % .-target .-value))}]]
+       [:div
+        [:button {:type "submit"} "Post"]]])))
+
 (defn post []
   (let [content (r/atom "")]
     (fn []
       [:form {:on-submit #(do (.preventDefault %)
-                              (rf/dispatch [:post/save @content]))}
+                              (rf/dispatch [:post/save @content])
+                              (reset! content  ""))}
+       [:h2 "Post Message"]
        [:div
         [:label "Content:"]
         [:input {:type "text"
@@ -65,6 +92,7 @@
                                                                         (edn/read-string @query-reduce)])) 
                                                     :limit @query-limit
                                                     :reverse @query-reverse?}]))}
+       [:h2 "Query"]
        [:div
         [:label "Map"]
         [:input {:type "text"
@@ -96,6 +124,7 @@
 
 (defn right-panel []
   [:div
+   [create-transaction]
    [post]
    [query]
    [:h4 "Feed:"]
