@@ -398,33 +398,34 @@
          (for [task tasks]
            [:tr ^{:key task} 
             [:td ^{:key (str task "items")}
-    ;;Equipment for task
+;; Equipment for task
              [:div ^{:key (str task "equipment")}
               [modal-button "Add Equipment" "Equipment:"
                [line-item #(rf/dispatch [:task/add-equipment task %1 %2 %3])]
                "equipment-qty"]]
              [list-items @(rf/subscribe [:task/equipment task])
               :task/remove-equipment task]
-     ;;Ingredients for task
+;; Ingredients for task
              [:div ^{:key (str task "ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
                [line-item #(rf/dispatch [:task/add-ingredient task %1 %2 %3])]
                "ingredient-qty"]]
              [list-items @(rf/subscribe [:task/ingredients task])
               :task/remove-ingredient task]]
-     ;;Steps for task
+;; Steps for task
             [:td#task ^{:key (str task "-steps")}
              [:h2 [inline-editor @(rf/subscribe [:task/name task]) 
                    {:on-update #(rf/dispatch [:task/update-name task %])}]]
              [task-duration task]
              [display-steps task]]
-     ;;Yielded products:        
+;; Yielded products:        
             [:td ^{:key (str task "-products")}
              [modal-button "Add Product Item" "Yields:"
               [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
               "yield-qty"]
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]]
+;; Rearrange Tasks
             [:td ^{:key (str task " arrange")}
              (if-not (= task (first tasks))
                [:button {:title "Move Task up"

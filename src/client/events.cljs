@@ -42,6 +42,8 @@
 (defn parse-json [msg] 
   (js->clj msg :keywordize-keys true))
 
+(defn remove-lineitem [id list] (vec (remove #(= id (:item %)) list)))
+
 ;;;;;;;;;;;;;
 ;; Effects ;;
 ;;;;;;;;;;;;;
@@ -478,7 +480,7 @@
 (rf/reg-event-db
  :task/remove-ingredient
  (fn [db [_ task-id item-id]]
-   (update-in db [:tasks task-id :ingredients] (vec (remove #(= item-id (:id %)))))))
+   (update-in db [:tasks task-id :ingredients] #(remove-lineitem item-id %))))
 
 (rf/reg-event-db
  :task/add-product
@@ -490,7 +492,7 @@
 (rf/reg-event-db
  :task/remove-product
  (fn [db [_ task-id item-id]]
-   (update-in db [:tasks task-id :yields] (vec (remove #(= item-id (:id %)))))))
+   (update-in db [:tasks task-id :yields] #(remove-lineitem item-id %))))
 
 (rf/reg-event-db
  :task/add-equipment
@@ -502,7 +504,7 @@
 (rf/reg-event-db
  :task/remove-equipment
  (fn [db [_ task-id item-id]]
-   (update-in db [:tasks task-id :yields] (vec (remove #(= item-id (:id %)))))))
+   (update-in db [:tasks task-id :yields] #(remove-lineitem item-id %))))
 
 
 (rf/reg-event-db
