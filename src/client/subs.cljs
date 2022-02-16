@@ -255,45 +255,14 @@
   (get-in db [:tasks task-id :equipment])))
 
 (rf/reg-sub
-  :task/ingredients-items
+  :task/ingredients
   (fn [db [_ task-id]]
-    (get-in db [:tasks task-id :ingredients :items])))
-
-(rf/reg-sub
- :task/ingredients-line-items
- (fn [db [_ task-id]]
-   (mapv (fn [item-id]
-             {:qty (get-in db [:tasks task-id :ingredients :qty item-id])
-              :unit (get-in db [:tasks task-id :ingredients :units item-id])
-              :item item-id})
-           (get-in db [:tasks task-id :ingredients :items]))))
-
-(rf/reg-sub
- :task/equipment-line-items
- (fn [db [_ task-id]]
-   (mapv (fn [item-id]
-             {:qty (get-in db [:tasks task-id :equipment :qty item-id])
-              :unit (get-in db [:tasks task-id :equipment :units item-id])
-              :item item-id})
-           (get-in db [:tasks task-id :equipment :items]))))
-
-(rf/reg-sub
- :task/optional-line-items
- (fn [db [_ task-id]]
-   (mapv (fn [item-id]
-             {:qty (get-in db [:tasks task-id :optional :qty item-id])
-              :unit (get-in db [:tasks task-id :optional :units item-id])
-              :item item-id})
-           (get-in db [:tasks task-id :optional :items]))))
+    (get-in db [:tasks task-id :ingredients])))
 
 (rf/reg-sub
  :task/yields
  (fn [db [_ task-id]]
-   (mapv (fn [item-id]
-             {:qty (get-in db [:tasks task-id :yields :qty item-id])
-              :unit (get-in db [:tasks task-id :yields :units item-id])
-              :item item-id})
-           (get-in db [:tasks task-id :yields :items]))))
+   (get-in db [:tasks task-id :yields])))
 
 (rf/reg-sub
  :task/status

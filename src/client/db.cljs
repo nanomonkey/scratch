@@ -23,6 +23,7 @@
    :temp-id 0
    :feed []
    :errors []   
+   :contacts []
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
                    :description "Soup made by friends"
@@ -47,51 +48,29 @@
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :duration "M1"
-                 :equipment [{:item "i1" :quantity 4 :unit "ea"}]
-                 :ingredients [{:item "i3" :quantity 2 :unit "usquart"}]
+                 :equipment [{:item "i1" :qty 4 :unit "ea"}]
+                 :ingredients [{:item "i3" :qty 2 :unit "usquart"}]
                  :steps ["fill pot with water"]
-                 :yields [{:item "i5" :quantity 1 :unit "each"}]}
+                 :yields [{:item "i5" :qty 1 :unit "each"}]}
            "t2" {:id "t2"
                  :state :mew
                  :name "Bring to Boil"
                  :duration "M12S45"
-                 :equipment {:items ["i2"]
-                             :qty {"i2" 1}
-                             :units {"i2" "ea"}}
-                 :ingredients {:items ["i5"]
-                               :qty {"i5" 1}
-                               :units {"i5" "ea"}
-                               :scaling {"i5" 1}}
+                 :equipment [{:item "i2" :qty 1 :unit "ea"}]
+                 :ingredients [{:item "i5" :qty 1 :unit "ea"}]
                  :steps ["Turn stove on medium" "Leave until boiling"]
-                 :yields {:items ["i4" "i5"]
-                          :qty {"i4" 6
-                                "i5" 1}
-                          :units {"i4" "usquart"
-                                  "i5" "usquart"}}}
+                 :yields [{:item "i4" :qty 6 :unit "usquart"}
+                          {:item "i5" :qty 1 :unit "usquart"}]}
            "t3" {:id "t3"
                  :state :mew
                  :name "Add Salt"
-                 :ingredients {:items ["i6"]
-                               :qty {"i6" {:whole 1 :numer 1 :denom 2}}
-                               :units {"i6" "ustbsp"}
-                               :scaling {"i6" 1}}
-                 :optional {:items ["i7"]
-                            :qty {"i7" 1}
-                            :units {"i7" "ustbsp"}}
+                 :ingredients [:item "i6" :qty {:whole 1 :numer 1 :denom 2}]
                  :steps ["Add salt and optional baking soda to boiling water, stir until dissolved." "Cool solution to body temperature."]
-                 :yields {:items ["i4" "i5"]
-                          :qty {"i4" 6
-                                "i5" 1}
-                          :units {"i4" "usquart"
-                                  "i5" "usquart"}}}
+                 :yields [{:item "i4" :qty 6 :unit "usquart"} {:item "i5":qty 1 :unit "usquart"}]}
            "t4" {:id "t4"
                  :state :new
                  :name "Autolyze Flour"
-                 :ingredients {:items ["i3" "i8"]
-                               :qty {"i3" 638
-                                     "i8" 550}
-                               :units {"i3" "gram"
-                                       "i8" "gram"}}
+                 :ingredients [{:item "i3" :qty 638 :units"gram"} {:item "i8" :qty 550 :unit "gram"}]
                  :steps ["Mix flour and water in a bowl" "Cover and let rest for 20-60 min"]}}
    :items {"i1" {:id "i1" :name "6 Qt. Pot" :description "" :tags []}
            "i2" {:id "i2" :name "stove" :description "" :tags []} 
