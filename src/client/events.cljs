@@ -42,7 +42,11 @@
 (defn parse-json [msg] 
   (js->clj msg :keywordize-keys true))
 
-(defn remove-lineitem [id list] (vec (remove #(= id (:item %)) list)))
+(defn remove-lineitem [id list] 
+  (vec (remove #(= id (:item %)) list)))
+
+(defn pluralize-keyword [keyword]
+  (keyword (str (symbol keyword) "s")))
 
 ;;;;;;;;;;;;;
 ;; Effects ;;
@@ -91,26 +95,25 @@
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
- :ssb/create
- (fn [{:keys [type content]}]
-   (let [old-id (:id content)]
-     (ws/chsk-send! [:ssb/create {:type type :content (dissoc content :id)}] 55000
-                    (fn [reply] 
-                      (if (cb-success? reply) 
-                        (rf/dispatch [:saved type old-id (:new-id reply)])
-                        (rf/dispatch [:error reply])))))))
+ :ssb/create-record
+ (fn [content created-fn]
+   (ws/chsk-send! [:ssb/create content] 55000
+                  (fn [reply] 
+                    (if (cb-success? reply) 
+                      (created-fn reply)
+                      (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
- :ssb/update 
- (fn [{:keys [id content]}]
-   (ws/chsk-send! [:ssb/update {:id id :content content}] 5000
-                                    (fn [reply] 
-                      (if (cb-success? reply) 
-                        (rf/dispatch [:clear-updates id])
-                        (rf/dispatch [:error reply]))))))
+ :ssb/update-record
+ (fn [{:keys [id updates]}]
+   (ws/chsk-send! [:ssb/update {:id id :updates updates}] 5000
+                  (fn [reply] 
+                    (if (cb-success? reply) 
+                      (rf/dispatch [:clear-updates id])
+                      (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx 
- :ssb/tombstone
+ :ssb/tombstone-record
  (fn [{:keys [id reason]}]
    (ws/chsk-send! [:ssb/tombstone {:id id :reason reason}] 5000
                   (fn [reply] 
@@ -264,16 +267,6 @@
  ::initialize-db
  (fn  [_ _]
    db/recipe-db))
-
-(defn pluralize-keyword [keyword]
-  (keyword (str (symbol keyword) "s")))
-
-(rf/reg-event-db
- :saved
- (fn [db [_ type old-id new-id]]
-   (case type
-     :task (rf/dispatch [:task/updated old-id new-id])
-     )))
 
 (rf/reg-event-db
  :field-updated
@@ -435,10 +428,14 @@
 (rf/reg-event-fx
  :task/save
  (fn [cofx [_ id]]
-   (let [status  @(rf/subscribe [:task/status id])]
-         (if (= :new status)
-           {:ssb/create {:type "task" :content (dissoc @(rf/subscribe [:task id]) :id)}}
-           (println "Trying to save" id "with status" status)))))
+   (let [status  @(rf/subscribe [:task/status id])
+         record (dissoc @(rf/subscribe [:task id]) :id)]
+     (if (= :new status)
+       {:db (:db cofx)
+        :ssb/create-record [(merge {:type "task"} record)
+                            (fn [reply] (let [new-id (:id reply)]
+                                          (rf/dispatch [:task/updated id new-id])))]}
+       (println "Trying to save" id "with status" status)))))
 
 (rf/reg-cofx
  :task/update
@@ -446,8 +443,8 @@
    (let [update-keys @(rf/subscribe [:updates id])
          changes (select-keys update-keys @(rf/subscribe [:task id]))]
      {:db (:db cofx) 
-      :ssb/update {:id id
-                   :content changes}})))
+      :ssb/update-record {:id id
+                          :content changes}})))
 
 (rf/reg-event-db
  :task/updated
@@ -601,20 +598,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (rf/reg-event-fx
- :post/save
+ :post
  (fn [cofx [_ text]]
-   {:ssb/create {:type "post" :content {:text text}}}))
+   {:ssb/create-record {:type "post" :text text}}
+   (fn [reply] 
+     {:db (update-in (:db cofx) [:posts] (fnil conj []) reply)})))
 
 (rf/reg-event-fx
  :create-transaction
  (fn [cofx [_ type content]]
-   {:ssb/create {:type type :content content}}))
+   {:ssb/create-record [(merge {:type type} content) (fn [reply] (rf/dispatch [:feed reply]))]}))
 
 (comment  ;; To Add
 
   (rf/reg-event-fx
-   :reply/save
+   :reply-to-post
    (fn [cofx [_ reply-to text]]
-     {:ssb/create {:type "post" :content {:root reply-to
-                                          :text text}}})))
+     {:ssb/create-record {:type "post" :root reply-to :text text}})))
 

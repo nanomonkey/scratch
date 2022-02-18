@@ -161,9 +161,9 @@
                   :value @password
                   :on-change #(reset! password (-> % .-target .-value))}]]
         [:button {:type "submit"} "Login to Existing Account"]]
-       [:div [:button {:on-click #(do
-                                    (.preventDefault %)
-                                    (rf/dispatch [:create-account @name @password]))} "Create New Account"]]])))
+       [:div [:button {:on-click #(do (.preventDefault %)
+                                      (rf/dispatch [:create-account @name @password]))} 
+              "Create New Account"]]])))
 
 (defn login-view []
 [:div

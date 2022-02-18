@@ -209,9 +209,9 @@
   :ssb/update
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (let [id (:id ?data)
-        changes (:changes ?data)]
+        updates (:updates ?data)]
     ;(dispatch! :update {:uid uid :id :changes changes})
-    (ssb/publish! uid {:type "update" :root id :content changes})))
+    (ssb/publish! uid {:type "update" :root id :updates updates})))
 
 (defmethod -event-msg-handler
   :ssb/tombstone

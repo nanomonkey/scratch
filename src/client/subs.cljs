@@ -352,7 +352,7 @@
 (rf/reg-sub
 :event/duration 
 (fn [db [_ event-id]]
-  (let [tasks (get-in db [:events event-id :tasks])]          ;;TODO determine if recipes are stored in :tasks field
+  (let [tasks (get-in db [:events event-id :tasks])]   ;;TODO determine if recipes are stored in :tasks field
     (reduce + (map #(duration->sec (get-in db [:tasks % :duration] 0)))))))
 
 (comment
@@ -362,3 +362,27 @@
      (rf/subscribe [:events]))
    (fn [start end events]
      (filter (overlaps? start end (event-start event) (event-end end))))))
+
+
+;;;;;;;;;;;
+;; Posts ;;
+;;;;;;;;;;;
+
+;{:posts [{id {:id :text :root :}}]} 
+
+(rf/reg-sub
+ :posts
+ (fn [db]
+   (:posts db)))
+
+(rf/reg-sub
+ :post/text
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :text])))
+
+(rf/reg-sub
+ :post/root
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :root])))
+
+
