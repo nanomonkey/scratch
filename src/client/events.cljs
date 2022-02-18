@@ -48,6 +48,10 @@
 (defn pluralize-keyword [keyword]
   (keyword (str (symbol keyword) "s")))
 
+(defn remove-nils [record]
+  "Removes nil values from map, but allows for false values"
+  (into {} (remove (comp nil? second) record)))
+
 ;;;;;;;;;;;;;
 ;; Effects ;;
 ;;;;;;;;;;;;;
@@ -175,7 +179,7 @@
 (rf/reg-event-fx
  :query
  (fn [cofx [_ {:keys [:map :filter :reduce :reverse :limit]}]]
-   (let [query {:$map map :$filter filter :$reduce reduce :reverse reverse :limit limit}]
+   (let [query (remove-nils {:$map map :$filter filter :$reduce reduce :reverse reverse :limit limit})]
      {:db (:db cofx) ;set a spinner?
       :ssb/query query})))
 
@@ -597,6 +601,12 @@
 ;; Comments, Posts and Replies  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(rf/reg-event-fx
+ :create-transaction
+ (fn [cofx [_ type content]]
+   {:ssb/create-record [(merge {:type type} content) (fn [reply] (rf/dispatch [:feed reply]))]}))
+
 (rf/reg-event-fx
  :post
  (fn [cofx [_ text]]
@@ -605,14 +615,22 @@
      {:db (update-in (:db cofx) [:posts] (fnil conj []) reply)})))
 
 (rf/reg-event-fx
- :create-transaction
- (fn [cofx [_ type content]]
-   {:ssb/create-record [(merge {:type type} content) (fn [reply] (rf/dispatch [:feed reply]))]}))
+ :reply-to-post
+ (fn [cofx [_ reply-to text]]
+   {:ssb/create-record (remove-nils {:type "post" 
+                                     :root (rf/subscribe [:post/root reply-to])
+                                     :branch (rf/subscribe [:post/branch reply-to])
+                                     :text text})}))
 
-(comment  ;; To Add
-
-  (rf/reg-event-fx
-   :reply-to-post
-   (fn [cofx [_ reply-to text]]
-     {:ssb/create-record {:type "post" :root reply-to :text text}})))
-
+(rf/reg-event-fx
+ :private-post
+ (fn [cofx [_ text recps root branch channel mentions]]
+   (let [content (remove-nils {:type "post"
+                               :text text
+                               :root root
+                               :branch branch
+                               :channel channel
+                               :mentions mentions
+                               :recps (conj (set recps) @(rf/subscribe [:server/id]))})] ; add self
+     {:ssb/private-post content
+      :db (:db cofx)})))   

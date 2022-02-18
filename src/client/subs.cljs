@@ -368,7 +368,8 @@
 ;; Posts ;;
 ;;;;;;;;;;;
 
-;{:posts [{id {:id :text :root :}}]} 
+;{:posts [{id {:id :text :root :channel :branch :mentions}}]} 
+; private message posts also have :recps
 
 (rf/reg-sub
  :posts
@@ -385,4 +386,17 @@
  (fn [db [_ post-id]]
    (get-in db [:posts post-id :root])))
 
+(rf/reg-sub
+ :post/channel
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :channel])))
 
+(rf/reg-sub
+ :post/branch
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :branch])))
+
+(rf/reg-sub
+ :post/mentions
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :root])))
