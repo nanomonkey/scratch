@@ -292,7 +292,7 @@
    :feed (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/feed {:message  message}]))
    :query-response (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/query-response {:message message}]))
    :name (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/contact-name {:message message}]))
-   :blob (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/blob {:message message}]))
+   :blob (fn [{:keys [uid id url]}] (chsk-send! uid [:ssb/blob {:blob-id id :url url}]))
    :display (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/display {:message message}]))}
 )
 (doall (map (fn [[k v]] (handle! k v)) message-handlers))

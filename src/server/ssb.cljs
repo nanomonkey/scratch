@@ -371,7 +371,9 @@
    :add-file (fn [{:keys [uid file]}] (add-blob! uid file))
    :get-blob (fn [{:keys [uid blob-id]}] (get-blob! uid blob-id (fn [blob] (prn blob))))
    :serve-blob (fn [{:keys [uid blob-id]}]
-               (serve-blobs! uid blob-id #(dispatch! :blob {:uid uid :message (js->clj %)})))
+               (serve-blobs! uid blob-id #(dispatch! :blob {:uid uid 
+                                                            :id blob-id 
+                                                            :url (js->clj %)})))
    :list-blobs (fn [{:keys [uid]}] (list-blobs! uid #(dispatch! :feed {:uid uid :message %})))
    :thread (fn [{:keys [uid message-id]}] (msg-thread! uid message-id))
    :user-feed (fn [{:keys [uid user-id]}] (user-feed! uid user-id))

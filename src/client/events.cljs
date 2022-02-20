@@ -135,13 +135,17 @@
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
- :ssb/comment
- (fn [root comment]
-   (ws/chsk-send! [:ssb/publish {:root root :comment comment}] 8000
-                  (fn [reply] 
-                    (if (cb-success? reply) 
-                      (rf/dispatch [:add-comment root comment])
-                      (rf/dispatch [:error reply]))))))
+ :ssb/serve-blob
+ (fn [blob-id] (ws/chsk-send! [:ssb/serve-blob blob-id]))) ; response comes back through [:ssb/blob {:message }]
+
+(rf/reg-fx
+ :ssb/get-blob-url
+ (fn [blob-id] (ws/chsk-send! [:ssb/blob-url  blob-id] 5000
+                             (fn [reply]
+                               (if (cb-success? reply)
+                                 (rf/dispatch [:blob/add-url blob-id reply])
+                                 (rf/dispatch [:error reply]))))))  
+
 
 (rf/reg-fx
 :set-local-store
@@ -596,6 +600,46 @@
  (fn [db [_ id name]]
    (assoc-in db [:contacts id :name] name)))
 
+(rf/reg-event-fx
+ :contact/save-name
+ (fn [cofx [_ id name]]
+   {:ssb/create-record [{:type "about" :about id :name name}
+                        (fn [reply] (rf/dispatch [:contact/name id name]))]}))
+
+(rf/reg-event-db
+ :contact/image             ; Save image url instead?
+ (fn [db [_ id image-id]]
+   (assoc-in db [:contacts id :image] image-id)))
+
+(rf/reg-event-fx
+ :contact/save-image
+ (fn [cofx [_ id blob-id]]
+   {:ssb/create-record [{:type "about" :about id :image blob-id}
+                        (fn [reply] (rf/dispatch [:contact/name id name]))]}))
+
+(rf/reg-event-fx
+ :contact/follow
+ (fn [cofx [_ id]]
+   {:ssb/create-record [{:type "contact" :contact id :following true :blocking false}
+                        (fn [reply] (rf/dispatch [:feed reply]))]}))
+
+(rf/reg-event-fx
+ :contact/unfollow
+ (fn [cofx [_ id]]
+   {:ssb/create-record [{:type "contact" :contact id :following false}
+                        (fn [reply] (rf/dispatch [:feed reply]))]}))
+
+(rf/reg-event-fx
+ :contact/block
+ (fn [cofx [_ id]]
+   {:ssb/create-record [{:type "contact" :contact id :following false :blocking true}
+                        (fn [reply] (rf/dispatch [:feed reply]))]}))
+
+(rf/reg-event-fx
+ :contact/unblock
+ (fn [cofx [_ id]]
+   {:ssb/create-record [{:type "contact" :contact id :blocking false}
+                        (fn [reply] (rf/dispatch [:feed reply]))]}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Comments, Posts and Replies  ;;
@@ -607,12 +651,18 @@
  (fn [cofx [_ type content]]
    {:ssb/create-record [(merge {:type type} content) (fn [reply] (rf/dispatch [:feed reply]))]}))
 
+
+(rf/reg-event-db
+ :add-post
+ (fn [db [_ post]]
+   (update-in db [:posts] (fnil conj []) (index-by :id post))))
+
 (rf/reg-event-fx
  :post
  (fn [cofx [_ text]]
    {:ssb/create-record {:type "post" :text text}}
    (fn [reply] 
-     {:db (update-in (:db cofx) [:posts] (fnil conj []) reply)})))
+     (rf/dispatch [:add-post reply]))))
 
 (rf/reg-event-fx
  :reply-to-post
@@ -632,5 +682,17 @@
                                :channel channel
                                :mentions mentions
                                :recps (conj (set recps) @(rf/subscribe [:server/id]))})] ; add self
-     {:ssb/private-post content
+     {:ssb/private-post [content 
+                         (fn [reply] (rf/dispatch [:add-post reply]))]
       :db (:db cofx)})))   
+
+
+
+;;;;;;;;;;;
+;; Blobs ;;
+;;;;;;;;;;;
+
+(rf/reg-event-db
+ :blob/add-url
+ (fn [db [_ blob-id url]]
+   (assoc-in db [:blobs blob-id :url] url)))

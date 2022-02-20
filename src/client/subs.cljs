@@ -374,7 +374,7 @@
 (rf/reg-sub
  :posts
  (fn [db]
-   (:posts db)))
+   (:posts db)))  ; (fn [x] (sort-by (juxt :branch :timestamp) x)
 
 (rf/reg-sub
  :post/text
