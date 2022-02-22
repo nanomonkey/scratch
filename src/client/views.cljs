@@ -60,6 +60,12 @@
        [:div
         [:button {:type "submit"} "Post"]]])))
 
+(defn comments-view [root-id]
+  (fn []
+    [:button {:on-click (rf/dipsatch [:get-thread root-id])}]
+    (for [comment @(rf/subscribe [:comments root-id])]
+      [:div comment])))
+
 (defn post []
   (let [content (r/atom "")]
     (fn []
@@ -469,7 +475,8 @@
               #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
        [:div [task-table @recipe-id]]]
       [:div.column.right
-       (right-panel)]]]))
+       (right-panel)
+       (comments-view recipe-id)]]]))
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded-supplier])]

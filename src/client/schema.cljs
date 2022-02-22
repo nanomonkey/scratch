@@ -3,6 +3,7 @@
 
 
 (s/def ::id (s/and string? #(= (count %) 44)))     ;;better hash spec?
+(s/def ::non-blank-string (s/and string? (complement str/blank?)))
 (s/def ::name (s/and string? #(<= 1 (count %) 64)))
 (s/def ::description string?)
 (s/def ::dirty? boolean?)
@@ -20,11 +21,12 @@
 (s/def ::items (s/map-of ::id ::item :distinct true))
 (s/def ::qty (s/map-of ::id int? :distinct true))
 (s/def ::units (s/map-of ::id ::id :distinct true))
-(s/def ::line-items (s/keys* :req [::items ::qty ::units]))
-(s/def ::equipment ::line-items)
-(s/def ::ingredients ::line-items)
+
+(s/def ::line-item (s/map-of ::item ::qty ::unit))
+(s/def ::equipment (s/coll-of ::line-item))
+(s/def ::ingredients (s/coll-of ::line-item))
 (s/def ::steps (s/coll-of string?))
-(s/def ::yields ::line-items)
+(s/def ::yields (s/coll-of ::line-item))
 
 (s/def ::task (s/keys :req [::id ::name]
                       :opt [::equipment 

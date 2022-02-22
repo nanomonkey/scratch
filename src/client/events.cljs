@@ -135,6 +135,15 @@
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
+ :ssb/get-thread 
+ (fn [root]
+   (ws/chsk-send! [:ssb/query {:msg [{:$filter {:value {:content {:type "post" :root root}}}}]}] 8000
+                  (fn [reply]
+                    (if (cb-success? reply)
+                      (rf/dispatch [:comments [root reply]])
+                      (rf/dispatch [:error reply]))))))
+
+(rf/reg-fx
  :ssb/serve-blob
  (fn [blob-id] (ws/chsk-send! [:ssb/serve-blob blob-id]))) ; response comes back through [:ssb/blob {:message }]
 
@@ -686,6 +695,10 @@
                          (fn [reply] (rf/dispatch [:add-post reply]))]
       :db (:db cofx)})))   
 
+(rf/reg-event-fx
+ :get-comments
+ (fn [cofx [_ root]]
+   {:ssb/get-thread root}))
 
 
 ;;;;;;;;;;;
