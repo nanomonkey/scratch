@@ -24,26 +24,27 @@
    :feed []
    :errors []   
    :contacts []
+   :comments []
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
                    :description "Soup made by friends"
                    :tags #{"soup"}
-                   :task-list ["t1" "t2"]}
+                   :tasks ["t1" "t2"]}
              "r2" {:id "r2"
                    :name "Another Recipe"
                    :description "Another description..."
                    :tags #{"test"}
-                   :task-list ["t2"]}
+                   :tasks ["t2"]}
              "r3" {:id "r3"
                    :name "Neti Pot solution"
                    :description "..."
                    :tags #{}
-                   :task-list ["t1" "t2" "t3"]}
+                   :tasks ["t1" "t2" "t3"]}
              "r4" {:id "r4"
                    :name "Pizza Dough"
                    :description "Pulled from varasanos.com"
                    :tags #{"pizza" "dough"}
-                   :task-list ["t4"]}}
+                   :tasks ["t4"]}}
    
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"

@@ -365,28 +365,28 @@
 (rf/reg-event-db
  :recipe/add-task
  (fn [db [_ recipe-id task-id]]
-   (update-in db [:recipes recipe-id :task-list] (fnil conj []) task-id)))
+   (update-in db [:recipes recipe-id :tasks] (fnil conj []) task-id)))
 
 (rf/reg-event-db
  :recipe/move-task-up
  (fn [db [_ recipe-id task-id]]
-   (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
+   (let [tasklist @(rf/subscribe [:recipe/tasks recipe-id])
          task-pos @(rf/subscribe [:recipe/task-pos recipe-id task-id])]
-     (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist task-pos)))))
+     (update-in db [:recipes recipe-id] assoc :tasks (vec-swap tasklist task-pos)))))
 
 (rf/reg-event-db
  :recipe/move-task-down
  (fn [db [_ recipe-id task-id]]
-   (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
+   (let [tasklist @(rf/subscribe [:recipe/tasks recipe-id])
          task-pos @(rf/subscribe [:recipe/task-pos recipe-id task-id])]
-     (update-in db [:recipes recipe-id] assoc :task-list (vec-swap tasklist (inc task-pos))))))
+     (update-in db [:recipes recipe-id] assoc :tasks (vec-swap tasklist (inc task-pos))))))
 
 (rf/reg-event-db
  :recipe/remove-task
  (fn [db [_ recipe-id task-id]]
-   (let [tasklist @(rf/subscribe [:recipe/task-list recipe-id])
+   (let [tasklist @(rf/subscribe [:recipe/tasks recipe-id])
          task-pos @(rf/subscribe [:recipe/task-pos recipe-id task-id])]
-     (update-in db [:recipes recipe-id] assoc :task-list (vec-remove tasklist task-pos)))))
+     (update-in db [:recipes recipe-id] assoc :tasks (vec-remove tasklist task-pos)))))
 
 (rf/reg-event-fx
  :recipe/new-task
@@ -406,7 +406,7 @@
                                         :name name
                                         :description "..."
                                         :tags #{}
-                                        :task-list []})
+                                        :tasks []})
       :dispatch [:load-recipe id]})))
 
 
@@ -467,12 +467,12 @@
  :task/updated
  (fn [db [_ old-id new-id]]
    (let [recipe @(rf/subscribe [:loaded-recipe])
-         task-list @(rf/subscribe [:recipe/task-list recipe])
+         task-list @(rf/subscribe [:recipe/tasks recipe])
          task-pos (.indexOf task-list old-id)]
      (-> db
          (update-in [:tasks] assoc new-id (merge @(rf/subscribe [:task old-id]) {:id new-id}))
          (update-in [:tasks] dissoc old-id)
-         (update-in [:recipes recipe :task-list] assoc (vec-replace task-list task-pos new-id))))))
+         (update-in [:recipes recipe :tasks] assoc (vec-replace task-list task-pos new-id))))))
 
 (rf/reg-event-db 
  :task/update-name
@@ -674,7 +674,7 @@
      (rf/dispatch [:add-post reply]))))
 
 (rf/reg-event-fx
- :reply-to-post
+ :reply
  (fn [cofx [_ reply-to text]]
    {:ssb/create-record (remove-nils {:type "post" 
                                      :root (rf/subscribe [:post/root reply-to])
@@ -698,8 +698,12 @@
 (rf/reg-event-fx
  :get-comments
  (fn [cofx [_ root]]
-   {:ssb/get-thread root}))
+   {:ssb/get-thread root})) 
 
+(rf/reg-event-db
+ :comments
+ (fn [db [_ target-id comment]]
+   (update-in db [:comments target-id] (fnil conj []) comment)))
 
 ;;;;;;;;;;;
 ;; Blobs ;;

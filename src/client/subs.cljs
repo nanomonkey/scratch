@@ -212,16 +212,16 @@
    (sort (get-in db [:recipes id :tags]))))
 
 (rf/reg-sub
- :recipe/task-list
+ :recipe/tasks
  (fn [db [_ id]]
-   (get-in db [:recipes id :task-list])))
+   (get-in db [:recipes id :tasks])))
 
 (rf/reg-sub
  :recipe/task-pos
  (fn [ [_ recipe task]]
-   (rf/subscribe [:recipe/task-list recipe]))
- (fn [task-list [_ recipe task]]
-   (.indexOf task-list task)))
+   (rf/subscribe [:recipe/tasks recipe]))
+ (fn [tasks [_ recipe task]]
+   (.indexOf tasks task)))
 
 ;; Tasks
 (rf/reg-sub

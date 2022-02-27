@@ -60,11 +60,21 @@
        [:div
         [:button {:type "submit"} "Post"]]])))
 
+(defn display-post [post-id]
+  (let [post @(rf/subscribe [:post post-id])
+        author (:author post)
+        text (:text post)])
+  [:div 
+   [:div @(rf/subscribe [:contact/name author])]
+   [:div (markdown-section text)]])
+
 (defn comments-view [root-id]
-  (fn []
-    [:button {:on-click (rf/dipsatch [:get-thread root-id])}]
-    (for [comment @(rf/subscribe [:comments root-id])]
-      [:div comment])))
+  (fn [root-id]
+    [:div
+     [:h2 "Comments"]
+     [:button {:on-click (rf/dispatch [:get-comments root-id])} "Load Comments"]
+     (for [comment-id @(rf/subscribe [:comments root-id])]  ;order by timestamp/branch etc.?
+       (display-post comment-id))]))
 
 (defn post []
   (let [content (r/atom "")]
@@ -397,7 +407,7 @@
 
 (defn task-table [recipe-id]
   (fn [recipe-id]
-    (let [tasks @(rf/subscribe [:recipe/task-list recipe-id])]
+    (let [tasks @(rf/subscribe [:recipe/tasks recipe-id])]
       [:table#tasks
        [:tbody
         (doall
