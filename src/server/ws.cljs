@@ -229,8 +229,7 @@
     (debugf "msg: %s" msg)
     (dispatch! :query {:uid uid :msg msg}) 
     ;(ssb/query uid msg)
-    ;(when ?reply-fn (?reply-fn {:post-event ?data}))
-    ))
+    (when ?reply-fn (?reply-fn {:message (str "Query" msg)}))))
 
 (defmethod -event-msg-handler
   :ssb/get-id

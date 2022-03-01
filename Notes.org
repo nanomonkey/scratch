@@ -1,77 +1,43 @@
 Notes 
-* Re-frame
-** Dashboards
-[[https://github.com/Day8/re-frame-10x][Re-frame-10x]]
-** Modals
-[[https://github.com/benhowell/re-frame-modal][re-frame modal]]
-* IMPLIMENT
-** DONE Add Search lookahead for adding item to task
-- When item isn't found, and (+) button is clicked, open modal to create item
-- after modal, add to tasklist with default number and unit (1 each?)
-** DONE Add similar for units 
-- Seperate modal, or units may need their own configuration page or be hard coded
-
-** TODO record changes locally in a parametric manner, then update ssb upon user's request.
-
-** TODO Look into gantry system for task management
-** TODO Gant Chart view of Recipe based on Task time duration
-* example re-frame code projects
-- https://github.com/dhruvp/angular-phonecat-re-frame/
-- https://github.com/jacekschae/conduit
-- https://github.com/vallard/Reagent-Example/
-
-
-
-Datomic datastructure:
-[e a v t a?]
-entity - 
-attribute 
-value
-transaction
-added?
-
-* Reagent
-- [[https://github.com/reagent-project/reagent-cookbook][Reagent Cookbook]]
-* How to describe
+-----
+* Glossary of terms
 ** Recipes
-- Procedural knowledge about the tasks to reproduce a final product.  
+- A list of tasks needed to produce a Product or Service.  
 ** Task
-- A group of steps that are to be done in sequential order with one group of Equipment to transform a group of Ingredients into a final Product.
+*** Composed of three parts
+- An ordered list of Steps to achieve a Task
+- the Equipment needed, and the time required
+- the Ingredient Items needed, and their Units of measure
+- any intermediate Products created used in later Tasks
 ** Ingredients
-- Items that are consumed by a task
+- Items that are consumed by a Tasks, these can be Products from other Recipes or Tasks
 ** Products
-- Items created by a task
+- Items created by a Recipe's Task
+- also known as physical goods
+- these can be biproducts (waste) or sellable Items.
 ** Equipment
-- Items used but not consummed by a task
+- Items used but not consummed by a Task
 ** Duration
-- time a task takes to complete
-
-* Dealing with Units
-** JS library
-- https://github.com/ben-ng/convert-units
-
-
-Transmutation: Turn Lead into Gold
-
-Combine one part Fiery Dragon, some Doves of Diana, and at least seven Eagles of mercury
-sophick mercury
-
-* SSB as database
-** Nodejs backend talks to Reframe front-end
-*** How to set up project like this
-*** transit
-- flumeview for data types
-
-** GraphQL backend talks to Reframe front-end
-* Datastructures (possible)
-   Database Tables and their fields, each has a primary key (UUID or hash id) not shown
+- the time a task takes to complete using equipment
+** Services
+- Tasks that don't produce Products that are physical goods.
+- examples: cleaning, body work, instruction, maintenance tasks
+** Units
+- the unit of measure needed for each item
+- can be converted when an appropriate conversion factor is saved in the system
+- stored in relation to SI base units
+-----
+* Datastructures 
+- Record schemas stored as messages in SSB.  
+- As messages each has a timestamp, author and unique key not shown
+- possible fields to be added later indicated with question mark (?)
 *** Item
 - name
-- tags [food, material, tool, container, furniture, equipment]
 - description
-? specifications
+? density (g/cm^3)
+? specs (nutrition, dimensions, sizes, color, etc.)
 ? wikipedia category
-*** Units
+*** Unit
 - name
 - type [distance, volume or weight]
 *** Unit_Conversion
@@ -80,10 +46,10 @@ sophick mercury
 - conversion_factor
 *** Recipe
 - name
-- type          //production, subrecipe, etc.  Not sure if this is needed
 - description
-- notes
-- reference    //citation to previous work or versions from which this is adapted
+- tags
+? notes
+? reference    //citation to previous work or versions from which this is adapted
 - task_list  
 **** Calculateable from task_list:
 + equipment_list
@@ -139,71 +105,76 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 **** Json
 { 
   id: MsgId,
-  name: string,
-  type: [food, sub_recipe, material, tool, container, furniture],
-  timestamp: number,
-  sequence:[task_id,]
-  yield: { item, number, unit }
+  type: "recipe"
   author: FeedId,
-  description: textfield,
-  notes: textfield,
-  private: boolean
+  content: {
+    name: string,
+    timestamp: number,
+    tasks:[task_id,]
+    description: textfield,
+    notes: string
+  }
 }
 
-{ 
-  id: task_id,
-  name: string,
-  items: [item_id],
-  yield: [item_id],
-  waste: [item_id],
-  instructions: string,
-  skills: [skill_id,],
-  notes: string
-  equipment: [item_id,]
-  estimated_time: timespan
-}
 
 *** Tasks
-- instructions
-  production process consumable operator (g-code, text, reaction environment, etc.)
-- time
-- item_list
-- equipment_list
-- media_list <- just imbedded in the instructions?
-- product_list
-- precursor_task <- necessary, or just use item list?
+- steps
+- duration
+- ingredients
+- equipment
+- media
+- yields
+
 - necessary_conditions
+**** JSON
+{ 
+  id: task_id,
+  type: "task"
+  author: FeedId,
+  contents: {
+    name: string,
+    items: [{item: item-id, qty: number, unit: unit-id }, ...]
+    yields: [{item: item-id, qty: number, unit: unit-id }, ...]
+    steps: [string, ...]
+    notes: string
+    equipment: [{item: item-id, qty: number, unit: unit-id }, ...]
+    duration: number (ms)
+}
 
 *** Suppliers
 - contact_info
 - order_requirements 
   email, api, minimum costs, net 30, etc.
-- cost_list 
+- price_list 
   item, price, qty, unit (purchase unit may be different then other unit, i.e. box of 8 each)
   
-*** People
+*** People (Contacts?)
 - name
-- access
+? access
 - primary_location
 - skillset
 - contact_info
-*** Group
+*** Group (Organization?)
 - name
 - access
 - people_list
 - location
 *** Location
 - name
+- lat_long
 - address
 - sublocations
-- type
+- tags
 - timezone
 *** Events
 - location (contains timezone, etc.)
-- date
-- reoccurring?
-- frequency
-*** Lot Tracking
+- datetime
+- participants (group, or list of people)
+- duration (calculated from tasks?)
+? reoccurring
+? frequency
+? completion
+*** Lot Tracking (completion of an event/task)
 - task/recipe/product
 - batch
 - scan {timestamp, person, tracking number}
@@ -288,23 +259,29 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 - task/recipe
 - event
 - completing_date
+*** Pattern Language
+****  Name 
+- single word or short phrase that refers to the pattern. This allows for rapid association and retrieval.
+**** Problem 
+- definition of a problem, including its intent or a desired outcome, and symptoms that would indicate that this problem exists.
+**** Context 
+– preconditions which must exist in order for that problem to occur; this is often a situation. When forces conflict, the resolutions of those conflicts is often implied by the context.
+**** Forces 
+– description of forces or constraints and how they interact. Some of the forces may be contradictory. For example: being thorough often conflicts with time or money constraints.
+**** Solution 
+– instructions, possibly including variants. The solution may include pictures, diagrams, prose, or other media.
+**** Examples
+– sample applications and solutions, analogies, visual examples, and known uses can be especially helpful, help user understand the context
+**** Resulting Context 
+– result after the pattern has been applied, including postconditions and side effects. It might also include new problems that might result from solving the original problem.
+**** Rationale 
+– the thought processes that would go into selecting this pattern, The rationale includes an explanation of why this pattern works, how forces and constraints are resolved to construct a desired outcome.
+**** Related Patterns 
+– differences and relationships with other patterns, possibly predecessor, antecedents, or alternatives that solve similar problems.
 
-*** Pattern Language lexicon
-*** Problem need specifier
-* Price field
-** parse
-- use seperate unit field (which would allow currency denominations, and the exchange of goods as barter).
-- or parse out currency denominations (ie $) and convert automatically. 
-- convert the remainder to decimals. 
-- 
-* Sigils
-*** For lookup purposes it may be useful to use a sigil in front of hashes for datastructures. Alternatively, a 2 or 3 letter indicator (REC, TSK, ORD, ITM) could be used, matching the index names used in SSB.
-- + Recipes
-- ^ task
-- ! Items
-- $ Order
-- @ Person
-- % message
+*** Needs
+- Search query of Products/Services that one needs
+
 * Contracts
 ** Legal Domain Specific Language 
 - https://catala-lang.org/
@@ -314,12 +291,3 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 * Cryptography in Clojure
 ** Buddy.core
 - https://cljdoc.org/d/buddy/buddy-core/1.10.1/doc/user-guide
-** BB
-*** Get list of tasks
-#+BEGIN_SRC sh
-bb tasks
-#+END_SRC
-*** Run tasks
-#+BEGIN_SRC sh
-bb run taskname
-#+END_SRC

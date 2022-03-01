@@ -63,10 +63,10 @@
 (defn display-post [post-id]
   (let [post @(rf/subscribe [:post post-id])
         author (:author post)
-        text (:text post)])
-  [:div 
-   [:div @(rf/subscribe [:contact/name author])]
-   [:div (markdown-section text)]])
+        text (:text post)]
+    [:div 
+     [:div @(rf/subscribe [:contact/name author])]
+     [:div (markdown-section text)]]))
 
 (defn comments-view [root-id]
   (fn [root-id]
@@ -101,38 +101,46 @@
         query-limit (r/atom 5)]
     (fn []
       [:form {:on-submit #(do (.preventDefault %)
-                              (rf/dispatch [:query {:query 
-                                                    (into [] 
-                                                          (remove nil? [(edn/read-string @query-map) 
-                                                                        (edn/read-string @query-filter) 
-                                                                        (edn/read-string @query-reduce)])) 
-                                                    :limit @query-limit
-                                                    :reverse @query-reverse?}]))}
+                              (rf/dispatch [:query 
+                                            {:query (into [] 
+                                                          (remove nil? 
+                                                                  [(when @query-map 
+                                                                     {:$map (edn/read-string @query-map)})
+                                                                   (when @query-filter
+                                                                     {:$filter (edn/read-string @query-filter)})
+                                                                   (when @query-reduce
+                                                                     {:$reduce (edn/read-string @query-reduce)})])) 
+                                             :limit @query-limit
+                                             :reverse @query-reverse?}]))}
        [:h2 "Query"]
        [:div
         [:label "Map"]
-        [:input {:type "text"
+        [:input {:type "text-area"
                  :name "query-map"
                  :value @query-map
                  :on-change #(reset! query-map (-> % .-target .-value))}]]
        [:div
         [:label "Filter"]
-        [:input {:type "string"
+        [:input {:type "text-area"
+                 :name "query-filter"
                  :value @query-filter
                  :on-change #(reset! query-filter (-> % .-target .-value))}]]
        [:div
         [:label "Reduce"]
-        [:input {:type "string"
+        [:input {:type :textarea
+                 :name "query-reduce"
                  :value @query-reduce
                  :on-change #(reset! query-reduce (-> % .-target .-value))}]]
        [:div
         [:label "Reverse"]
         [:input {:type "radio"
+                 :name "query-reverse?"
                  :value @query-reverse?
                  :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
        [:div
         [:label "Limit"]
         [:input {:type "integer"
+                 :name "query-limit"
                  :value @query-limit
                  :on-change #(reset! query-limit (-> % .-target .-value))}]]     
        [:div

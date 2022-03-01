@@ -7,7 +7,8 @@
                 [hiccups                   "0.3.0"]
                 [reagent                     "1.1.0"]
                 [re-frame                "1.3.0-rc2"]
-                [com.andrewmcveigh/cljs-time "0.5.2"]]
+                [com.andrewmcveigh/cljs-time "0.5.2"]
+                [juji/editscript "0.5.8"]]
  :nrepl {:port 43219}
  :builds
  {:server {:id :server

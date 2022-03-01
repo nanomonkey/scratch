@@ -144,6 +144,16 @@
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
+ :ssb/get-recipes
+ (fn [topic]
+   (ws/chsk-send! [:ssb/query-collect {:msg [{:$filter {:value {:content {:type topic}}}}]}
+                   8000
+                   (fn [reply]
+                     (if (cb-success? reply)
+                       (rf/dispatch [:add-recipes (:recipes reply)])
+                       (rf/dispatch [:error reply])))])))
+
+(rf/reg-fx
  :ssb/serve-blob
  (fn [blob-id] (ws/chsk-send! [:ssb/serve-blob blob-id]))) ; response comes back through [:ssb/blob {:message }]
 
@@ -191,10 +201,9 @@
 
 (rf/reg-event-fx
  :query
- (fn [cofx [_ {:keys [:map :filter :reduce :reverse :limit]}]]
-   (let [query (remove-nils {:$map map :$filter filter :$reduce reduce :reverse reverse :limit limit})]
-     {:db (:db cofx) ;set a spinner?
-      :ssb/query query})))
+ (fn [cofx [_ query]]
+   {:db (:db cofx)        ;set a spinner?
+    :ssb/query query}))
 
 (rf/reg-event-fx         
  :load-defaults-localstore
@@ -337,6 +346,11 @@
 ;;;;;;;;;;;;;;
 ;;  Recipes  ;
 ;;;;;;;;;;;;;;
+
+(rf/reg-event-db
+ :add-recipes
+ (fn [db [_ recipes]] 
+   (update-in db [:recipes] (merge (:recipes db) (index-by :id recipes)))))
 
 (rf/reg-event-db
  :recipe/update-name

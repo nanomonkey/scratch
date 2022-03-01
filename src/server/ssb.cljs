@@ -22,7 +22,8 @@
             ["stream-to-pull-stream" :as to-pull]
             ["flumeview-reduce" :as fv-reduce]
             ["flumeview-query" :as fv-query]
-            ["flumedb" :as flumedb])
+            ["flumedb" :as flumedb]
+            [editscript.core :as edit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def scratch-caps (clj->js {:shs "SecugSsSNct6tgFyepgEFCE07p5q+OCAAKusgEb/Jwc="
@@ -181,38 +182,35 @@
                         (dispatch! :response {:uid uid :message (parse-json msg)})))))
     (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
 
-
-;(defn feed [uid] (db-collect uid :response createFeedStream (clj->js {:reverse true})))
   
 ;; get message or entry
-(defn get-message [uid msg-id]
+(defn get-message [uid msg-id cb]
   "Get message by hash id"
   (if-let [^js db (get @db-conns uid)]
     (.get db msg-id
           (fn [err msg] 
             (if err
               (dispatch! :error {:uid uid :message err})
-              (dispatch! :response {:uid uid :message (parse-json msg)}))))))
+              (cb (parse-json msg)))))))
 
 ;; Queries
-(defn query! [uid query]
+(defn query! [uid query cb]
   (if-let [^js db (get @db-conns uid)]
     (pull (.query.read db (clj->js query))
           (.collect pull  (fn [err ary] (if err
                                           (dispatch! :error {:uid uid :message err})
-                                          (dispatch! :feed {:uid uid :message  (parse-json ary)})))))
+                                          (cb (parse-json ary))))))
     (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )}))) 
 
 
 (defn db-collect
   "collects values from source-fn which is passed a db connection and returns an array of objects"
-  ([uid source-fn] (db-collect uid source-fn :feed))
-  ([uid source-fn bus-tag]
+  ([uid source-fn cb]
    (if-let [^js db (get @db-conns uid)]
            (.collect pull (fn [err ary] 
                             (if err
                               (dispatch! :error {:uid uid :message (parse-json err)})
-                              (dispatch! bus-tag {:uid uid :message (parse-json ary)})))))
+                              (cb (parse-json ary))))))
      (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
 
 (defn db-drain 
@@ -239,7 +237,7 @@
     (source-fn db parameters cb)
     (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
 
-(defn query-collect! [uid qry] (db-collect uid (fn [^js db] (.query.read db (clj->js qry)))))
+(defn query-collect! [uid qry cb] (db-collect uid (fn [^js db] (.query.read db (clj->js qry))) cb))
 
 (defn query-drain! [uid qry] (db-drain uid (fn [^js db] (.query.read db (clj->js qry))) :feed))
 
@@ -282,10 +280,12 @@
 (defn latest! [uid] (db-sync uid (fn [^js db] (.latestSequence db))))
 
 (defn user-feed! [uid user-id]
-  (db-collect uid (fn [^js db] (.createHistoryStream db #js {:id user-id})) :feed))
+  (db-collect uid (fn [^js db] (.createHistoryStream db #js {:id user-id})) #(dispatch! :feed %)))
 
 (defn msg-thread! [uid message-id]
-  (db-collect (fn [^js db] (.links db #js {:values true :rel 'root' :dest message-id})) :feed))
+  (db-collect uid 
+              (fn [^js db] (.links db #js {:values true :rel 'root' :dest message-id})) 
+              #(dispatch! :feed %)))
 
 
 ;; *************
@@ -293,7 +293,7 @@
 ;; *************
 
 (defn list-blobs [uid]
-  (db-collect uid (fn [^js db] (.blobs.ls db (clj->js {:meta true}))) :response))
+  (db-collect uid (fn [^js db] (.blobs.ls db (clj->js {:meta true}))) #(dispatch! :response %)))
 
 (defn list-blobs! [uid cb-fn]
   (if-let [^js db (get @db-conns uid)]
@@ -336,7 +336,6 @@
         array (js/Uint8Array. size)]
     (for [i (range size)] (aset array i (aget byte-string i)))))
 
-
 (defn add-blob! 
   ([uid file]
    (prn file)
@@ -356,7 +355,31 @@
    (cb-fn (blob-id->url blob-id (clj->js {:unbox unbox-key})))))
 
 
-;; Message bus Handlers
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Updatable Records ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (defn get-record [uid record-id]
+;;   "obtains root record, and it's updates and returns patched record"
+;;   (let [record (atom {})]
+;;     (get-message uid record-id 
+;;                  (fn [msg] (if (= :update (get-in [:content :type] msg)))))
+;;     root-id  (if (= (:type record) :update) 
+;;                (get-in [:content :record] record)
+;;                record-id)
+;;     query (clj->js {:query [{:$filter {:value {:content {:type "update" :record root-id}}}}]})
+
+;;     updates (take! (<query-collect! uid query)))                         
+;;   (edit/patch (:content root) (edit/combine (map :content updates))))
+
+;; (defn update-record [uid record-id update]
+;;   (let [diff (edit/diff (get-record uid record-id) update)]
+;;     (publish! uid {:type "update" :record record-id :update (clj->js diff)})))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Message bus Handlers ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defonce message-handlers 
   {:ssb-login (fn [{:keys [username password]}] 
@@ -364,7 +387,7 @@
    :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))
-   :get (fn [{:keys [uid msg-id]}] (get-message uid msg-id))
+   :get (fn [{:keys [uid msg-id]}] (get-message uid msg-id #(dispatch! :response {:uid uid :message %})))
    :query (fn [{:keys [uid msg]}](query-drain! uid msg))
    :query-explain (fn [{:keys [uid msg]}] (query-explain! uid msg))
    :lookup-name (fn [{:keys [uid id]}] (lookup-name! uid id))
@@ -374,7 +397,8 @@
                (serve-blobs! uid blob-id #(dispatch! :blob {:uid uid 
                                                             :id blob-id 
                                                             :url (js->clj %)})))
-   :list-blobs (fn [{:keys [uid]}] (list-blobs! uid #(dispatch! :feed {:uid uid :message %})))
+   :list-blobs (fn [{:keys [uid]}] (list-blobs! uid 
+                                                #(dispatch! :feed {:uid uid :message %})))
    :thread (fn [{:keys [uid message-id]}] (msg-thread! uid message-id))
    :user-feed (fn [{:keys [uid user-id]}] (user-feed! uid user-id))
    :test (fn [message] (prn message))})
