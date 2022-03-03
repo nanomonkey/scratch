@@ -112,10 +112,12 @@
   (filter #(contains? (:tags %) tag) col))
 
 
-;; Search Field 
-;;
-;; displays drop down of results
-;; other options weren't working in Safari
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Search Field                            ;;
+;;                                         ;;
+;; displays drop down of results           ;;
+;; other options weren't working in Safari ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn item-search [{:keys [placeholder source add create find-by-name]}]
   (let [search-string (r/atom "")]
@@ -151,6 +153,10 @@
                  name]]))]])])))
 
 
+;;;;;;;;;;;;;;;;;;;;;;
+;; Rational Numbers ;;
+;;;;;;;;;;;;;;;;;;;;;;
+
 (defn parse-rational [string]
   "parses string into components of rational number if applicable"
   (let [[orig whole numer denom numer2 denom2 float int]
@@ -174,7 +180,9 @@
     [:span (display-rational qty) " " @unit " " [:strong @item]]))
 
 
-;; Durations of time
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Durations of time ;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn display-duration [{:keys [hr min sec] :as duration}]
   [:time {:dateTime (str "PT"
@@ -263,7 +271,10 @@
            (display-duration (parse-duration @source)))]))))
 
 
-;; Recipe Search
+;;;;;;;;;;;;;;;;;;;
+;; Recipe Search ;;
+;;;;;;;;;;;;;;;;;;;
+
 ;; should be replaced with more generalized Item Search above
 
 (defn recipe-search []
@@ -294,7 +305,9 @@
                       (:name recipe)]]))]))])))
 
 
-;; Modals
+;;;;;;;;;;;;
+;; Modals ;;
+;;;;;;;;;;;;
 
 (defn modal-panel
   [{:keys [child size show?]}]
@@ -365,23 +378,5 @@
    [:path {:d "M25 0H7a7 7 0 0 0-7 7v18a7 7 0 0 0 7 7h18a7 7 0 0 0 7-7V7a7 7 0 0 0-7-7zm5 25a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5z"}]
    [:path {:d "M17 23.59V5h-2v18.59l-5.29-5.3-1.42 1.42 7 7a1 1 0 0 0 1.41 0l7-7-1.41-1.41z"}]])
 
-;CSS
 
-(comment
-  ;; available css
- [:div.arrow_box "text for arrow box"]
-  [:div.blue-panel "text for blue panel"]
-  [:div.white-panel "text for white panel"]
-  [:div.help-text "help text"]
-  [:div#task
-   [:div.steps-indicator
-    [:div.connector]
-    [:div.connector.complete]
-    [:ol.steps
-     [:li.complete [:strong "completed"] " step"]
-     [:li.active "not complete"]
-     [:li.active "not complete"]
-     [:li.inactive "inactive"]
-     [:li.warning "warning"]
-     [:li.active "last one"]]]]
-  )
+  

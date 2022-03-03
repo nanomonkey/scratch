@@ -41,8 +41,70 @@ blockquote {color: purple;
 button .icon-clock {fill: grey;}
 button:hover > .icon-clock {fill: white;}
 
-/* Navigation Search */
-nav ul ul {
+
+
+/* Navigation Bar */
+
+nav ul li:hover > ul {
+    display: block;
+    margin: 8px 16px;
+}
+
+nav ul {
+    background: #008CBA;//#efefef; 
+    padding: 8px 8px 8px 8px;
+    list-style: none;
+    text-align: center
+    position: relative;
+}
+
+nav ul:after {
+    content: ""; clear: both; display: block;
+}
+
+nav ul li {
+    float: left;
+}
+
+nav ul li:hover {
+    background:  #008CBA; //#4b545f;
+}
+
+nav ul li:hover a {
+    color: #fff;
+}
+
+nav ul li a {
+    display: block;
+    padding: 8px 16px;
+    font-weight: bold;
+    color: white; //#757575;
+    text-decoration: none;
+}
+
+nav ul li.alt_panel {
+    display: block;
+    padding: 8px 16px;
+    font-weight: bold;
+    color: white; //#757575; 
+    text-decoration: none;
+    border-radius: 10px 10px 0px 0px;
+    border-style: none none solid none
+}
+nav ul li.active_panel {
+    display: block;
+    padding: 8px 16px;
+    font-weight: bold;
+    color: white; //#757575; 
+    text-decoration: none;
+    border-radius: 7px 7px 0px 0px;
+    border-style: solid solid none solid
+}
+
+
+/* Search Results */
+
+#search ul {
     padding-top: 12px;
     padding-bottom: 12px;
     text-align: left;
@@ -52,55 +114,26 @@ nav ul ul {
     display: block; //none;
     z-index: 99;
 }
-nav ul li:hover > ul {
-    display: block;
-    margin: 8px 16px;
-}
-nav ul {
-    background: #008CBA;//#efefef; 
-    padding: 8px 8px 8px 8px;
-    list-style: none;
-    position: relative;
-}
-nav ul:after {
-    content: ""; clear: both; display: block;
-}
-nav ul li {
-	float: left;
-}
-nav ul li:hover {
-    background:  #008CBA; //#4b545f;
-}
-nav ul li:hover a {
-    color: #fff;
-}
 
-nav ul li a {
-    display: block;
-    padding: 8px 16px;
-    font-weight: bold;
-    color: white; //#757575; 
-    text-decoration: none;
-}
-nav ul ul {
+#search ul {
     background: pink; // #5f6975; 
     border-radius: 0px; padding: 0;
     position: absolute; top: 100%;
 }
-nav ul ul li {
+#search ul li {
     float: none; 
     border-top: 1px solid white; //#6b727c;
     //border-bottom: 1px solid #575f6a;
     position: relative;
 }
-nav ul ul li a {
+#search ul li a {
     padding: 8px 8px;
     color: #fff;
 }	
-nav ul ul li a:hover {
+#search ul li a:hover {
     background: orange;
 }
-nav ul ul ul {
+#search ul ul {
     position: absolute; left: 100%; top:0;
 }
 
@@ -121,6 +154,8 @@ nav ul ul ul {
 .typeahead-item {
   padding: 3px;
 }
+
+
 /* Item Search */
 #options-container {
     z-index: 99;

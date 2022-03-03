@@ -72,12 +72,12 @@
    (ws/ssb-login! username password))) 
 
 (rf/reg-fx
- :ssb/get-id
+ :ssb/whoami
  (fn []
-   (ws/chsk-send! [:ssb/get-id] 10000
+   (ws/chsk-send! [:ssb/whoami] 10000
                   (fn [reply] 
                     (if (cb-success? reply)
-                      (rf/dispatch [:ssb/id (:id reply)])
+                      (rf/dispatch [:save-whoami (:id reply)])
                       (rf/dispatch [:error (str reply)]))))))
 
 (rf/reg-fx
@@ -195,6 +195,7 @@
   (fn [cofx _]
     (assoc cofx :temp-id (swap! last-temp-id inc))))
 
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Event Handlers  ;;
 ;;;;;;;;;;;;;;;;;;;;;
@@ -244,9 +245,9 @@
    {:db (assoc-in (:db cofx) [:server :account] "login failed")}))
 
 (rf/reg-event-fx
- :get-id
+ :ssb/whoami
  (fn [cofx [_ username password]]
-   {:ssb/get-id []}))
+   {:ssb/whoami []}))
 
 (rf/reg-event-fx
  :save-defaults-localstore
@@ -265,9 +266,9 @@
    (update-in db [:errors] (fnil conj []) error)))
 
 (rf/reg-event-db
- :ssb/id 
+ :save-whoami 
  (fn [db [_ id]]
-   (assoc-in db [:server :id] id)))
+   (assoc-in db [:server :whoami] id)))
 
 (rf/reg-event-db
  :feed
@@ -468,7 +469,7 @@
                                           (rf/dispatch [:task/updated id new-id])))]}
        (println "Trying to save" id "with status" status)))))
 
-(rf/reg-cofx
+(rf/reg-event-fx
  :task/update
  (fn [cofx id]
    (let [update-keys @(rf/subscribe [:updates id])

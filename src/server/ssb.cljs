@@ -114,7 +114,7 @@
                         (dispatch! :response {:uid uid :message (js->clj content)}))))
     (dispatch! :error {:uid uid :message "Unable to get server with User-id"})))
 
-(defn get-id [uid]
+(defn whoami! [uid]
   (if-let [^js db (get @db-conns uid)]
     (:id (parse-json (.whoami db)))))
 

@@ -20,4 +20,6 @@
            :target :browser
            :output-dir "resources/public/js"
            :asset-path "/js"
+           :dev-http {8000 "public"}
+           :devtools {:watch-dir "public"}
            :modules {:main {:init-fn client.core/init}}}}}

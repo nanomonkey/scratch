@@ -232,9 +232,9 @@
     (when ?reply-fn (?reply-fn {:message (str "Query" msg)}))))
 
 (defmethod -event-msg-handler
-  :ssb/get-id
+  :ssb/whoami
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]     
-  (let [id (ssb/get-id uid)]
+  (let [id (ssb/whoami! uid)]
     (do
       (println "Id: " id)
       (when ?reply-fn (?reply-fn {:id id})))))

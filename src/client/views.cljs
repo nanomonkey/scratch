@@ -23,17 +23,19 @@
 
 
 (defn topnav []
-  [:nav  [:ul 
-          [:li [:a {:href "#" 
-                    :on-click #(rf/dispatch [:set-active-panel :recipe])} "Recipes"]]
-          [:li [:a {:href "#" 
-                    :on-click #(rf/dispatch [:set-active-panel :inventory])} "Inventory"]]
-          [:li [:a {:href "#"
-                    :on-click #(rf/dispatch [:set-active-panel :supplier])} "Suppliers"]]
-          [:li [:a {:href  "#"
-                    :on-click #(rf/dispatch [:set-active-panel :schedule])} "Schedule"]]
-          [:li [:a {:href  "#"
-                    :on-click #(rf/dispatch [:set-active-panel :settings])} "Settings"]]]])
+  (fn []
+    (let [active @(rf/subscribe [:active-panel])]
+      [:nav [:ul
+             (map (fn [[key value]] 
+                    (if (= active key)
+                      [:li.active_panel [:a value]]
+                      [:li.alt_panel [:a {:href "#" 
+                                          :on-click #(rf/dispatch [:set-active-panel key])} value]]) ) 
+                  {:recipe "Recipes" 
+                   :inventory "Inventory" 
+                   :supplier "Supplier" 
+                   :schedule "Schedule"
+                   :settings "Settings"})]])))
 
 
 (defn create-transaction []
@@ -63,10 +65,20 @@
 (defn display-post [post-id]
   (let [post @(rf/subscribe [:post post-id])
         author (:author post)
-        text (:text post)]
-    [:div 
+        text (:text post)
+        timestamp (:timestamp post)
+        comment (atom "")
+        comment? (atom false)]
+    [:div.post 
      [:div @(rf/subscribe [:contact/name author])]
-     [:div (markdown-section text)]]))
+     [:div timestamp]
+     [:div (markdown-section text)]
+     [:div (if comment? 
+             [:div [:input {:type :textarea
+                            :name "comment"
+                            :value @comment
+                            :on-change #(reset! comment (-> % .-target .-value))}]])]
+     [:button {:on-click (reset! comment? (not @comment))} "Comment"]]))
 
 (defn comments-view [root-id]
   (fn [root-id]
@@ -100,51 +112,47 @@
         query-reverse? (r/atom false)
         query-limit (r/atom 5)]
     (fn []
-      [:form {:on-submit #(do (.preventDefault %)
-                              (rf/dispatch [:query 
-                                            {:query (into [] 
-                                                          (remove nil? 
-                                                                  [(when @query-map 
-                                                                     {:$map (edn/read-string @query-map)})
-                                                                   (when @query-filter
-                                                                     {:$filter (edn/read-string @query-filter)})
-                                                                   (when @query-reduce
-                                                                     {:$reduce (edn/read-string @query-reduce)})])) 
-                                             :limit @query-limit
-                                             :reverse @query-reverse?}]))}
-       [:h2 "Query"]
-       [:div
-        [:label "Map"]
-        [:input {:type "text-area"
-                 :name "query-map"
-                 :value @query-map
-                 :on-change #(reset! query-map (-> % .-target .-value))}]]
-       [:div
-        [:label "Filter"]
-        [:input {:type "text-area"
-                 :name "query-filter"
-                 :value @query-filter
-                 :on-change #(reset! query-filter (-> % .-target .-value))}]]
-       [:div
-        [:label "Reduce"]
-        [:input {:type :textarea
-                 :name "query-reduce"
-                 :value @query-reduce
-                 :on-change #(reset! query-reduce (-> % .-target .-value))}]]
-       [:div
-        [:label "Reverse"]
-        [:input {:type "radio"
-                 :name "query-reverse?"
-                 :value @query-reverse?
-                 :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
-       [:div
-        [:label "Limit"]
-        [:input {:type "integer"
-                 :name "query-limit"
-                 :value @query-limit
-                 :on-change #(reset! query-limit (-> % .-target .-value))}]]     
-       [:div
-        [:button {:type "submit"} "Query"]]])))
+      (let [query {:query 
+                   (into [] (remove nil? [(when @query-map {:$map (edn/read-string @query-map)})
+                                          (when @query-filter {:$filter (edn/read-string @query-filter)})
+                                          (when @query-reduce {:$reduce (edn/read-string @query-reduce)})]))
+                   :limit @query-limit
+                   :reverse @query-reverse?}]
+        [:form {:on-submit #(do (.preventDefault %) 
+                                (rf/dispatch [:query query]))}
+         [:h2 "Query"]
+         [:div
+          [:label "Map"]
+          [:input {:type "text-area"
+                   :name "query-map"
+                   :value @query-map
+                   :on-change #(reset! query-map (-> % .-target .-value))}]]
+         [:div
+          [:label "Filter"]
+          [:input {:type "text-area"
+                   :name "query-filter"
+                   :value @query-filter
+                   :on-change #(reset! query-filter (-> % .-target .-value))}]]
+         [:div
+          [:label "Reduce"]
+          [:input {:type :textarea
+                   :name "query-reduce"
+                   :value @query-reduce
+                   :on-change #(reset! query-reduce (-> % .-target .-value))}]]
+         [:div
+          [:label "Reverse"]
+          [:input {:type "radio"
+                   :name "query-reverse?"
+                   :value @query-reverse?
+                   :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
+         [:div
+          [:label "Limit"]
+          [:input {:type "integer"
+                   :name "query-limit"
+                   :value @query-limit
+                   :on-change #(reset! query-limit (-> % .-target .-value))}]]     
+         [:div
+          [:button {:type "submit"} "Query"]]]))))
 
 (defn right-panel []
   [:div
@@ -477,7 +485,7 @@
   (let [recipe-id (rf/subscribe [:loaded-recipe])]
     [:div
      [modal]
-     (topnav)
+     [topnav]
      [:div.row
       [:div.column.left
        [:div [recipe-search]]]
@@ -499,7 +507,7 @@
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded-supplier])]
     [:div
-     (topnav)
+     [topnav]
      [:div.row
       [:div.column.left
        (doall
@@ -614,7 +622,7 @@
   (let [today (dt/today)]
     [:div
      [modal]
-     (topnav)
+     [topnav]
      [:div.row
       [:div.column.left
        (calendar-view)]
@@ -626,7 +634,7 @@
 (defn settings-view []
   [:div 
    [modal]
-   (topnav)
+   [topnav]
    [:div.row
     [:div.column.left]
     [:div.column.middle
@@ -675,7 +683,7 @@
   (let [location-id (rf/subscribe [:loaded-location])]
     [:div 
      [modal]
-     (topnav)
+     [topnav]
      [:div.row
       [:div.column.left 
        (doall

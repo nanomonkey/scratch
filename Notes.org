@@ -2,15 +2,22 @@ Notes
 -----
 * Glossary of terms
 ** Recipes
-- A list of tasks needed to produce a Product or Service.  
+- A list of individual Tasks needed to produce a Product or Service.  
 ** Task
+- Tasks are a list of instructions for completing a specific task, the inventory items that will be consumed, the equipment you'll use and the final product (if any) from completing the task.  
+- Each task is seperated out by the equipment used and whether or not the task can be done in concurrently, or in a specific order.
+- Tasks that don't result in a product are often called Services. 
+- A task is different than a recipe in that each individual step needs to be done in order and cannot be done concurrently by seperate individual, or at a later time.
 *** Composed of three parts
 - An ordered list of Steps to achieve a Task
 - the Equipment needed, and the time required
 - the Ingredient Items needed, and their Units of measure
 - any intermediate Products created used in later Tasks
+** Items
+- Physical items in your inventory, equipment you use, and products which you produce, or purchase from a supplier are all saved as Items. 
+- Items have names, descriptions and are uniquely addressable.
 ** Ingredients
-- Items that are consumed by a Tasks, these can be Products from other Recipes or Tasks
+- Items that are consumed by a Tasks, these can be Products from other Tasks
 ** Products
 - Items created by a Recipe's Task
 - also known as physical goods
@@ -26,6 +33,30 @@ Notes
 - the unit of measure needed for each item
 - can be converted when an appropriate conversion factor is saved in the system
 - stored in relation to SI base units
+*** SI Base Units
+- Meter (m) length unit of measurement:
+  Distance traveled by light in a vacuum in 1/299,792,458 seconds
+- Second (s) time unit of measurement:
+  9,192,631,770 cycles of radiation of an atom of caesium-133
+- Kilogram (kg) mass unit of measurement:
+  Planck’s constant divided by 6.626,070,15 × 10−34 m−2s
+- Candela (cd) luminous intensity measurement unit:
+  Light source with monochromatic radiation of frequency 540 × 1012 Hz and radiant intensity of 1/683 watt per steradian
+- Kelvin (K) temperature unit of measurement:
+  Boltzmann constant, defined as a change in thermal energy of 1.380 649 × 10−23 joules
+- Ampere (A) electric current measurement unit:
+  Flow equal to 1/1.602176634×10−19 elementary charges per second
+- Mole (mol) amount of substance measurement unit:
+  Avogadro constant, defined as 6.02214076 ×1023 elementary entities.
+** Inventory
+- Items stored in a specific location for later use.
+** Suppliers
+- The manufacturer or seller of items that you use.
+** Events
+- The date, time and location used when scheduling tasks.
+** Messages
+- Posts, or comments linked to Tasks, Recipes, Events, etc that are used for users to coordinate their work.
+
 -----
 * Datastructures 
 - Record schemas stored as messages in SSB.  
@@ -291,3 +322,35 @@ Flaky sea salt is a great way to finish a cooked piece of meat or fish.  It adds
 * Cryptography in Clojure
 ** Buddy.core
 - https://cljdoc.org/d/buddy/buddy-core/1.10.1/doc/user-guide
+
+* NPM dependencies
+** Adding
+#+BEGIN_SRC sh
+npm install the-thing
+#+END_SRC
+** Removing
+#+BEGIN_SRC sh
+npm uninstall the-thing
+#+END_SRC
+
+* CSS
+** Available (in Hiccup notation)
+#+BEGIN_SRC clojurescript
+
+[:div.arrow_box "text for arrow box"]
+[:div.blue-panel "text for blue panel"]
+[:div.white-panel "text for white panel"]
+[:div.help-text "help text"]
+[:div#task
+ [:div.steps-indicator
+  [:div.connector]
+  [:div.connector.complete]
+  [:ol.steps
+   [:li.complete [:strong "completed"] " step"]
+   [:li.active "not complete"]
+   [:li.active "not complete"]
+   [:li.inactive "inactive"]
+   [:li.warning "warning"]
+   [:li.active "last one"]]]]
+
+#+END_SRC
