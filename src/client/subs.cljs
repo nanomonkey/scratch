@@ -423,12 +423,11 @@
  (fn [root-id]
    (rf/subscribe [:posts]))
  (fn [posts [_ root-id]]
-   (mapv :id
-         (filter  #(= root-id (:root %)) (vals posts)))))
+   (filter  #(= root-id (:root %)) (vals posts))))
 
 (rf/reg-sub
- :replies
- (fn [branch-id]
-   (rf/subscribe [:posts]))
- (fn [posts [_ branch-id]]
-   (mapv :id (filter (fn [[key value]](= branch-id (:branch value) posts))))))
+ :reply-ids
+ (fn [root-id branch-id]
+   (rf/subscribe [:comments root-id]))
+ (fn [posts [_ root-id branch-id]]
+   (mapv :id (filter #(= branch-id (:branch %)) (vals posts)))))

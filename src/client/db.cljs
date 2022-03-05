@@ -1,18 +1,7 @@
 (ns client.db)
 
-;; useful fn's for later
-(defn index-by [key-fn coll]
-    (into {} (map (juxt key-fn identity) coll)))
-
-
 (def recipe-db
-  "This sample data for the in memory database is for graphical testing only, 
-  it doesn't represent the way in which transactions are stored on the 
-   scuttlebutt database, but instead how they are stored for the re-frame (react) 
-  pub/sub system.  
-  Some of the storage methods below seem redundant in my eyes, 
-  so I'm likely to try and bring it closer to the way it's stored in ssb transactions.
-  Sample id's are made up strings instead of hash ids that would be generated."
+  "Initialial values for react in memory db."
   {:loaded {:recipe "r1"
             :date 20210513 ;(rf/subscribe [:now])
             :location "l1"
@@ -35,6 +24,7 @@
                  :timestamp 123456
                  :text "hello world"
                  :root "r1"
+                 :branch "r1"
                  :author "c1"}
            "p2" {:id "p2"
                  :timestamp 123499

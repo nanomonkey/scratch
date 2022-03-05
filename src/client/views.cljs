@@ -66,29 +66,28 @@
   (let [author (rf/subscribe [:post/author post-id])
         text (rf/subscribe [:post/text post-id])
         timestamp (rf/subscribe [:post/timestamp])
+        root (rf/subscribe [:post/root post-id])
+        replies (rf/subscribe [:reply-ids @root post-id])
         comment (atom "")
-        comment? (atom false)
-        replies (rf/subscribe [:replies post-id])]
+        comment? (atom false)]
     (fn []
       [:div.post 
        [:div @author]
-       [:div (.toString js/Date timestamp)]
-       [:div (markdown-section text)]
+       [:div (.toString js/Date @timestamp)]
+       [:div (markdown-section @text)]
        [:div (if comment? 
                [:div [:input {:type :textarea
                               :name "comment"
                               :value @comment
                               :on-change #(reset! comment (-> % .-target .-value))}]])]
-       [:button {:on-click (reset! comment? (not @comment))} "Comment"]
-       (if replies  [:ul.replies (map #(vector :li {:key (:id %)} (:id @replies)))])])))
+       [:button {:on-click (reset! comment? (not @comment))} "Post Comment"]
+       (if @replies  [:ul.replies (map #(vector :li {:key %} (display-post %)) @replies)])])))
 
 (defn comments-view [root-id]
-  (let [comments (rf/subscribe [:comments root-id])]
+  (let [comments (rf/subscribe [:replies root-id root-id])]
     (fn [root-id]
-      [:div
-       [:div "Comments: " (str @comments)]
-       ;[:ul (map #(vector :li {:key (:id %)} (:id @replies)))]
-       ])))
+      [:div "Comments: "
+       [:ul.replies (map #(vector :li {:key (:id %)} (display-post %)) @comments )]])))
 
 (defn post []
   (let [content (r/atom "")]
