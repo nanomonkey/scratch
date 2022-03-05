@@ -102,61 +102,34 @@ nav ul li.active_panel {
 }
 
 
-/* Search Results */
+/*************************/
+/* Recipe Search Results */
+/*************************/ 
 
-#search ul {
-    padding-top: 12px;
-    padding-bottom: 12px;
-    text-align: left;
-    background-color: #008CBA;
-    font-weight:bold;
-    color: white;
-    display: block; //none;
-    z-index: 99;
-}
-
-#search ul {
-    background: pink; // #5f6975; 
+ul.search {
     border-radius: 0px; padding: 0;
-    position: absolute; top: 100%;
+    //position: absolute; top: 100%;
 }
-#search ul li {
+ul.search li {
     float: none; 
     border-top: 1px solid white; //#6b727c;
     //border-bottom: 1px solid #575f6a;
     position: relative;
 }
-#search ul li a {
+ul.search li a {
+    background: pink; // #5f6975; 
     padding: 8px 8px;
     color: #fff;
 }	
-#search ul li a:hover {
+ul.search li a:hover {
     background: orange;
 }
-#search ul ul {
-    position: absolute; left: 100%; top:0;
-}
-
-.typeahead-list {
-    list-style-type: none;
-    padding: 5px;
-    margin-top: 3px;
-    border: solid 1px grey;
-    border-radius: 3px;
-    position: absolute;
-    z-index: 2;
-    background-color: white;
-    overflow-y: scroll;
-    max-height: 300px;
-    width: 445px}
 
 
-.typeahead-item {
-  padding: 3px;
-}
-
-
+/***************/
 /* Item Search */
+/***************/
+
 #options-container {
     z-index: 99;
     position: absolute;
@@ -174,7 +147,11 @@ nav ul li.active_panel {
     background-color: yellow;
 }
 
+
+
+/**********/
 /* Layout */
+/**********/
 
 .column {
     float: left;
@@ -200,7 +177,11 @@ nav ul li.active_panel {
     }
 }
 
-/* Task Steps layout */
+
+
+/**************/
+/* Task Steps */
+/**************/
 #tasks td, #tasks th {
     border: 1px solid #ddd;
     padding: 8px;
@@ -357,6 +338,8 @@ input[type=text]{
     color:black;
     background-color:white;
 }
+
+
 /***************/
 /* item-lists */
 /**************/
@@ -594,13 +577,10 @@ border: 3px dotted orange;
   border-radius: 5px;
 }
 
-/* Spinner(s) */
 
-/* Moon 
-<div class="moon">
-  <div class="disc"></div>
-</div> 
-*/
+/**************/
+/* Spinner(s) */
+/**************/
 
 .moon {
   width: 100px;
@@ -657,6 +637,33 @@ border: 3px dotted orange;
 @keyframes flip {
   0%   { left: 0; }
   100% { left: 100%; }
+}
+
+
+/*******************/
+/* Posts & Replies */
+/*******************/
+
+.author {
+  font-size: 16px;
+  font-weight: 600;
+  font-color: #38761d; //#fff;
+  //background-color: #eee; //#7AB720;
+  //border: none;
+}
+
+.post {
+  background-color: white;
+  border-color: silver; 
+}
+
+.replies {
+  background-color: rgba(255, 255, 255, 0.8);
+  //text-align: center;
+  border: solid 1px;
+  border-color: grey;
+  padding: 10px 0;
+  //font-size: 30px;
 }
 
 </style>

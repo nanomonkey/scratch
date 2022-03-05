@@ -23,8 +23,30 @@
    :temp-id 0
    :feed []
    :errors []   
-   :contacts []
-   :comments []
+   :contacts {"a1" {:id "a1"
+                    :name "Anne"}
+              "a2" {:id "a2"
+                    :name "Bob"}
+              "a3" {:id "a3"
+                    :name "Carrol"}
+              "a4" {:id "a4"
+                    :name "Doug"}}
+   :posts {"p1" {:id "p1"
+                 :timestamp 123456
+                 :text "hello world"
+                 :root "r1"
+                 :author "c1"}
+           "p2" {:id "p2"
+                 :timestamp 123499
+                 :text "hi there!"
+                 :root "r1"
+                 :branch "p1"
+                 :author "a2"}
+           "p3" {:id "p3"
+                 :timestamp 133333
+                 :root "r1"
+                 :branch "p1"
+                 :author "a3"}}
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
                    :description "Soup made by friends"

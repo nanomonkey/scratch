@@ -56,9 +56,11 @@ Notes
 - The date, time and location used when scheduling tasks.
 ** Messages
 - Posts, or comments linked to Tasks, Recipes, Events, etc that are used for users to coordinate their work.
+** Hash Chains
+- Each feed is a append only log of messages that contain a cryptographic signature, proving that the message was written by someone in possession of the feed's private key.
 
 -----
-* Datastructures 
+* Datastructures & Message Schemas
 - Record schemas stored as messages in SSB.  
 - As messages each has a timestamp, author and unique key not shown
 - possible fields to be added later indicated with question mark (?)

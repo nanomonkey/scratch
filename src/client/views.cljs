@@ -15,9 +15,9 @@
                                     display-duration
                                     display-rational
                                     parse-rational
-                                    duration-editor
-                                    arrow-up-icon
-                                    arrow-down-icon]]
+                                    duration-editor]]
+            [client.svg :refer [arrow-up-icon
+                                arrow-down-icon]]
             [goog.string :as gstring]
             [cljs-time.core :as dt]))
 
@@ -63,30 +63,32 @@
         [:button {:type "submit"} "Post"]]])))
 
 (defn display-post [post-id]
-  (let [post @(rf/subscribe [:post post-id])
-        author (:author post)
-        text (:text post)
-        timestamp (:timestamp post)
+  (let [author (rf/subscribe [:post/author post-id])
+        text (rf/subscribe [:post/text post-id])
+        timestamp (rf/subscribe [:post/timestamp])
         comment (atom "")
-        comment? (atom false)]
-    [:div.post 
-     [:div @(rf/subscribe [:contact/name author])]
-     [:div timestamp]
-     [:div (markdown-section text)]
-     [:div (if comment? 
-             [:div [:input {:type :textarea
-                            :name "comment"
-                            :value @comment
-                            :on-change #(reset! comment (-> % .-target .-value))}]])]
-     [:button {:on-click (reset! comment? (not @comment))} "Comment"]]))
+        comment? (atom false)
+        replies (rf/subscribe [:replies post-id])]
+    (fn []
+      [:div.post 
+       [:div @author]
+       [:div (.toString js/Date timestamp)]
+       [:div (markdown-section text)]
+       [:div (if comment? 
+               [:div [:input {:type :textarea
+                              :name "comment"
+                              :value @comment
+                              :on-change #(reset! comment (-> % .-target .-value))}]])]
+       [:button {:on-click (reset! comment? (not @comment))} "Comment"]
+       (if replies  [:ul.replies (map #(vector :li {:key (:id %)} (:id @replies)))])])))
 
 (defn comments-view [root-id]
-  (fn [root-id]
-    [:div
-     [:h2 "Comments"]
-     [:button {:on-click (rf/dispatch [:get-comments root-id])} "Load Comments"]
-     (for [comment-id @(rf/subscribe [:comments root-id])]  ;order by timestamp/branch etc.?
-       (display-post comment-id))]))
+  (let [comments (rf/subscribe [:comments root-id])]
+    (fn [root-id]
+      [:div
+       [:div "Comments: " (str @comments)]
+       ;[:ul (map #(vector :li {:key (:id %)} (:id @replies)))]
+       ])))
 
 (defn post []
   (let [content (r/atom "")]
@@ -103,7 +105,6 @@
                  :on-change #(reset! content (-> % .-target .-value))}]]
        [:div
         [:button {:type "submit"} "Post"]]])))
-
 
 (defn query []
   (let [query-map (r/atom nil)
@@ -501,8 +502,8 @@
               #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
        [:div [task-table @recipe-id]]]
       [:div.column.right
-       (right-panel)
-       (comments-view recipe-id)]]]))
+       ;;(right-panel)
+       [comments-view @recipe-id]]]]))
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded-supplier])]

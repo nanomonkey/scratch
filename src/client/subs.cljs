@@ -360,7 +360,7 @@
    :events/in-range
    (fn [start end]
      (rf/subscribe [:events]))
-   (fn [start end events]
+   (fn [events [_ start end]]
      (filter (overlaps? start end (event-start event) (event-end end))))))
 
 
@@ -377,9 +377,26 @@
    (:posts db)))  ; (fn [x] (sort-by (juxt :branch :timestamp) x)
 
 (rf/reg-sub
+ :post
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id])))
+
+(rf/reg-sub
  :post/text
  (fn [db [_ post-id]]
    (get-in db [:posts post-id :text])))
+
+(rf/reg-sub
+ :post/author
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :author])))
+
+(rf/reg-sub
+ :post/author-name
+ (fn [post-id]
+   (rf/subscribe [:post/author]))
+ (fn [author-id post-id]
+   @(rf/subscribe [:contact/name author-id])))
 
 (rf/reg-sub
  :post/root
@@ -399,4 +416,19 @@
 (rf/reg-sub
  :post/mentions
  (fn [db [_ post-id]]
-   (get-in db [:posts post-id :root])))
+   (get-in db [:posts post-id :mentions])))
+
+(rf/reg-sub
+ :comments
+ (fn [root-id]
+   (rf/subscribe [:posts]))
+ (fn [posts [_ root-id]]
+   (mapv :id
+         (filter  #(= root-id (:root %)) (vals posts)))))
+
+(rf/reg-sub
+ :replies
+ (fn [branch-id]
+   (rf/subscribe [:posts]))
+ (fn [posts [_ branch-id]]
+   (mapv :id (filter (fn [[key value]](= branch-id (:branch value) posts))))))

@@ -1,6 +1,8 @@
 (ns client.widgets
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
+            [client.svg :refer [tag-icon
+                                clock-icon]]
             [goog.string.format]))
 
 ;; Markdown
@@ -65,15 +67,6 @@
 
 
 ;; Tag Editor
-
-(defn tag-icon []
-  [:svg {:class "icon icon-tags" 
-         :xmlns "http://www.w3.org/2000/svg" 
-         :width "15" 
-         :height "14" 
-         :viewBox "0 0 30 28" 
-         :aria-hidden "true"}
-   [:path {:d "M7 7c0-1.109-.891-2-2-2s-2 .891-2 2 .891 2 2 2 2-.891 2-2zm16.672 9c0 .531-.219 1.047-.578 1.406l-7.672 7.688c-.375.359-.891.578-1.422.578s-1.047-.219-1.406-.578L1.422 13.906C.625 13.125 0 11.609 0 10.5V4c0-1.094.906-2 2-2h6.5c1.109 0 2.625.625 3.422 1.422l11.172 11.156c.359.375.578.891.578 1.422zm6 0c0 .531-.219 1.047-.578 1.406l-7.672 7.688a2.08 2.08 0 0 1-1.422.578c-.812 0-1.219-.375-1.75-.922l7.344-7.344c.359-.359.578-.875.578-1.406s-.219-1.047-.578-1.422L14.422 3.422C13.625 2.625 12.11 2 11 2h3.5c1.109 0 2.625.625 3.422 1.422l11.172 11.156c.359.375.578.891.578 1.422z"}]])
 
 (defn tag-editor [source remove add]
   "view and modify tags using event handlers source remove and add"
@@ -215,14 +208,6 @@
     (+ sec (* 60 min) (* 360 hr))))
 
 
-(defn svg-clock []
-  [:svg {:class "icon icon-clock" 
-         :width "24"
-         :height "28" 
-         :viewBox "0 0 24 28" 
-         :aria-hidden "true"}
-   [:path  {:d "M14 8.5v7c0 .281-.219.5-.5.5h-5a.494.494 0 0 1-.5-.5v-1c0-.281.219-.5.5-.5H12V8.5c0-.281.219-.5.5-.5h1c.281 0 .5.219.5.5zm6.5 5.5c0-4.688-3.813-8.5-8.5-8.5S3.5 9.313 3.5 14s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5zm3.5 0c0 6.625-5.375 12-12 12S0 20.625 0 14 5.375 2 12 2s12 5.375 12 12z"}]])
-
 (defn duration-editor [source update]
   (let [duration (r/atom (parse-duration @source))
         editing? (r/atom false)]
@@ -266,7 +251,7 @@
         [:button {:style {:border-radius 100}
                   :on-click #(do (.preventDefault %)
                                  (reset! editing? true))}
-         [svg-clock]
+         [clock-icon]
          (when @source
            (display-duration (parse-duration @source)))]))))
 
@@ -292,7 +277,7 @@
                                 (reset! search-string ""))} "+"]
        (when (< 1 (count @search-string))
          (let [recipes @(rf/subscribe [:recipe/names])] 
-           [:ul
+           [:ul.search
             (for [recipe recipes]
               (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
                       (= "" @search-string))
@@ -358,25 +343,14 @@
    [:div.modal-body body]
    [:div.modal-footer footer]])
 
-(defn arrow-up-icon []
-  [:svg {:class "icon icon-tags"
-         :xmlns "http://www.w3.org/2000/svg" 
-         :width "15" 
-         :height "14" 
-         :viewBox "0 0 32 32" 
-         :aria-hidden "true"}
-   [:path {:d "M25 0H7a7 7 0 0 0-7 7v18a7 7 0 0 0 7 7h18a7 7 0 0 0 7-7V7a7 7 0 0 0-7-7zm5 25a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5z"}]
-   [:path {:d "m15.29 5.29-7 7L9.7 13.7 15 8.41V27h2V8.41l5.29 5.29 1.41-1.41-7-7a1 1 0 0 0-1.41 0z"}]])
 
-(defn arrow-down-icon []
-  [:svg {:class "icon icon-tags"
-         :xmlns "http://www.w3.org/2000/svg" 
-         :width "15" 
-         :height "14" 
-         :viewBox "0 0 32 32" 
-         :aria-hidden "true"}
-   [:path {:d "M25 0H7a7 7 0 0 0-7 7v18a7 7 0 0 0 7 7h18a7 7 0 0 0 7-7V7a7 7 0 0 0-7-7zm5 25a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5z"}]
-   [:path {:d "M17 23.59V5h-2v18.59l-5.29-5.3-1.42 1.42 7 7a1 1 0 0 0 1.41 0l7-7-1.41-1.41z"}]])
+;;;;;;;;;;;;;;
+;; Spinners ;;
+;;;;;;;;;;;;;;
+
+(defn moon-spinner [visible?] 
+  (when visible? [:div.moon [:div.disc]]))
+
 
 
   
