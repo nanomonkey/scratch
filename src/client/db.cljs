@@ -25,7 +25,7 @@
                  :text "hello world"
                  :root "r1"
                  :branch "r1"
-                 :author "c1"}
+                 :author "a1"}
            "p2" {:id "p2"
                  :timestamp 123499
                  :text "hi there!"
@@ -34,6 +34,7 @@
                  :author "a2"}
            "p3" {:id "p3"
                  :timestamp 133333
+                 :text "Ahoy matey?!"
                  :root "r1"
                  :branch "p1"
                  :author "a3"}}

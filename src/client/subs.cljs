@@ -364,6 +364,20 @@
      (filter (overlaps? start end (event-start event) (event-end end))))))
 
 
+;;;;;;;;;;;;;;
+;; Contacts ;;
+;;;;;;;;;;;;;;
+
+(rf/reg-sub
+ :contacts
+ (fn [db]
+   (:contacts db)))
+
+(rf/reg-sub
+ :contact/name
+ (fn [db [_ contact-id]]
+   (get-in db [:contacts contact-id :name])))
+
 ;;;;;;;;;;;
 ;; Posts ;;
 ;;;;;;;;;;;
@@ -384,19 +398,17 @@
 (rf/reg-sub
  :post/text
  (fn [db [_ post-id]]
-   (get-in db [:posts post-id :text])))
+   (get-in db [:posts post-id :text] "")))
+
+(rf/reg-sub
+ :post/timestamp
+ (fn [db [_ post-id]]
+   (get-in db [:posts post-id :timestamp])))
 
 (rf/reg-sub
  :post/author
  (fn [db [_ post-id]]
    (get-in db [:posts post-id :author])))
-
-(rf/reg-sub
- :post/author-name
- (fn [post-id]
-   (rf/subscribe [:post/author]))
- (fn [author-id post-id]
-   @(rf/subscribe [:contact/name author-id])))
 
 (rf/reg-sub
  :post/root
@@ -423,11 +435,11 @@
  (fn [root-id]
    (rf/subscribe [:posts]))
  (fn [posts [_ root-id]]
-   (filter  #(= root-id (:root %)) (vals posts))))
+   (filterv  #(= root-id (:root %)) (vals posts))))
 
 (rf/reg-sub
  :reply-ids
- (fn [root-id branch-id]
-   (rf/subscribe [:comments root-id]))
- (fn [posts [_ root-id branch-id]]
-   (mapv :id (filter #(= branch-id (:branch %)) (vals posts)))))
+ (fn [branch-id]
+   (rf/subscribe [:posts]))
+ (fn [posts [_ branch-id]]
+   (mapv :id (filterv  #(= branch-id (:branch %)) (vals posts)))))

@@ -28,9 +28,9 @@
       [:nav [:ul
              (map (fn [[key value]] 
                     (if (= active key)
-                      [:li.active_panel [:a value]]
-                      [:li.alt_panel [:a {:href "#" 
-                                          :on-click #(rf/dispatch [:set-active-panel key])} value]]) ) 
+                      [:li.active_panel {:key value} [:a value]]
+                      [:li.alt_panel {:key value} 
+                       [:a {:href "#" :on-click #(rf/dispatch [:set-active-panel key])} value]]) ) 
                   {:recipe "Recipes" 
                    :inventory "Inventory" 
                    :supplier "Supplier" 
@@ -65,29 +65,34 @@
 (defn display-post [post-id]
   (let [author (rf/subscribe [:post/author post-id])
         text (rf/subscribe [:post/text post-id])
-        timestamp (rf/subscribe [:post/timestamp])
+        timestamp (rf/subscribe [:post/timestamp post-id])
         root (rf/subscribe [:post/root post-id])
-        replies (rf/subscribe [:reply-ids @root post-id])
-        comment (atom "")
-        comment? (atom false)]
-    (fn []
-      [:div.post 
-       [:div @author]
-       [:div (.toString js/Date @timestamp)]
+        replies (rf/subscribe [:reply-ids post-id])
+        comment (r/atom "")
+        comment? (r/atom false)]
+    (fn [post-id]
+      [:div.post
+       [:div (.toUTCString (js/Date. @timestamp))]
+       [:div.author  @(rf/subscribe [:contact/name @author])]
        [:div (markdown-section @text)]
-       [:div (if comment? 
+       [:div (if @comment? 
                [:div [:input {:type :textarea
                               :name "comment"
                               :value @comment
-                              :on-change #(reset! comment (-> % .-target .-value))}]])]
-       [:button {:on-click (reset! comment? (not @comment))} "Post Comment"]
-       (if @replies  [:ul.replies (map #(vector :li {:key %} (display-post %)) @replies)])])))
+                              :on-change #(reset! comment (-> % .-target .-value))}]
+                [:button {:on-click #(reset! comment? false)} "Cancel"]
+                [:button {:on-click #(do (rf/dispatch [:reply post-id @comment])
+                                         (reset! comment "")
+                                         (reset! comment? false))} "Post Reply"]]
+               [:button {:on-click #(reset! comment? (not @comment?))} "Reply"])]
+       (if (first @replies)  [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))])])))
 
 (defn comments-view [root-id]
-  (let [comments (rf/subscribe [:replies root-id root-id])]
+  (let [comments (rf/subscribe [:reply-ids root-id])]
     (fn [root-id]
-      [:div "Comments: "
-       [:ul.replies (map #(vector :li {:key (:id %)} (display-post %)) @comments )]])))
+      [:div 
+       [:h3 "Comments "]
+       [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @comments))]])))
 
 (defn post []
   (let [content (r/atom "")]

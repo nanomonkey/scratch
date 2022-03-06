@@ -657,13 +657,15 @@ border: 3px dotted orange;
   border-color: silver; 
 }
 
-.replies {
+ul.replies {
   background-color: rgba(255, 255, 255, 0.8);
   //text-align: center;
   border: solid 1px;
   border-color: grey;
   padding: 10px 0;
   //font-size: 30px;
+  padding: 8px 8px 8px 8px;
+  list-style: none;
 }
 
 </style>

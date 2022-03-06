@@ -692,8 +692,8 @@
  :reply
  (fn [cofx [_ reply-to text]]
    {:ssb/create-record (remove-nils {:type "post" 
-                                     :root (rf/subscribe [:post/root reply-to])
-                                     :branch (rf/subscribe [:post/branch reply-to])
+                                     :root @(rf/subscribe [:post/root reply-to])
+                                     :branch @(rf/subscribe [:post/branch reply-to])
                                      :text text})}))
 
 (rf/reg-event-fx
