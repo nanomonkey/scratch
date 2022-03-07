@@ -38,7 +38,7 @@
    [:path {:d "M17 23.59V5h-2v18.59l-5.29-5.3-1.42 1.42 7 7a1 1 0 0 0 1.41 0l7-7-1.41-1.41z"}]])
 
 (defn active-time-icon [] 
-  [:svg
+  [:svg 
    [:symbol {:viewBox "0 0 41 41" :id "active-time"}]
    [:circle {:cx "19.04" :cy "20.38" :r "17.04" :fill "none" :stroke "#cacaca" :stroke-width "4"}]
    [:path {:fill "#fff" :d "M19.04 20.38h21.97v19.28H19.04z"}]
@@ -47,11 +47,17 @@
    [:path {:d "M20.73 23.36l.46-.82 6.17 3.32-.46.82z" :fill "#fff" :stroke "#cacaca" :stroke-width "2.5"}]
    [:path {:d "M30 19.48l5.59 7.89 5.38-8z" :fill "#cacaca"}]])
 
-(defn comment-icon []
-  [:svg
-   [:symbol {:viewBox "0 0 40 29" :id "comment"}] 
+(defn comment-icon [count]
+  [:svg {:class "icon icon-tags"
+         :id "comment"
+         :xmlns "http://www.w3.org/2000/svg" 
+         :width "40" 
+         :height "40" 
+         :viewBox "0 0 40 29" 
+         :aria-hidden "true"}
    [:path {:d "M1.5 0h37A1.54 1.54 0 0 1 40 1.5v18.2a1.54 1.54 0 0 1-1.5 1.5h-37A1.54 1.54 0 0 1 0 19.7V1.5A1.54 1.54 0 0 1 1.5 0z" :fill "#cacaca"}]
-   [:path {:d "M19.9 18.8L6.9 29 4.1 13.2z" :fill "#cacaca"}]])
+   [:path {:d "M19.9 18.8L6.9 29 4.1 13.2z" :fill "#cacaca"}]
+   [:text {:x "12" :y "16" :fill "red"} (str count)]])
 
 (defn heart-icon []
   [:svg

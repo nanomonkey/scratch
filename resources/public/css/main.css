@@ -644,6 +644,10 @@ border: 3px dotted orange;
 /* Posts & Replies */
 /*******************/
 
+.right {
+  float: right;
+}
+
 .author {
   font-size: 16px;
   font-weight: 600;
@@ -654,7 +658,8 @@ border: 3px dotted orange;
 
 .post {
   background-color: white;
-  border-color: silver; 
+  border-color: aqua; 
+  padding: 8px 8px 8px 8px;
 }
 
 ul.replies {

@@ -17,7 +17,8 @@
                                     parse-rational
                                     duration-editor]]
             [client.svg :refer [arrow-up-icon
-                                arrow-down-icon]]
+                                arrow-down-icon
+                                comment-icon]]
             [goog.string :as gstring]
             [cljs-time.core :as dt]))
 
@@ -71,28 +72,30 @@
         comment (r/atom "")
         comment? (r/atom false)]
     (fn [post-id]
-      [:div.post
-       [:div (.toUTCString (js/Date. @timestamp))]
+      [:div.post 
+       [:div (.toDateString (js/Date. @timestamp))]
        [:div.author  @(rf/subscribe [:contact/name @author])]
        [:div (markdown-section @text)]
        [:div (if @comment? 
-               [:div [:input {:type :textarea
-                              :name "comment"
-                              :value @comment
-                              :on-change #(reset! comment (-> % .-target .-value))}]
-                [:button {:on-click #(reset! comment? false)} "Cancel"]
-                [:button {:on-click #(do (rf/dispatch [:reply post-id @comment])
-                                         (reset! comment "")
-                                         (reset! comment? false))} "Post Reply"]]
-               [:button {:on-click #(reset! comment? (not @comment?))} "Reply"])]
-       (if (first @replies)  [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))])])))
+                     [:div [:input {:type :textarea
+                                    :name "comment"
+                                    :value @comment
+                                    :on-change #(reset! comment (-> % .-target .-value))}]
+                      [:button.right {:on-click #(reset! comment? false)} "Cancel"]
+                      [:button.right {:on-click #(do (rf/dispatch [:reply post-id @comment])
+                                               (reset! comment "")
+                                               (reset! comment? false))} "Post Reply"]]
+                     [:button.right {:on-click #(reset! comment? (not @comment?))} "Reply"])]
+       [:div 
+        (if (first @replies) [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))])]])))
 
 (defn comments-view [root-id]
-  (let [comments (rf/subscribe [:reply-ids root-id])]
+  (let [comments (rf/subscribe [:comments root-id])
+        replies (rf/subscribe [:reply-ids root-id])]
     (fn [root-id]
       [:div 
-       [:h3 "Comments "]
-       [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @comments))]])))
+       [:h3 "Comments " [comment-icon (count @comments)]]
+       [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))]])))
 
 (defn post []
   (let [content (r/atom "")]
