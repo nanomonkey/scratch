@@ -5,7 +5,8 @@
   {:loaded {:recipe "r1"
             :date 20210513 ;(rf/subscribe [:now])
             :location "l1"
-            :supplier "s1"}
+            :supplier "s1"
+            :comment "r1"}
    :server {:account ""
             :status "not-connected"}
    :active-panel :login

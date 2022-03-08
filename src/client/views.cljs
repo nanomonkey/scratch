@@ -63,6 +63,21 @@
        [:div
         [:button {:type "submit"} "Post"]]])))
 
+
+(defn comment-form [root branch]
+  (let [text (r/atom "")]
+    (fn [root branch]
+      [:div.white-panel
+       [:form {:on-submit #(do (.preventDefault %)
+                               (rf/dispatch [:post-reply root branch  @text])
+                               (reset! text  ""))}
+        [:div
+         [:label "Reply: " ]
+         [:input {:type "textarea"
+                  :value @text
+                  :on-change #(reset! text (-> % .-target .-value))}]]
+        [:div [:button {:type "submit"} "Post"]]]])))
+
 (defn display-post [post-id]
   (let [author (rf/subscribe [:post/author post-id])
         text (rf/subscribe [:post/text post-id])
@@ -76,26 +91,28 @@
        [:div (.toDateString (js/Date. @timestamp))]
        [:div.author  @(rf/subscribe [:contact/name @author])]
        [:div (markdown-section @text)]
-       [:div (if @comment? 
-                     [:div [:input {:type :textarea
-                                    :name "comment"
-                                    :value @comment
-                                    :on-change #(reset! comment (-> % .-target .-value))}]
-                      [:button.right {:on-click #(reset! comment? false)} "Cancel"]
-                      [:button.right {:on-click #(do (rf/dispatch [:reply post-id @comment])
-                                               (reset! comment "")
-                                               (reset! comment? false))} "Post Reply"]]
-                     [:button.right {:on-click #(reset! comment? (not @comment?))} "Reply"])]
+       [modal-button "Post Comment" "Comment" [comment-form root post-id]]
+       #_(if @comment? 
+         [:div [:input {:type :textarea
+                        :name "comment"
+                        :value @comment
+                        :on-change #(reset! comment (-> % .-target .-value))}]
+          [:div
+           [:button {:on-click #(reset! comment? false)} "Cancel"]
+           [:button {:on-click #(do (rf/dispatch [:reply post-id @comment])
+                                    (reset! comment "")
+                                    (reset! comment? false))} "Post Reply"]]]
+         [:div [:button {:on-click #(reset! comment? (not @comment?))} "Reply"]])
        [:div 
         (if (first @replies) [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))])]])))
 
-(defn comments-view [root-id]
-  (let [comments (rf/subscribe [:comments root-id])
-        replies (rf/subscribe [:reply-ids root-id])]
-    (fn [root-id]
+(defn comments-view []
+  (let [loaded-comment @(rf/subscribe [:loaded-comment])
+        replies @(rf/subscribe [:reply-ids loaded-comment])]
+    (if (first replies)
       [:div 
-       [:h3 "Comments " [comment-icon (count @comments)]]
-       [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))]])))
+       [modal-button "Post Comment" "Comment" [comment-form loaded-comment loaded-comment]]
+       [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) replies))]])))
 
 (defn post []
   (let [content (r/atom "")]
@@ -436,7 +453,7 @@
        [:tbody
         (doall
          (for [task tasks]
-           [:tr ^{:key task} 
+           [:tr ^{:key (str task "row")} 
             [:td ^{:key (str task "items")}
 ;; Equipment for task
              [:div ^{:key (str task "equipment")}
@@ -446,7 +463,7 @@
              [list-items @(rf/subscribe [:task/equipment task])
               :task/remove-equipment task]
 ;; Ingredients for task
-             [:div ^{:key (str task "ingredients")}
+             [:div ^{:key (str task "-ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
                [line-item #(rf/dispatch [:task/add-ingredient task %1 %2 %3])]
                "ingredient-qty"]]
@@ -466,7 +483,7 @@
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]]
 ;; Rearrange Tasks
-            [:td ^{:key (str task " arrange")}
+            [:td ^{:key (str task "-arrange")}
              (if-not (= task (first tasks))
                [:button {:title "Move Task up"
                          :on-click #(do (.preventDefault %)
@@ -490,7 +507,7 @@
 
 
 (defn recipe-view []
-  (let [recipe-id (rf/subscribe [:loaded-recipe])]
+  (let [recipe-id @(rf/subscribe [:loaded-recipe])]
     [:div
      [modal]
      [topnav]
@@ -498,19 +515,21 @@
       [:div.column.left
        [:div [recipe-search]]]
       [:div.column.middle
-       [:h1 [inline-editor @(rf/subscribe [:recipe/name @recipe-id])
-             {:on-update #(rf/dispatch [:recipe/update-name @recipe-id %])}]]
-       [inline-editor @(rf/subscribe [:recipe/description @recipe-id])
-        {:on-update #(rf/dispatch [:recipe/update-description @recipe-id %])
+       [:a.right {:href "#" :on-click #(rf/dispatch [:loaded-comment recipe-id])} 
+        [comment-icon (count @(rf/subscribe [:comments recipe-id]))]]
+       [:h1 [inline-editor @(rf/subscribe [:recipe/name recipe-id])
+             {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]] 
+       [inline-editor @(rf/subscribe [:recipe/description recipe-id])
+        {:on-update #(rf/dispatch [:recipe/update-description recipe-id %])
          :markdown? true}]
        [:div [tag-editor 
-              @(rf/subscribe [:recipe/tags @recipe-id]) 
-              #(rf/dispatch [:recipe/remove-tag @recipe-id %]) 
-              #(rf/dispatch [:recipe/save-tag @recipe-id %])]]
-       [:div [task-table @recipe-id]]]
+              @(rf/subscribe [:recipe/tags recipe-id]) 
+              #(rf/dispatch [:recipe/remove-tag recipe-id %]) 
+              #(rf/dispatch [:recipe/save-tag recipe-id %])]]
+       [:div [task-table recipe-id]]]
       [:div.column.right
        ;;(right-panel)
-       [comments-view @recipe-id]]]]))
+       (comments-view)]]]))
 
 (defn supplier-view []
   (let [supplier-id (rf/subscribe [:loaded-supplier])]
@@ -561,7 +580,7 @@
      [:h2 [:center [:a {:href "#"} "<  "] year [:a {:href "#"} "  >"]]]
      [:table#calendar
       [:tbody
-        [:tr
+        [:tr 
         (doall (for [day [" " "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"]]
                  [:th [:div day]]))]
        (for [week (partition-all 7 (map #(dt/plus start (dt/days %)) (range 1 372)))]

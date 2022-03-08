@@ -37,7 +37,7 @@
 (defn index-by
   "Transform a coll to a map with a given key as a lookup value"
   [key coll]
-  (into {} (map (juxt key identity))))
+  (into {} (map (juxt key identity) coll)))
 
 (defn parse-json [msg] 
   (js->clj msg :keywordize-keys true))
@@ -337,6 +337,11 @@
  :loaded-date
  (fn [db [_ date]]
    (assoc-in db [:loaded :date] date)))
+
+(rf/reg-event-db
+ :loaded-comment
+ (fn [db [_ root]]
+   (assoc-in db [:loaded :comment] root)))
 
 (rf/reg-event-db
  :modal
@@ -677,23 +682,28 @@
 
 
 (rf/reg-event-db
- :add-post
- (fn [db [_ post]]
-   (update-in db [:posts] (fnil conj []) (index-by :id post))))
+ :add-records
+ (fn [db [_ record-key records]]
+   (update-in db [record-key] (fnil conj []) (index-by :id records))))
+
+(rf/reg-event-db
+ :add-posts
+ (fn [db [_ posts]] 
+   (update-in db [:posts] (merge (:posts db) (index-by :id posts)))))
 
 (rf/reg-event-fx
  :post
  (fn [cofx [_ text]]
    {:ssb/create-record {:type "post" :text text}}
-   (fn [reply] 
-     (rf/dispatch [:add-post reply]))))
+   (fn [reply]
+     (rf/dispatch [:add-posts [reply]]))))
 
 (rf/reg-event-fx
- :reply
- (fn [cofx [_ reply-to text]]
+ :post-reply
+ (fn [cofx [_ root branch text]]
    {:ssb/create-record (remove-nils {:type "post" 
-                                     :root @(rf/subscribe [:post/root reply-to])
-                                     :branch @(rf/subscribe [:post/branch reply-to])
+                                     :root root
+                                     :branch branch
                                      :text text})}))
 
 (rf/reg-event-fx
@@ -714,11 +724,6 @@
  :get-comments
  (fn [cofx [_ root]]
    {:ssb/get-thread root})) 
-
-(rf/reg-event-db
- :comments
- (fn [db [_ target-id comment]]
-   (update-in db [:comments target-id] (fnil conj []) comment)))
 
 ;;;;;;;;;;;
 ;; Blobs ;;

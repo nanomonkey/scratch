@@ -63,6 +63,13 @@
    (:date loaded)))
 
 (rf/reg-sub
+ :loaded-comment
+ (fn []
+   (rf/subscribe [:loaded]))
+ (fn [loaded]
+   (:comment loaded)))
+
+(rf/reg-sub
  :errors
  (fn [db]
    (get db :errors [])))
