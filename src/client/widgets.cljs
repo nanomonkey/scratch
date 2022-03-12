@@ -281,7 +281,7 @@
             (for [recipe recipes]
               (if (or (re-find (re-pattern (str "(?i)" @search-string)) (:name recipe))
                       (= "" @search-string))
-                ^{ :key (.indexOf recipes recipe)}
+                ^{:key (.indexOf recipes recipe)}
                 [:li [:a {:href "#"
                           :on-click #(do
                                        (.preventDefault %)
@@ -294,8 +294,7 @@
 ;; Modals ;;
 ;;;;;;;;;;;;
 
-(defn modal-panel
-  [{:keys [child size show?]}]
+(defn modal-panel[{:keys [child size show?]}]
   [:div {:class "modal-wrapper"}
    [:div {:class "modal-backdrop"
           :on-click (fn [event]

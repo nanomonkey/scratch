@@ -111,9 +111,9 @@ ul.search {
     //position: absolute; top: 100%;
 }
 ul.search li {
-    float: none; 
+    //float: none; 
     border-top: 1px solid white; //#6b727c;
-    //border-bottom: 1px solid #575f6a;
+    border-bottom: 1px solid #575f6a;
     position: relative;
 }
 ul.search li a {
@@ -360,7 +360,7 @@ ul.items {
     margin:5%;
 }
 .white-panel strong{
-    display:block;
+    //display:block;
     padding-bottom:10px;
 }
 .blue-panel{

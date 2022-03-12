@@ -1,6 +1,5 @@
 (ns client.views
   (:require [re-frame.core :as rf]
-            [clojure.edn :as edn]
             [reagent.core :as r] 
             [client.subs :as subs]
             [client.widgets :refer [markdown-section 
@@ -73,10 +72,16 @@
                                (reset! text  ""))}
         [:div
          [:label "Reply: " ]
-         [:input {:type "textarea"
-                  :value @text
-                  :on-change #(reset! text (-> % .-target .-value))}]]
-        [:div [:button {:type "submit"} "Post"]]]])))
+         [:textarea{:rows 9
+                    :style {:resize "none"
+                            :width "100%" 
+                            :margin "auto"
+                            :overlfow "auto"}
+                    :value @text
+                    :on-change #(reset! text (-> % .-target .-value))}]]
+        [:div [:button {:type "submit"} "Post"]]
+        [:hr]
+        [:div (markdown-section @text)]]])))
 
 (defn display-post [post-id]
   (let [author (rf/subscribe [:post/author post-id])
@@ -91,18 +96,7 @@
        [:div (.toDateString (js/Date. @timestamp))]
        [:div.author  @(rf/subscribe [:contact/name @author])]
        [:div (markdown-section @text)]
-       [modal-button "Post Comment" "Comment" [comment-form root post-id]]
-       #_(if @comment? 
-         [:div [:input {:type :textarea
-                        :name "comment"
-                        :value @comment
-                        :on-change #(reset! comment (-> % .-target .-value))}]
-          [:div
-           [:button {:on-click #(reset! comment? false)} "Cancel"]
-           [:button {:on-click #(do (rf/dispatch [:reply post-id @comment])
-                                    (reset! comment "")
-                                    (reset! comment? false))} "Post Reply"]]]
-         [:div [:button {:on-click #(reset! comment? (not @comment?))} "Reply"]])
+       [modal-button "Post Comment" "Comment" [comment-form @root post-id]]
        [:div 
         (if (first @replies) [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) @replies))])]])))
 
@@ -137,24 +131,23 @@
         query-reverse? (r/atom false)
         query-limit (r/atom 5)]
     (fn []
-      (let [query {:query 
-                   (into [] (remove nil? [(when @query-map {:$map (edn/read-string @query-map)})
-                                          (when @query-filter {:$filter (edn/read-string @query-filter)})
-                                          (when @query-reduce {:$reduce (edn/read-string @query-reduce)})]))
-                   :limit @query-limit
-                   :reverse @query-reverse?}]
+      (let [query {:query-map @query-map
+                   :query-filter @query-filter
+                   :query-reduce @query-reduce
+                   :limit  @query-limit
+                   :reverse? @query-reverse?}]
         [:form {:on-submit #(do (.preventDefault %) 
                                 (rf/dispatch [:query query]))}
          [:h2 "Query"]
          [:div
           [:label "Map"]
-          [:input {:type "text-area"
+          [:input {:type :textarea
                    :name "query-map"
                    :value @query-map
                    :on-change #(reset! query-map (-> % .-target .-value))}]]
          [:div
           [:label "Filter"]
-          [:input {:type "text-area"
+          [:input {:type :textarea
                    :name "query-filter"
                    :value @query-filter
                    :on-change #(reset! query-filter (-> % .-target .-value))}]]
@@ -166,13 +159,13 @@
                    :on-change #(reset! query-reduce (-> % .-target .-value))}]]
          [:div
           [:label "Reverse"]
-          [:input {:type "radio"
+          [:input {:type :checkbox
                    :name "query-reverse?"
                    :value @query-reverse?
                    :on-change #(reset! query-reverse? (-> % .-target .-value))}]]
          [:div
           [:label "Limit"]
-          [:input {:type "integer"
+          [:input {:type :number
                    :name "query-limit"
                    :value @query-limit
                    :on-change #(reset! query-limit (-> % .-target .-value))}]]     
@@ -185,6 +178,7 @@
    [post]
    [query]
    [:h4 "Feed:"]
+   [:button {:on-click #(rf/dispatch [:clear-feed])} "Clear Feed"]
    (doall
     (for [message @(rf/subscribe [:feed])]
       [:div (str message)]))

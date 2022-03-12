@@ -1,5 +1,6 @@
 (ns client.events
   (:require [re-frame.core :as rf]
+            [clojure.edn :as edn]
             [taoensso.sente  :as sente  :refer (cb-success?)]
             [client.db :as db]
             [client.ws :as ws]))
@@ -191,20 +192,27 @@
 (defonce last-temp-id (atom 0))
 
 (rf/reg-cofx
-  :temp-id 
-  (fn [cofx _]
-    (assoc cofx :temp-id (swap! last-temp-id inc))))
+   :temp-id 
+   (fn [cofx _]
+     (assoc cofx :temp-id (swap! last-temp-id inc))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;
-;; Event Handlers  ;;
+ ;; Event Handlers  ;;
 ;;;;;;;;;;;;;;;;;;;;;
+
 
 (rf/reg-event-fx
  :query
- (fn [cofx [_ query]]
-   {:db (:db cofx)        ;set a spinner?
-    :ssb/query query}))
+ (fn [cofx [_ {:keys [query-map query-filter query-reduce limit reverse?]}]]
+   (let [query {:query (into [] 
+                             (remove nil? [(when query-map {:$map query-map})
+                                           (when query-filter {:$filter (edn/read-string query-filter)})
+                                           (when query-reduce {:$reduce (edn/read-string query-reduce)})]))
+                :limit (edn/read-string limit)
+                :reverse (edn/read-string reverse?)}]
+     {:db (:db cofx)                   ;set a spinner?
+      :ssb/query query})))
 
 (rf/reg-event-fx         
  :load-defaults-localstore
@@ -274,6 +282,11 @@
  :feed
  (fn [db [_ message]]
    (update-in db [:feed] (fnil conj []) message)))
+
+(rf/reg-event-db
+ :clear-feed
+ (fn [db]
+   (assoc-in db [:feed] [])))
 
 (rf/reg-event-db
  :server/account
