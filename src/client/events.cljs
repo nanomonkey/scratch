@@ -138,7 +138,7 @@
 (rf/reg-fx
  :ssb/get-thread 
  (fn [root]
-   (ws/chsk-send! [:ssb/query {:msg [{:$filter {:value {:content {:type "post" :root root}}}}]}] 8000
+   (ws/chsk-send! [:ssb/query {:msg [{:$filter {:value {:content {:type 'post' :root root}}}}]}] 8000
                   (fn [reply]
                     (if (cb-success? reply)
                       (rf/dispatch [:comments [root reply]])
@@ -206,9 +206,10 @@
  :query
  (fn [cofx [_ {:keys [query-map query-filter query-reduce limit reverse?]}]]
    (let [query {:query (into [] 
-                             (remove nil? [(when query-map {:$map query-map})
-                                           (when query-filter {:$filter (edn/read-string query-filter)})
-                                           (when query-reduce {:$reduce (edn/read-string query-reduce)})]))
+                             (remove nil?
+                                     [(when query-filter {:$filter (edn/read-string query-filter)})
+                                      (when query-map {:$map (edn/read-string query-map)})
+                                      (when query-reduce {:$reduce (edn/read-string query-reduce)})]))
                 :limit (edn/read-string limit)
                 :reverse (edn/read-string reverse?)}]
      {:db (:db cofx)                   ;set a spinner?
@@ -746,3 +747,6 @@
  :blob/add-url
  (fn [db [_ blob-id url]]
    (assoc-in db [:blobs blob-id :url] url)))
+
+
+

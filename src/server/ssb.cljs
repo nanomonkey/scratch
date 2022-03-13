@@ -388,7 +388,8 @@
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))
    :get (fn [{:keys [uid msg-id]}] (get-message uid msg-id #(dispatch! :response {:uid uid :message %})))
-   :query (fn [{:keys [uid msg]}](query-drain! uid msg))
+   :query-drain (fn [{:keys [uid msg]}](query-drain! uid msg))
+   :query (fn [{:keys [uid msg]}] (query! uid msg #(dispatch! :feed {:uid uid :message %})))
    :query-explain (fn [{:keys [uid msg]}] (query-explain! uid msg))
    :lookup-name (fn [{:keys [uid id]}] (lookup-name! uid id))
    :add-file (fn [{:keys [uid file]}] (add-blob! uid file))
