@@ -138,20 +138,32 @@
 (rf/reg-fx
  :ssb/get-thread 
  (fn [root]
-   (ws/chsk-send! [:ssb/query {:msg [{:$filter {:value {:content {:type 'post' :root root}}}}]}] 8000
+   (ws/chsk-send! [:ssb/query {:msg [{:$filter {:value {:content {:type "post" :root (str root)}}}}
+                                     {:$map {:id "key"
+                                             :root ["value" "content" "root"]
+                                             :branch ["value" "content" "branch"]
+                                             :timestamp "timestamp"
+                                             :author ["value" "author"] 
+                                             :text ["value" "content" "text"]}}]}] 8000
                   (fn [reply]
                     (if (cb-success? reply)
                       (rf/dispatch [:comments [root reply]])
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
- :ssb/get-recipes
- (fn [topic]
-   (ws/chsk-send! [:ssb/query-collect {:msg [{:$filter {:value {:content {:type topic}}}}]}
+ :ssb/get-type
+ (fn [type]
+   (ws/chsk-send! [:ssb/query-collect {:msg [{:$filter {:value {:content {:type type}}}}
+                                             {:$map {:id "key"
+                                                     :type ["value" "content" "type"]
+                                                     :timestamp "timestamp"
+                                                     :author ["value" "author"] 
+                                                     :content ["value" "content"]}}]}
                    8000
                    (fn [reply]
                      (if (cb-success? reply)
-                       (rf/dispatch [:add-recipes (:recipes reply)])
+                       (doseq [record (:records reply)]
+                         (rf/dispatch [:add-type ((pluralize-keyword type) record)]))
                        (rf/dispatch [:error reply])))])))
 
 (rf/reg-fx
@@ -205,11 +217,11 @@
 (rf/reg-event-fx
  :query
  (fn [cofx [_ {:keys [query-map query-filter query-reduce limit reverse?]}]]
-   (let [query {:query (into [] 
-                             (remove nil?
-                                     [(when query-filter {:$filter (edn/read-string query-filter)})
-                                      (when query-map {:$map (edn/read-string query-map)})
-                                      (when query-reduce {:$reduce (edn/read-string query-reduce)})]))
+   (let [query {:query (into []
+                             (filter #(apply second  %) 
+                                     [{:$filter (edn/read-string query-filter)}
+                                      {:$map (edn/read-string query-map)}
+                                      {:$reduce (edn/read-string query-reduce)}]))
                 :limit (edn/read-string limit)
                 :reverse (edn/read-string reverse?)}]
      {:db (:db cofx)                   ;set a spinner?
