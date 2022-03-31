@@ -149,13 +149,13 @@
 
 ;; Publish to database 
 
-(defn publish! [uid contents]
+(defn publish! [uid contents bus-tag]
   (if-let [^js db (get @db-conns uid)]    
     (.publish db (clj->js contents) 
               (fn [err msg]
                 (if err
                   (dispatch! :error {:uid uid :message err})
-                  (dispatch! :response {:uid uid :message (js->clj msg)}))))
+                  (dispatch! bus-tag {:uid uid :message (js->clj msg)}))))
     (dispatch!  :error {:uid uid :message "Unable to get server with User-id"})))
 
 (defn private-publish! [uid contents recipients]
@@ -358,23 +358,32 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Updatable Records ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (defn get-record [uid record-id]
+;
+; (defn get-record [uid record-id]
 ;;   "obtains root record, and it's updates and returns patched record"
-;;   (let [record (atom {})]
+;;   (let [record (atom {})
+;;         updates (atom [])]
 ;;     (get-message uid record-id 
-;;                  (fn [msg] (if (= :update (get-in [:content :type] msg)))))
+;;                  (fn [msg] (if (= :update (get-in msg [:content :type])) 
+;;                              (update updates conj (get-in msg [:content :changes]))
+;;                              (update record assoc (get-in msg [:content])))))
+    
 ;;     root-id  (if (= (:type record) :update) 
 ;;                (get-in [:content :record] record)
 ;;                record-id)
 ;;     query (clj->js {:query [{:$filter {:value {:content {:type "update" :record root-id}}}}]})
 
 ;;     updates (take! (<query-collect! uid query)))                         
-;;   (edit/patch (:content root) (edit/combine (map :content updates))))
+;;   (edit/patch (:content root) (edit/combine (map #(get-in [:content :changes] %) updates))))
 
-;; (defn update-record [uid record-id update]
-;;   (let [diff (edit/diff (get-record uid record-id) update)]
-;;     (publish! uid {:type "update" :record record-id :update (clj->js diff)})))
+
+;; (defn update-record [uid root previous update]
+;;   (let [diff (edit/diff (get-record uid previous) update)]
+;;     (publish! uid {:type "update" 
+;;                    :root root 
+;;                    :previous previous 
+;;                    :update diff}
+;;               :response)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -384,7 +393,7 @@
 (defonce message-handlers 
   {:ssb-login (fn [{:keys [username password]}] 
                 (swap! db-conns assoc username (start-server username password)))
-   :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"}))
+   :add-message (fn [{:keys [uid msg]}] (publish! uid {:text msg :type "post"} :response))
    :private-message (fn [{:keys [uid msg rcps]}] 
                       (private-publish! uid {:text msg :mentions rcps} rcps))
    :get (fn [{:keys [uid msg-id]}] (get-message uid msg-id #(dispatch! :response {:uid uid :message %})))

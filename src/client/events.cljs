@@ -78,7 +78,7 @@
    (ws/chsk-send! [:ssb/whoami] 10000
                   (fn [reply] 
                     (if (cb-success? reply)
-                      (rf/dispatch [:save-whoami (:id reply)])
+                      (rf/dispatch [:save-id (:id reply)])
                       (rf/dispatch [:error (str reply)]))))))
 
 (rf/reg-fx
@@ -150,6 +150,11 @@
                       (rf/dispatch [:comments [root reply]])
                       (rf/dispatch [:error reply]))))))
 
+
+(defn flatten-record [record]
+  (let [content (:content record)]
+    (merge content (dissoc record :content))))
+
 (rf/reg-fx
  :ssb/get-type
  (fn [type]
@@ -163,8 +168,9 @@
                    (fn [reply]
                      (if (cb-success? reply)
                        (doseq [record (:records reply)]
-                         (rf/dispatch [:add-type ((pluralize-keyword type) record)]))
+                         (rf/dispatch [:add-type [type (flatten-record record)]]))
                        (rf/dispatch [:error reply])))])))
+
 
 (rf/reg-fx
  :ssb/serve-blob
@@ -210,15 +216,20 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;
- ;; Event Handlers  ;;
+;; Event Handlers  ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
+(rf/reg-event-db 
+ :add-type 
+ (fn [db [_ type records]]
+   (let [type-key (pluralize-keyword type)]
+     (update-in db [type-key] (merge (type-key db) index-by :id records)))))
 
 (rf/reg-event-fx
  :query
  (fn [cofx [_ {:keys [query-map query-filter query-reduce limit reverse?]}]]
    (let [query {:query (into []
-                             (filter #(apply second  %) 
+                             (filter #(apply second %)                            ; removes nil values
                                      [{:$filter (edn/read-string query-filter)}
                                       {:$map (edn/read-string query-map)}
                                       {:$reduce (edn/read-string query-reduce)}]))
@@ -258,7 +269,9 @@
  (fn [cofx [_ account state]]
    {:db (assoc-in (:db cofx) [:server] {:account  account
                                         :status state})
-    :dispatch [:set-active-panel :recipe]}))
+    :dispatch-n [[:get-id]
+                 [:get-recipes]
+                 [:set-active-panel :recipe]]}))
 
 (rf/reg-event-fx
  :login-failed
@@ -266,8 +279,8 @@
    {:db (assoc-in (:db cofx) [:server :account] "login failed")}))
 
 (rf/reg-event-fx
- :ssb/whoami
- (fn [cofx [_ username password]]
+ :get-id
+ (fn [cofx _]
    {:ssb/whoami []}))
 
 (rf/reg-event-fx
@@ -287,9 +300,9 @@
    (update-in db [:errors] (fnil conj []) error)))
 
 (rf/reg-event-db
- :save-whoami 
+ :save-id 
  (fn [db [_ id]]
-   (assoc-in db [:server :whoami] id)))
+   (assoc-in db [:server :id] id)))
 
 (rf/reg-event-db
  :feed
@@ -340,32 +353,25 @@
 (rf/reg-event-db
  :load-recipe 
  (fn [db [_ recipe-id]]
-   (-> db 
-       (assoc-in [:active-panel] :recipe)
-       (assoc-in [:loaded :recipe] recipe-id))))
+   (assoc-in db [:loaded :recipe] recipe-id)))
 
 (rf/reg-event-db
- :loaded-recipe
- (fn [db [_ id]]
-  (assoc-in db [:loaded :recipe] id)))
-
-(rf/reg-event-db
- :loaded-location
+ :load-location
  (fn [db [_ id]]
    (assoc-in db [:loaded :location] id)))
 
 (rf/reg-event-db
- :loaded-supplier
+ :load-supplier
  (fn [db [_ id]]
    (assoc-in db [:loaded :supplier] id)))
 
 (rf/reg-event-db
- :loaded-date
+ :load-date
  (fn [db [_ date]]
    (assoc-in db [:loaded :date] date)))
 
 (rf/reg-event-db
- :loaded-comment
+ :load-comment
  (fn [db [_ root]]
    (assoc-in db [:loaded :comment] root)))
 
@@ -378,6 +384,11 @@
 ;;;;;;;;;;;;;;
 ;;  Recipes  ;
 ;;;;;;;;;;;;;;
+
+(rf/reg-event-fx
+ :get-recipes
+ (fn [cofx _]
+   {:ssb/get-type [:recipe]}))
 
 (rf/reg-event-db
  :add-recipes

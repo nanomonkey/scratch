@@ -177,6 +177,15 @@
    (map key (:recipes db))))
 
 (rf/reg-sub
+ :recipe/status
+ (fn [db [_ recipe-id]]
+   (if (integer? recipe-id)            ; only temp-ids should be an integer
+     :new
+     (if (> 0 (count @(rf/subscribe [:updates recipe-id])))
+       :dirty
+       :saved))))
+
+(rf/reg-sub
  :recipe/names
  (fn [db]
    (map val (:recipes db))))

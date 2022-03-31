@@ -509,7 +509,7 @@
       [:div.column.left
        [:div [recipe-search]]]
       [:div.column.middle
-       [:a.right {:href "#" :on-click #(rf/dispatch [:loaded-comment recipe-id])} 
+       [:a.right {:href "#" :on-click #(rf/dispatch [:load-comment recipe-id])} 
         [comment-icon (count @(rf/subscribe [:comments recipe-id]))]]
        [:h1 [inline-editor @(rf/subscribe [:recipe/name recipe-id])
              {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]] 
@@ -535,7 +535,7 @@
         (for [[name id] @(rf/subscribe [:supplier/source])]
           (if (not (= id @supplier-id))
             [:div [:a.supplier {:href "#"
-                                :on-click #(rf/dispatch [:loaded-supplier id])}
+                                :on-click #(rf/dispatch [:load-supplier id])}
                    name]])))]
       [:div.column.middle
        [:div
@@ -583,7 +583,7 @@
             [:th {:class month} (when (> 8 (dt/day (first week))) month)])
           (for [date week]
             [:td {:class (if (=date date today) "today" (get months (dec (dt/month date))))}
-             [:a {:href "#" :on-click #(rf/dispatch [:loaded-date date])} (dt/day date)]])])]]]))
+             [:a {:href "#" :on-click #(rf/dispatch [:load-date date])} (dt/day date)]])])]]]))
 
 
 (defn time-cells [rows]
@@ -663,9 +663,6 @@
      [:div "Logged in as: " @(rf/subscribe [ :server/account])]
      [:div "Connection status: " @(rf/subscribe [:server/status])]
      [:div "ID: " @(rf/subscribe [:server/id])] 
-     [:div [:button {:on-click #(do
-                                    (.preventDefault %)
-                                    (rf/dispatch [:get-id]))} "Get Id"]]
      [:h3 "Default Names"]
      [:h3 "Recipes"]
      [:h3 "Products"]
@@ -675,30 +672,6 @@
      [:h3 "Themes"]]
     [:div.column.right]]])
 
-(defmacro left-bar [mode loaded]
-  (let [source (str ":" mode "/source")]
-    `[:div.column.left 
-      (doall
-       (for [[name id] @(rf/subscribe ~source)]
-         (if (not (= id ~loaded))
-           [:div [:a {:href "#"
-                      :on-click #(rf/dispatch [:loaded id])}
-                  name]])))]))
-
-(comment
-  (defmacro header [mode id  &fields]
-    (let [get-name (str ":" mode "/name")
-          update-name (str ":" mode "/update-name")]
-      `[:div.column.middle
-        [:div
-         [:h1 [inline-editor @(rf/subscribe [~get-name ~@id])
-               {:on-update #(rf/dispatch [~update-name id %])}]]
-         (for [field in fields]
-           (let [sub (str ":" mode "/" field)
-                 dis (str ":" mode "/update-" field)])
-           `[inline-editor @(rf/subscribe [~sub ~id])
-             {:on-update #(rf/dispatch [~dis id %])
-              :markdown? true}])]])))
 
 (defn inventory-view []
   (let [location-id (rf/subscribe [:loaded-location])]
@@ -711,7 +684,7 @@
         (for [[name id] @(rf/subscribe [:location/source])]
           (if (not (= id @location-id))
             [:div [:a.location {:href "#"
-                                :on-click #(rf/dispatch [:loaded-location id])}
+                                :on-click #(rf/dispatch [:load-location id])}
                    name]])))
        ]
       [:div.column.middle

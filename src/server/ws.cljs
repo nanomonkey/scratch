@@ -190,7 +190,7 @@
   (println "ping"))  ;;TODO: print "." without flush?
 
 (defmethod -event-msg-handler
-  :ssb/post
+  :ssb/post  
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (let [msg (:msg ?data)]
     (debugf "Post event: %s" event)
@@ -203,7 +203,7 @@
   (let [type (:type ?data)
         content (:content ?data)]
     ;(dispatch! :create {:uid uid :type type :content content})
-    (ssb/publish! uid (merge content {:type type}))))
+    (ssb/publish! uid (merge content {:type type}) :response)))
 
 (defmethod -event-msg-handler
   :ssb/update
@@ -211,7 +211,7 @@
   (let [id (:id ?data)
         updates (:updates ?data)]
     ;(dispatch! :update {:uid uid :id :changes changes})
-    (ssb/publish! uid {:type "update" :root id :updates updates})))
+    (ssb/publish! uid {:type "update" :root id :updates updates} :response)))
 
 (defmethod -event-msg-handler
   :ssb/tombstone
@@ -219,7 +219,7 @@
   (let [type (:type ?data)
         content (:content ?data)]
     ;(dispatch! :tombstone {:uid uid :id id})
-    (ssb/publish! uid {:type "tombstone" :root id})))
+    (ssb/publish! uid {:type "tombstone" :root id} :response)))
 
 (defmethod -event-msg-handler
   :ssb/query
