@@ -3,6 +3,7 @@
             [server.message-bus :refer (dispatch! handle!)]
             [goog.object :as gobj]
             [clojure.string :as str]
+            [clojure.data :as data]
             ["ssb-server" :as ssb-server]
             ;["ssb-server/plugins/master" :as ssb-master]
             ["ssb-gossip" :as ssb-gossip]
@@ -205,13 +206,13 @@
 
 (defn db-collect
   "collects values from source-fn which is passed a db connection and returns an array of objects"
-  ([uid source-fn cb]
-   (if-let [^js db (get @db-conns uid)]
-           (.collect pull (fn [err ary] 
-                            (if err
-                              (dispatch! :error {:uid uid :message (parse-json err)})
-                              (cb (parse-json ary))))))
-     (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
+  [uid source-fn cb]
+  (if-let [^js db (get @db-conns uid)]
+    (.collect pull (fn [err ary] 
+                     (if err
+                       (dispatch! :error {:uid uid :message (parse-json err)})
+                       (cb (parse-json ary)))))
+    (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
 
 (defn db-drain 
   ([uid source-fn] (db-drain uid source-fn :feed))
@@ -358,7 +359,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Updatable Records ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
-;
+
 ; (defn get-record [uid record-id]
 ;;   "obtains root record, and it's updates and returns patched record"
 ;;   (let [record (atom {})
@@ -385,6 +386,51 @@
 ;;                    :update diff}
 ;;               :response)))
 
+;; (defn upsert [uid record]                            
+;;   (let [root (:root record)                          
+;;         previous (:previous record)                  
+;;         prev-records (go (<! (prev-chan uid root)))] 
+;;     (if-not (tombstoned? prev-records)               
+;;       (let [last-state                               
+;;             dif (edit/diff )])                       
+;;       )))                                          
+
+(defn tombstoned? [records]
+  (some #(= "tombstone" (:type %)) records))
+
+(defn <records [uid id]
+  "returns channel containing all records for an id, including: initial creation, updates and tombstones"
+  (let [ch (chan 1)]
+    (query! uid (clj->js {:query [{:$filter {:value {:content {:id id}}}}
+                                  {:$map {:key "key"
+                                          :timestamp "timestamp"
+                                          :author ["value" "author"] 
+                                          :content ["value" "content"]}}]}) 
+            (fn [arr] (put! ch arr)))
+    ch))
+
+(defn saved-state [uid id]
+  "Returns the final state of a record."
+  (let [state (atom {})
+        records (atom {})]
+    (take! (<records uid id) #(reset! records %))
+    (if (tombstoned? records)
+      (reset! state {:id id :tombstoned? true})
+      (doseq [record (map :content @records)]
+        (reset! state (merge @state record))))
+    @state))
+
+(defn save-diff [uid id current-record]
+ "calculate difference between current-record given and the saved state"
+  (let [last-state (saved-state uid id)
+        type (:type current-record)
+        diff (second (data/diff last-state current-record))]
+    (if-not (or (tombstoned? last-state) (nil? diff))
+      (let [message (merge {:type type :id id} diff)]
+        (publish! uid message :response))
+      (dispatch! :error {:uid uid :message (str "No diff saved for id " id)}))))
+
+ 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message bus Handlers ;;

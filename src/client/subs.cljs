@@ -128,6 +128,22 @@
    (get-in db [:items id])))
 
 (rf/reg-sub
+ :item/status   
+ (fn [[_ id]]                       ;TODO figure out if (get-in ...) would be more appropriate
+   (rf/subscribe [:item id]))
+ (fn [item [_ id]]
+   (:status item)))
+
+(rf/reg-sub
+ :item/record
+ (fn [[_ id]]
+   (rf/subscribe [:item id]))
+ (fn [item _]
+   (-> item
+       (dissoc :status)
+       (assoc :type "item"))))
+
+(rf/reg-sub
  :item/name
  (fn [db [_ id]]
    (get-in db [:items id :name])))

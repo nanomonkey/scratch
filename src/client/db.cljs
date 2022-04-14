@@ -38,7 +38,13 @@
                  :text "Ahoy matey?!"
                  :root "r1"
                  :branch "p1"
-                 :author "a3"}}
+                 :author "a3"}
+           "p4" {:id "p4"
+                 :timestamp 143333
+                 :text ">Ahoy matey?!\npirates?"
+                 :root "r1"
+                 :branch "p3"
+                 :author "a2"}}
    :recipes {"r1" {:id "r1"
                    :name "Stone Soup"
                    :description "Soup made by friends"

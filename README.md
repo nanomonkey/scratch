@@ -30,7 +30,7 @@ shadow-cljs watch client
 Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 
 ### Emacs
-In Emacs connect with Cider to Clojurescript REPL use 'M-x cider-connect', 
+In Emacs connect with Cider to Clojurescript REPL use 'M-x cider-connect',
 then run the following at the repl:
 ```
 (shadow.cljs.devtools.api/nrepl-select :server) 

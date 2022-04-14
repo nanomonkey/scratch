@@ -1,6 +1,6 @@
 ;; shadow-cljs configuration
 {:source-paths ["src"]
- :dependencies [[cider/cider-nrepl "0.23.0-SNAPSHOT"]
+ :dependencies [[cider/cider-nrepl "0.28.3"]
                 [com.taoensso/timbre      "4.10.0"] ;  "5.1.2"
                 ;[com.taoensso/encore "3.21.0"]  
                 [com.taoensso/sente       "1.11.0"] ; "1.16.2" 

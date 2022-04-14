@@ -197,6 +197,13 @@
     (debugf "ev-msg: %s" ev-msg)
     (dispatch! :add-message {:uid uid :msg msg})))
 
+;; (defmethod -event-msg-handler
+;;   :ssb/upsert
+;;   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
+;;   (let [record (:record ?data)]
+;;     (let [key (ssb/upsert! uid record)]
+;;          (when ?reply-fn (?reply-fn {:key key})))))
+
 (defmethod -event-msg-handler
   :ssb/create
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]

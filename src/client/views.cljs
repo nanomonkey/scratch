@@ -509,6 +509,10 @@
       [:div.column.left
        [:div [recipe-search]]]
       [:div.column.middle
+       (if (not= "saved" @(rf/subscribe [:recipe/status recipe-id]))
+         [:a.right {:href "#" 
+                    :on-click #(rf/dispatch [:recipe/publish recipe-id])
+                    :style {:border "solid blue"}} "Save Recipe"])
        [:a.right {:href "#" :on-click #(rf/dispatch [:load-comment recipe-id])} 
         [comment-icon (count @(rf/subscribe [:comments recipe-id]))]]
        [:h1 [inline-editor @(rf/subscribe [:recipe/name recipe-id])

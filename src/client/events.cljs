@@ -75,7 +75,7 @@
 (rf/reg-fx
  :ssb/whoami
  (fn []
-   (ws/chsk-send! [:ssb/whoami] 10000
+   (ws/chsk-send! [:ssb/whoami] 5000
                   (fn [reply] 
                     (if (cb-success? reply)
                       (rf/dispatch [:save-id (:id reply)])
@@ -84,7 +84,7 @@
 (rf/reg-fx
  :ssb/lookup-name
  (fn [id]
-   (ws/chsk-send! [:ssb/lookup-name id] 1500
+   (ws/chsk-send! [:ssb/lookup-name id] 5000
                   (fn [reply]
                     (if (cb-success? reply)
                       (rf/dispatch [:contact/name id (:name reply)])
@@ -93,7 +93,7 @@
 (rf/reg-fx
  :ssb/publish
  (fn [content]
-   (ws/chsk-send! [:ssb/publish content] 15000
+   (ws/chsk-send! [:ssb/publish content] 5000
                   (fn [reply] 
                     (if (cb-success? reply) 
                       (rf/dispatch [:published reply])
@@ -102,10 +102,19 @@
 (rf/reg-fx
  :ssb/create-record
  (fn [content created-fn]
-   (ws/chsk-send! [:ssb/create content] 55000
+   (ws/chsk-send! [:ssb/create content] 8000
                   (fn [reply] 
                     (if (cb-success? reply) 
                       (created-fn reply)
+                      (rf/dispatch [:error reply]))))))
+
+(rf/reg-fx
+ :ssb/upsert
+ (fn [record upserted-fn]
+   (ws/chsk-send! [:ssb/upsert record] 8000
+                  (fn [reply]
+                    (if (cb-success? reply)
+                      (upserted-fn (:key reply))
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
@@ -214,6 +223,10 @@
    (fn [cofx _]
      (assoc cofx :temp-id (swap! last-temp-id inc))))
 
+(rf/reg-cofx
+ :uuid
+ (fn [cofx _]
+   (assoc cofx :uuid (random-uuid))))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Event Handlers  ;;
@@ -269,9 +282,9 @@
  (fn [cofx [_ account state]]
    {:db (assoc-in (:db cofx) [:server] {:account  account
                                         :status state})
-    :dispatch-n [[:get-id]
-                 [:get-recipes]
-                 [:set-active-panel :recipe]]}))
+    :fx [[:dispatch [:set-active-panel :recipe]]
+         [:dispatch [:get-id]]
+         [:dispatch [:get-recipes]]]}))
 
 (rf/reg-event-fx
  :login-failed
@@ -395,6 +408,43 @@
  (fn [db [_ recipes]] 
    (update-in db [:recipes] (merge (:recipes db) (index-by :id recipes)))))
 
+(rf/reg-event-fx
+ :recipe/publish
+ (fn [cofx [_ recipe-id]]
+   (let [status  @(rf/subscribe [:recipe/status recipe-id])
+         task-list @(rf/subscribe [:recipe/tasks recipe-id])
+         record (dissoc @(rf/subscribe [:recipe recipe-id]) :id)]
+     (if (reduce   ;check to see if tasks are all saved
+          (fn [task] (if (not= "saved" @(rf/subscribe [:task/status task]))
+                       (reduced false)
+                       true)) 
+          task-list)
+       (if (= :new status)                                   
+         {:db (:db cofx)
+          :ssb/create-record [(merge {:type "recipe"} record)
+                              (fn [reply] (let [new-id (:id reply)]
+                                            (rf/dispatch [:recipe/updated recipe-id new-id])))]}
+         (println "Trying to save" recipe-id "with status" status))
+       (println "Tasks need to be saved first")))))
+
+
+(rf/reg-event-fx
+ :recipe/update
+ (fn [cofx id]
+   (let [update-keys @(rf/subscribe [:updates id])
+         changes (select-keys update-keys @(rf/subscribe [:recipe id]))]
+     {:db (:db cofx) 
+      :ssb/update-record {:id id
+                          :content changes}}))
+)
+(rf/reg-event-db
+ :recipe/updated
+ (fn [db [_ old-id new-id]]
+   (let [recipe @(rf/subscribe [:loaded-recipe])]
+     (-> db
+         (update-in [:recipes] assoc new-id (merge @(rf/subscribe [:recipes old-id]) {:id new-id}))
+         (update-in [:recipes] dissoc old-id)))))
+
 (rf/reg-event-db
  :recipe/update-name
  (fn [db [_ recipe-id name]]
@@ -447,19 +497,19 @@
 
 (rf/reg-event-fx
  :recipe/new-task
- [(rf/inject-cofx :temp-id)]
+ [(rf/inject-cofx :uuid)]
  (fn [cofx [_ recipe name]]
-   (let [id (:temp-id cofx)]
-     {:db (update (:db cofx) :tasks assoc id {:id id :name name})
+   (let [id (:uuid cofx)]
+     {:db (update (:db cofx) :tasks assoc id {:root id :dirty true :name name})
       :dispatch [:recipe/add-task recipe id]})))
 
 (rf/reg-event-fx
  :recipe/new
- [(rf/inject-cofx :temp-id)]
+ [(rf/inject-cofx :uuid)]
  (fn [cofx [_ name]]
-   (let [id (:temp-id cofx)]
-     {:db (update id :recipes assoc id {:id id
-                                        :statis :new
+   (let [id (:uuid cofx)]
+     {:db (update id :recipes assoc id {:root id
+                                        :dirty true
                                         :name name
                                         :description "..."
                                         :tags #{}
@@ -473,13 +523,22 @@
 
 (rf/reg-event-fx
  :item/new
- [(rf/inject-cofx :temp-id)]
+ [(rf/inject-cofx :uuid)]
  (fn [cofx [_ name description tags]]
-   (let [id (:temp-id cofx)]
-     {:db (update (:db cofx) :items assoc id {:id id 
+   (let [id (:uuid cofx)]
+     {:db (update (:db cofx) :items assoc id {:root id
+                                              :status :new
                                               :name name 
                                               :description description
                                               :tags tags})})))
+
+(rf/reg-event-fx
+ :item/save
+ (fn [cofx [_ id]]
+   (let [status @(rf/subscribe [:item/status id])
+         record @(rf/subscribe [:item/record id])]
+     {:db (update-in (:db cofx) [:items id] assoc :status :saving)
+      :ssb/upsert [record]})))
 
 ;;;;;;;;;;;
 ;  Units  ;
@@ -487,10 +546,10 @@
 
 (rf/reg-event-fx
  :unit/new
- [(rf/inject-cofx :temp-id)]
+ [(rf/inject-cofx :uuid)]
  (fn [cofx [_ name abbrev type]]
-   (let [id (:temp-id cofx)]
-     {:db (update (:db cofx) :units assoc id {:id id 
+   (let [id (:uuid cofx)]
+     {:db (update (:db cofx) :units assoc id {:root id 
                                               :name name 
                                               :abbrev abbrev 
                                               :type type})})))
