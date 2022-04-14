@@ -401,7 +401,7 @@
 (defn <records [uid id]
   "returns channel containing all records for an id, including: initial creation, updates and tombstones"
   (let [ch (chan 1)]
-    (query! uid (clj->js {:query [{:$filter {:value {:content {:id id}}}}
+    (query! uid (clj->js {:query [{:$filter {:value {:content {:id id}}}} ;:value {:sequence {:$lt max-seq}}
                                   {:$map {:key "key"
                                           :timestamp "timestamp"
                                           :author ["value" "author"] 
@@ -414,14 +414,39 @@
   (let [state (atom {})
         records (atom {})]
     (take! (<records uid id) #(reset! records %))
-    (if (tombstoned? records)
+    (if (tombstoned? @records)
       (reset! state {:id id :tombstoned? true})
       (doseq [record (map :content @records)]
         (reset! state (merge @state record))))
     @state))
 
+(defn <-records [uid id max-seq]
+  "returns channel containing all records for an id, including: initial creation, updates and tombstones"
+  (let [ch (chan 1)]
+    (query! uid (clj->js {:query [{:$filter {:value (if max-seq 
+                                                      {:content {:id id} :sequence {:$lt max-seq}}
+                                                      {:content {:id id}})}} 
+                                  {:$map {:key "key"
+                                          :timestamp "timestamp"
+                                          :author ["value" "author"] 
+                                          :content ["value" "content"]}}]}) 
+            (fn [arr] (put! ch arr)))
+    ch))
+
+(defn state-at-seq 
+  ([uid id] (state-at-seq uid id false))
+  ([uid id max-seq]
+   (let [state (atom {})
+         records (atom {})]
+     (take! (<-records uid id max-seq) #(reset! records %))
+     (if (tombstoned? @records)
+       (reset! state {:id id :tombstoned? true})
+       (doseq [record (map :content @records)]
+         (reset! state (merge @state record))))
+     @state)))
+
 (defn save-diff [uid id current-record]
- "calculate difference between current-record given and the saved state"
+ "calculate difference between current-record given and the saved state and publish it if the record isn't alreay tombstoned, or no difference found"
   (let [last-state (saved-state uid id)
         type (:type current-record)
         diff (second (data/diff last-state current-record))]
