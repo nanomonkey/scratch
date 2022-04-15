@@ -360,71 +360,14 @@
 ;; Updatable Records ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-; (defn get-record [uid record-id]
-;;   "obtains root record, and it's updates and returns patched record"
-;;   (let [record (atom {})
-;;         updates (atom [])]
-;;     (get-message uid record-id 
-;;                  (fn [msg] (if (= :update (get-in msg [:content :type])) 
-;;                              (update updates conj (get-in msg [:content :changes]))
-;;                              (update record assoc (get-in msg [:content])))))
-    
-;;     root-id  (if (= (:type record) :update) 
-;;                (get-in [:content :record] record)
-;;                record-id)
-;;     query (clj->js {:query [{:$filter {:value {:content {:type "update" :record root-id}}}}]})
-
-;;     updates (take! (<query-collect! uid query)))                         
-;;   (edit/patch (:content root) (edit/combine (map #(get-in [:content :changes] %) updates))))
-
-
-;; (defn update-record [uid root previous update]
-;;   (let [diff (edit/diff (get-record uid previous) update)]
-;;     (publish! uid {:type "update" 
-;;                    :root root 
-;;                    :previous previous 
-;;                    :update diff}
-;;               :response)))
-
-;; (defn upsert [uid record]                            
-;;   (let [root (:root record)                          
-;;         previous (:previous record)                  
-;;         prev-records (go (<! (prev-chan uid root)))] 
-;;     (if-not (tombstoned? prev-records)               
-;;       (let [last-state                               
-;;             dif (edit/diff )])                       
-;;       )))                                          
-
 (defn tombstoned? [records]
   (some #(= "tombstone" (:type %)) records))
 
-(defn <records [uid id]
-  "returns channel containing all records for an id, including: initial creation, updates and tombstones"
-  (let [ch (chan 1)]
-    (query! uid (clj->js {:query [{:$filter {:value {:content {:id id}}}} ;:value {:sequence {:$lt max-seq}}
-                                  {:$map {:key "key"
-                                          :timestamp "timestamp"
-                                          :author ["value" "author"] 
-                                          :content ["value" "content"]}}]}) 
-            (fn [arr] (put! ch arr)))
-    ch))
-
-(defn saved-state [uid id]
-  "Returns the final state of a record."
-  (let [state (atom {})
-        records (atom {})]
-    (take! (<records uid id) #(reset! records %))
-    (if (tombstoned? @records)
-      (reset! state {:id id :tombstoned? true})
-      (doseq [record (map :content @records)]
-        (reset! state (merge @state record))))
-    @state))
-
-(defn <-records [uid id max-seq]
+(defn <records [uid id max-seq]
   "returns channel containing all records for an id, including: initial creation, updates and tombstones"
   (let [ch (chan 1)]
     (query! uid (clj->js {:query [{:$filter {:value (if max-seq 
-                                                      {:content {:id id} :sequence {:$lt max-seq}}
+                                                      {:content {:id id} :sequence {:$lte max-seq}}
                                                       {:content {:id id}})}} 
                                   {:$map {:key "key"
                                           :timestamp "timestamp"
@@ -433,29 +376,30 @@
             (fn [arr] (put! ch arr)))
     ch))
 
-(defn state-at-seq 
-  ([uid id] (state-at-seq uid id false))
+(defn saved-state 
+  ([uid id] (saved-state uid id false))
   ([uid id max-seq]
    (let [state (atom {})
          records (atom {})]
-     (take! (<-records uid id max-seq) #(reset! records %))
+     (take! (<records uid id max-seq) #(reset! records %))
      (if (tombstoned? @records)
        (reset! state {:id id :tombstoned? true})
        (doseq [record (map :content @records)]
          (reset! state (merge @state record))))
      @state)))
 
-(defn save-diff [uid id current-record]
+(defn upsert! [uid record]
  "calculate difference between current-record given and the saved state and publish it if the record isn't alreay tombstoned, or no difference found"
-  (let [last-state (saved-state uid id)
-        type (:type current-record)
-        diff (second (data/diff last-state current-record))]
-    (if-not (or (tombstoned? last-state) (nil? diff))
-      (let [message (merge {:type type :id id} diff)]
-        (publish! uid message :response))
-      (dispatch! :error {:uid uid :message (str "No diff saved for id " id)}))))
-
- 
+  (let [id (:id record)
+        last-state (saved-state uid id)
+        type (:type record)
+        diff (second (data/diff last-state record))]
+    (if-not (tombstoned? last-state)
+      (if diff
+        (let [message (merge {:type type :id id} diff)]
+          (publish! uid message :response))
+        (dispatch! :error {:uid uid :message (str "No diff to save." id)}))
+      (dispatch! :error {:uid uid :message (str "Record already tombstoned." id)}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message bus Handlers ;;

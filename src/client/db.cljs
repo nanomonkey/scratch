@@ -41,7 +41,7 @@
                  :author "a3"}
            "p4" {:id "p4"
                  :timestamp 143333
-                 :text ">Ahoy matey?!\npirates?"
+                 :text ">Ahoy matey?! /n pirates?"
                  :root "r1"
                  :branch "p3"
                  :author "a2"}}
