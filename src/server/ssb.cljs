@@ -389,7 +389,8 @@
      @state)))
 
 (defn upsert! [uid record]
- "calculate difference between current-record given and the saved state and publish it if the record isn't alreay tombstoned, or no difference found"
+ "Calculate difference between record given and the saved state,
+  then publishs a diff if the record isn't alreay tombstoned."
   (let [id (:id record)
         last-state (saved-state uid id)
         type (:type record)

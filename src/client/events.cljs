@@ -114,7 +114,7 @@
    (ws/chsk-send! [:ssb/upsert record] 8000
                   (fn [reply]
                     (if (cb-success? reply)
-                      (upserted-fn (:key reply))
+                      (upserted-fn (:response reply))
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
@@ -226,7 +226,7 @@
 (rf/reg-cofx
  :uuid
  (fn [cofx _]
-   (assoc cofx :uuid (random-uuid))))
+   (assoc cofx :uuid (str (random-uuid)))))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Event Handlers  ;;
@@ -366,7 +366,9 @@
 (rf/reg-event-db
  :load-recipe 
  (fn [db [_ recipe-id]]
-   (assoc-in db [:loaded :recipe] recipe-id)))
+   (-> db
+       (assoc-in [:loaded :recipe] recipe-id)
+       (assoc-in [:loaded :comment] recipe-id))))
 
 (rf/reg-event-db
  :load-location
@@ -409,7 +411,15 @@
    (update-in db [:recipes] (merge (:recipes db) (index-by :id recipes)))))
 
 (rf/reg-event-fx
- :recipe/publish
+ :recipe/save
+ (fn [cofx [_ recipe-id]]
+   (if @(rf/subscribe [:recipe/dirty? recipe-id])
+     (let [record  @(rf/subscribe [:recipe/record recipe-id])] 
+       {:db (:db cofx)
+        :ssb/upsert [record (fn [reply] (rf/dispatch [:recipe/updated recipe-id]))]}))))
+
+(rf/reg-event-fx
+ :recipe/publish                          ;;TODO Remove, not using?
  (fn [cofx [_ recipe-id]]
    (let [status  @(rf/subscribe [:recipe/status recipe-id])
          task-list @(rf/subscribe [:recipe/tasks recipe-id])
@@ -435,8 +445,8 @@
          changes (select-keys update-keys @(rf/subscribe [:recipe id]))]
      {:db (:db cofx) 
       :ssb/update-record {:id id
-                          :content changes}}))
-)
+                          :content changes}})))
+
 (rf/reg-event-db
  :recipe/updated
  (fn [db [_ old-id new-id]]
@@ -500,7 +510,7 @@
  [(rf/inject-cofx :uuid)]
  (fn [cofx [_ recipe name]]
    (let [id (:uuid cofx)]
-     {:db (update (:db cofx) :tasks assoc id {:root id :dirty true :name name})
+     {:db (update (:db cofx) :tasks assoc id {:id id :status :new :name name})
       :dispatch [:recipe/add-task recipe id]})))
 
 (rf/reg-event-fx
@@ -508,8 +518,8 @@
  [(rf/inject-cofx :uuid)]
  (fn [cofx [_ name]]
    (let [id (:uuid cofx)]
-     {:db (update id :recipes assoc id {:root id
-                                        :dirty true
+     {:db (update id :recipes assoc id {:id id
+                                        :status :new
                                         :name name
                                         :description "..."
                                         :tags #{}
@@ -526,8 +536,8 @@
  [(rf/inject-cofx :uuid)]
  (fn [cofx [_ name description tags]]
    (let [id (:uuid cofx)]
-     {:db (update (:db cofx) :items assoc id {:root id
-                                              :status :new
+     {:db (update (:db cofx) :items assoc id {:id id
+                                              :dirty? true
                                               :name name 
                                               :description description
                                               :tags tags})})))
@@ -535,10 +545,10 @@
 (rf/reg-event-fx
  :item/save
  (fn [cofx [_ id]]
-   (let [status @(rf/subscribe [:item/status id])
-         record @(rf/subscribe [:item/record id])]
-     {:db (update-in (:db cofx) [:items id] assoc :status :saving)
-      :ssb/upsert [record]})))
+   (when @(rf/subscribe [:item/dirty? id])
+     (let [record @(rf/subscribe [:item/record id])]
+       {:db (update-in (:db cofx) [:items id] assoc :status :saving)
+        :ssb/upsert [record]}))))
 
 ;;;;;;;;;;;
 ;  Units  ;
@@ -561,14 +571,15 @@
 (rf/reg-event-fx
  :task/save
  (fn [cofx [_ id]]
-   (let [status  @(rf/subscribe [:task/status id])
-         record (dissoc @(rf/subscribe [:task id]) :id)]
-     (if (= :new status)
+   (let [record  @(rf/subscribe [:task/record id])]
+     (if @(rf/subscribe [:task/dirty? id])
        {:db (:db cofx)
-        :ssb/create-record [(merge {:type "task"} record)
-                            (fn [reply] (let [new-id (:id reply)]
-                                          (rf/dispatch [:task/updated id new-id])))]}
-       (println "Trying to save" id "with status" status)))))
+        :ssb/upsert [record (fn [reply] (rf/dispatch [:task/saved id]))]}))))
+
+(rf/reg-event-db
+ :task/saved
+ (fn [db [_ id]]
+   (update-in db [:tasks id] assoc :status :saved)))
 
 (rf/reg-event-fx
  :task/update
@@ -797,10 +808,10 @@
 (rf/reg-event-fx
  :post-reply
  (fn [cofx [_ root branch text]]
-   {:ssb/create-record (remove-nils {:type "post" 
-                                     :root root
-                                     :branch branch
-                                     :text text})}))
+   {:ssb/create-record [(remove-nils {:type "post" 
+                                      :root root
+                                      :branch branch
+                                      :text text})]}))
 
 (rf/reg-event-fx
  :private-post

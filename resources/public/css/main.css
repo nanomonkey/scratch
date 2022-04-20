@@ -113,7 +113,7 @@ ul.search {
 ul.search li {
     //float: none; 
     border-top: 1px solid white; //#6b727c;
-    border-bottom: 1px solid #575f6a;
+    //border-bottom: 1px solid #575f6a;
     position: relative;
 }
 ul.search li a {

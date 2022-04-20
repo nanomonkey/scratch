@@ -21,7 +21,13 @@
                     :name "Carrol"}
               "a4" {:id "a4"
                     :name "Doug"}}
-   :posts {"p1" {:id "p1"
+   :posts {"p01" {:id "p01"
+                 :timestamp 122456
+                 :text "This recipe looks nice."
+                 :root "r1"
+                 :branch "r1"
+                 :author "a3"}
+           "p1" {:id "p1"
                  :timestamp 123456
                  :text "hello world"
                  :root "r1"
@@ -35,13 +41,13 @@
                  :author "a2"}
            "p3" {:id "p3"
                  :timestamp 133333
-                 :text "Ahoy matey?!"
+                 :text "Ahoy matey!"
                  :root "r1"
                  :branch "p1"
                  :author "a3"}
            "p4" {:id "p4"
                  :timestamp 143333
-                 :text ">Ahoy matey?! /n pirates?"
+                 :text ">Ahoy matey! \n\n pirates?!"
                  :root "r1"
                  :branch "p3"
                  :author "a2"}}
@@ -64,17 +70,16 @@
                    :name "Pizza Dough"
                    :description "Pulled from varasanos.com"
                    :tags #{"pizza" "dough"}
-                   :tasks ["t4"]}}
-   
+                   :tasks ["t4"]}}   
    :tasks {"t1" {:id "t1"
                  :name "Fill pot"
                  :duration "M1"
                  :equipment [{:item "i1" :qty 4 :unit "ea"}]
                  :ingredients [{:item "i3" :qty 2 :unit "usquart"}]
                  :steps ["fill pot with water"]
-                 :yields [{:item "i5" :qty 1 :unit "each"}]}
+                 :yields [{:item "i5" :qty 1 :unit "ea"}]}
            "t2" {:id "t2"
-                 :state :mew
+                 :status :new
                  :name "Bring to Boil"
                  :duration "M12S45"
                  :equipment [{:item "i2" :qty 1 :unit "ea"}]
@@ -83,13 +88,12 @@
                  :yields [{:item "i4" :qty 6 :unit "usquart"}
                           {:item "i5" :qty 1 :unit "usquart"}]}
            "t3" {:id "t3"
-                 :state :mew
+                 :status :new
                  :name "Add Salt"
-                 :ingredients [:item "i6" :qty {:whole 1 :numer 1 :denom 2}]
-                 :steps ["Add salt and optional baking soda to boiling water, stir until dissolved." "Cool solution to body temperature."]
-                 :yields [{:item "i4" :qty 6 :unit "usquart"} {:item "i5":qty 1 :unit "usquart"}]}
+                 :ingredients [{:item "i6" :qty {:whole 1 :numer 1 :denom 2} :unit "ustsp"}]
+                 :steps ["Add salt and optional baking soda to boiling water, stir until dissolved." "Cool solution to body temperature."]}
            "t4" {:id "t4"
-                 :state :new
+                 :status :new
                  :name "Autolyze Flour"
                  :ingredients [{:item "i3" :qty 638 :units"gram"} {:item "i8" :qty 550 :unit "gram"}]
                  :steps ["Mix flour and water in a bowl" "Cover and let rest for 20-60 min"]}}

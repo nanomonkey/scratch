@@ -96,7 +96,7 @@
 
 (defn landing-pg-handler [^js ring-req]
   (hiccups/html
-   [:html
+   [:html5
     [:head
      [:div#sente-csrf-token {:data-csrf-token (str (.csrfToken  ring-req))}]
      [:meta {:charset "utf-8"}]
@@ -200,9 +200,8 @@
 (defmethod -event-msg-handler
   :ssb/upsert
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
-  (let [record (:record ?data)]
-    (let [key (ssb/upsert! uid record)]
-         (when ?reply-fn (?reply-fn {:key key})))))
+  (let [response (ssb/upsert! uid ?data)]
+    (when ?reply-fn (?reply-fn {:response response}))))
 
 (defmethod -event-msg-handler
   :ssb/create

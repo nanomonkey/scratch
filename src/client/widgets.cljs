@@ -323,7 +323,7 @@
 (defn- close-modal []
   (rf/dispatch [:modal {:show? false :child nil}]))
 
-(defn modal-button [title icon child first-focus]
+(defn modal-button [title icon child]
  [:button.wide
   {:title title
    :on-click #(do (.preventDefault %)  

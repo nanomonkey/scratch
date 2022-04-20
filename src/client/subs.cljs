@@ -3,7 +3,11 @@
             [client.widgets :refer [duration->sec]])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-;; Server
+
+;;;;;;;;;;;;
+;; Server ;;
+;;;;;;;;;;;;
+
 (rf/reg-sub
  :server/status
  (fn [db _]
@@ -135,6 +139,13 @@
    (:status item)))
 
 (rf/reg-sub
+ :item/dirty?
+ (fn [[_ id]]
+   (rf/subscribe [:item/status id]))
+ (fn [status _]
+   (if (= :saved status) false true)))
+
+(rf/reg-sub
  :item/record
  (fn [[_ id]]
    (rf/subscribe [:item id]))
@@ -186,20 +197,50 @@
     (into [] (for [[id item] item-index]
                [(:name item) id]))))
 
-;;Recipes
+
+;;;;;;;;;;;;;
+;; Recipes ;;
+;;;;;;;;;;;;;
+
+(rf/reg-sub
+ :recipe
+ (fn [db [_ id]]
+   (get-in db [:recipes id])))
+
 (rf/reg-sub
  :recipe/ids
  (fn [db]
    (map key (:recipes db))))
 
 (rf/reg-sub
+ :recipe/record
+ (fn [[_ id]]
+   (rf/subscribe [:recipe id]))
+ (fn [item _]
+   (-> item
+       (dissoc :status)
+       (assoc :type "recipe"))))
+
+(rf/reg-sub
  :recipe/status
- (fn [db [_ recipe-id]]
-   (if (integer? recipe-id)            ; only temp-ids should be an integer
-     :new
-     (if (> 0 (count @(rf/subscribe [:updates recipe-id])))
-       :dirty
-       :saved))))
+ (fn [[_ id]]
+   (rf/subscribe [:recipe id]))
+ (fn [recipe _]
+   (:status recipe)))
+
+(rf/reg-sub 
+ :recipe/tasks-saved?
+ (fn [db [_ id]]
+   (rf/subscribe [:recipe/tasks id]))
+ (fn [task-list _]
+   (reduce (fn [task] (if @(rf/subscribe [:task/dirty? task]) (reduced false) true)) task-list)))
+
+(rf/reg-sub
+ :recipe/dirty?
+ (fn [[_ id]]
+   (rf/subscribe [:recipe/status id]))
+ (fn [status _]
+   (if (= :saved status) false true)))
 
 (rf/reg-sub
  :recipe/names
@@ -222,11 +263,6 @@
                       (.indexOf text)
                       (> -1)))
          (mapv #(vector (:name %) (:id %))))))
-
-(rf/reg-sub
- :recipe
- (fn [db [_ id]]
-   (get-in db [:recipes id])))
 
 (rf/reg-sub
   :recipe/name
@@ -267,6 +303,15 @@
    (get-in db [:tasks id])))
 
 (rf/reg-sub
+ :task/record
+ (fn [[_ id]]
+   (rf/subscribe [:task id]))
+ (fn [item _]
+   (-> item
+       (dissoc :status)
+       (assoc :type "task"))))
+
+(rf/reg-sub
  :task/name
  (fn [db [_ id]]
    (get-in db [:tasks id :name])))
@@ -298,12 +343,17 @@
 
 (rf/reg-sub
  :task/status
- (fn [db [_ task-id]]
-   (if (integer? task-id)            ; only temp-ids should be an integer
-     :new
-     (if (> 0 (count @(rf/subscribe [:updates task-id])))
-       :dirty
-       :saved))))
+ (fn [[_ id]]
+   (rf/subscribe [:task id]))
+ (fn [task _]
+   (:status task)))
+
+(rf/reg-sub
+ :task/dirty?
+ (fn [[_ id]]
+   (rf/subscribe [:task/status id]))
+ (fn [status _]
+   (if (= :saved status) false true)))
 
 ;; Locations
 (rf/reg-sub

@@ -68,20 +68,24 @@
     (fn [root branch]
       [:div.white-panel
        [:form {:on-submit #(do (.preventDefault %)
-                               (rf/dispatch [:post-reply root branch  @text])
-                               (reset! text  ""))}
+                               (rf/dispatch [:post-reply root branch @text])
+                               (reset! text  "")
+                               (rf/dispatch [:modal {:show? false :child nil}]))}
         [:div
-         [:label "Reply: " ]
+         [:label "Reply: "]
          [:textarea{:rows 9
+                    :auto-focus true
                     :style {:resize "none"
                             :width "100%" 
                             :margin "auto"
                             :overlfow "auto"}
                     :value @text
                     :on-change #(reset! text (-> % .-target .-value))}]]
-        [:div [:button {:type "submit"} "Post"]]
-        [:hr]
-        [:div (markdown-section @text)]]])))
+        [:div [:button {:type "submit"} "Post"]]]
+       (when (not= "" @text)
+         [:fieldset
+          [:legend "Preview"]
+          [:div (markdown-section @text)]])])))
 
 (defn display-post [post-id]
   (let [author (rf/subscribe [:post/author post-id])
@@ -103,10 +107,11 @@
 (defn comments-view []
   (let [loaded-comment @(rf/subscribe [:loaded-comment])
         replies @(rf/subscribe [:reply-ids loaded-comment])]
-    (if (first replies)
-      [:div 
-       [modal-button "Post Comment" "Comment" [comment-form loaded-comment loaded-comment]]
-       [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) replies))]])))
+    [:div 
+     [modal-button "Post New Comment" "Comments" [comment-form loaded-comment loaded-comment]]
+     (if (first replies)
+       [:div
+        [:ul.replies (doall (map #(vector :li {:key %} [display-post %]) replies))]])]))
 
 (defn post []
   (let [content (r/atom "")]
@@ -431,15 +436,6 @@
                          }])
          [:button "+ Line Item"]]]))))
 
-(defn sync-task [task-id]
-  [:div
-   (case @(rf/subscribe [:task/status task-id])
-     :new [:button.wide {:on-click #(do (.preventDefault %)
-                                        (rf/dispatch [:task/save task-id]))} "Save Task"]
-     :dirty [:button.wide {:on-click #(do (.preventDefault %)
-                                          (rf/dispatch [:task/update task-id]))} "Update Task"]
-     :saved [:div "Task Saved"])])
-
 (defn task-table [recipe-id]
   (fn [recipe-id]
     (let [tasks @(rf/subscribe [:recipe/tasks recipe-id])]
@@ -452,15 +448,13 @@
 ;; Equipment for task
              [:div ^{:key (str task "equipment")}
               [modal-button "Add Equipment" "Equipment:"
-               [line-item #(rf/dispatch [:task/add-equipment task %1 %2 %3])]
-               "equipment-qty"]]
+               [line-item #(rf/dispatch [:task/add-equipment task %1 %2 %3])]]]
              [list-items @(rf/subscribe [:task/equipment task])
               :task/remove-equipment task]
 ;; Ingredients for task
              [:div ^{:key (str task "-ingredients")}
               [modal-button "Add Ingredient" "Ingredients:"
-               [line-item #(rf/dispatch [:task/add-ingredient task %1 %2 %3])]
-               "ingredient-qty"]]
+               [line-item #(rf/dispatch [:task/add-ingredient task %1 %2 %3])]]]
              [list-items @(rf/subscribe [:task/ingredients task])
               :task/remove-ingredient task]]
 ;; Steps for task
@@ -472,29 +466,31 @@
 ;; Yielded products:        
             [:td ^{:key (str task "-products")}
              [modal-button "Add Product Item" "Yields:"
-              [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]
-              "yield-qty"]
+              [line-item #(rf/dispatch [:task/add-product task %1 %2 %3])]]
               [list-items @(rf/subscribe [:task/yields task])
                :task/remove-product task]]
 ;; Rearrange Tasks
             [:td ^{:key (str task "-arrange")}
              (if-not (= task (first tasks))
-               [:button {:title "Move Task up"
+               [:button.wide {:title "Move Task up"
                          :on-click #(do (.preventDefault %)
                                              (rf/dispatch [:recipe/move-task-up recipe-id task]))} 
                 [arrow-up-icon]])
              (if-not (= task (last tasks))
-               [:button
+               [:button.wide
                 {:title "Move Task Down"
                  :on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/move-task-down recipe-id task]))} 
                 [arrow-down-icon]])
-             [:button 
+             [:button.wide 
                 {:title "Remove Task from Recipe"
                  :on-click #(do (.preventDefault %)
                                 (rf/dispatch [:recipe/remove-task recipe-id task]))} 
                 "Remove"]
-             (sync-task task) ] ]))
+             
+             (if @(rf/subscribe [:task/dirty? task])
+               [:button.wide {:on-click #(do (.preventDefault %)
+                                        (rf/dispatch [:task/save task]))} "Save Task"]) ] ]))
         [:tr ^{:key "Add_Task_row"}
          [:td ^{:key "Add_Task"}
           [add-task recipe-id]]] ]]))) 
@@ -509,12 +505,14 @@
       [:div.column.left
        [:div [recipe-search]]]
       [:div.column.middle
-       (if (not= "saved" @(rf/subscribe [:recipe/status recipe-id]))
-         [:a.right {:href "#" 
-                    :on-click #(rf/dispatch [:recipe/publish recipe-id])
-                    :style {:border "solid blue"}} "Save Recipe"])
-       [:a.right {:href "#" :on-click #(rf/dispatch [:load-comment recipe-id])} 
-        [comment-icon (count @(rf/subscribe [:comments recipe-id]))]]
+       (if @(rf/subscribe [:recipe/dirty? recipe-id])
+         [:div
+          [:a.right {:href "#" 
+                     :on-click #(rf/dispatch [:recipe/save recipe-id])
+                     :style {:border "solid blue"}} "Save Recipe"]])
+       [:div
+        [:a.right {:href "#" :on-click #(rf/dispatch [:load-comment recipe-id])} 
+         [comment-icon (count @(rf/subscribe [:comments recipe-id]))]]]
        [:h1 [inline-editor @(rf/subscribe [:recipe/name recipe-id])
              {:on-update #(rf/dispatch [:recipe/update-name recipe-id %])}]] 
        [inline-editor @(rf/subscribe [:recipe/description recipe-id])
@@ -702,8 +700,7 @@
          {:on-update #(rf/dispatch [:location/update-address @location-id %])}]
         [:div 
          [modal-button "Add Inventory" "+ Inventory"
-          [line-item #(rf/dispatch [:inventory/add @location-id %1 %2 %3])]
-          "qty"]
+          [line-item #(rf/dispatch [:inventory/add @location-id %1 %2 %3])]]
           (doall
              (for [item @(rf/subscribe [:location/inventory @location-id])]
                [:div
