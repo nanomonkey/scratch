@@ -3,7 +3,8 @@
             [clojure.edn :as edn]
             [taoensso.sente  :as sente  :refer (cb-success?)]
             [client.db :as db]
-            [client.ws :as ws]))
+            [client.ws :as ws]
+            [compact-uuids.core :as uuid]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Utility Functions  ;;
@@ -101,12 +102,11 @@
 
 (rf/reg-fx
  :ssb/create-record
- (fn [content created-fn]
-   (ws/chsk-send! [:ssb/create content] 8000
-                  (fn [reply] 
-                    (if (cb-success? reply) 
-                      (created-fn reply)
-                      (rf/dispatch [:error reply]))))))
+ (fn [content]
+   (ws/chsk-send! [:ssb/create content] 
+                  ;8000
+                  ;(fn [reply] (if (cb-success? reply) (created-fn reply) (rf/dispatch [:error reply])))
+                  )))
 
 (rf/reg-fx
  :ssb/upsert
@@ -118,7 +118,7 @@
                       (rf/dispatch [:error reply]))))))
 
 (rf/reg-fx
- :ssb/update-record
+ :ssb/update-record                             ;; TODO Remove, replaced by Upsert?
  (fn [{:keys [id updates]}]
    (ws/chsk-send! [:ssb/update {:id id :updates updates}] 5000
                   (fn [reply] 
@@ -224,9 +224,9 @@
      (assoc cofx :temp-id (swap! last-temp-id inc))))
 
 (rf/reg-cofx
- :uuid
+ :uuid 
  (fn [cofx _]
-   (assoc cofx :uuid (str (random-uuid)))))
+   (assoc cofx :uuid (uuid/str (random-uuid)))))  ;re-encode uuid in a compact ascii string
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Event Handlers  ;;
@@ -789,21 +789,22 @@
 
 
 (rf/reg-event-db
- :add-records
- (fn [db [_ record-key records]]
-   (update-in db [record-key] (fnil conj []) (index-by :id records))))
+ :add-record
+ (fn [db [_ record]]
+   (let [record-key (pluralize-keyword (:type record))]
+     (update-in db [record-key] (fnil conj []) (index-by :id record)))))
 
 (rf/reg-event-db
- :add-posts
- (fn [db [_ posts]] 
-   (update-in db [:posts] (merge (:posts db) (index-by :id posts)))))
+ :add-post 
+(fn [db [_ post]] 
+   (assoc-in db [:posts (:id post)] post)))
 
 (rf/reg-event-fx
  :post
  (fn [cofx [_ text]]
    {:ssb/create-record {:type "post" :text text}}
    (fn [reply]
-     (rf/dispatch [:add-posts [reply]]))))
+     (rf/dispatch [:add-post [reply]]))))
 
 (rf/reg-event-fx
  :post-reply

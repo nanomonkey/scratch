@@ -151,7 +151,7 @@
 ;; Publish to database 
 
 (defn publish! [uid contents bus-tag]
-  (if-let [^js db (get @db-conns uid)]    
+  (if-let [^jsq db (get @db-conns uid)]    
     (.publish db (clj->js contents) 
               (fn [err msg]
                 (if err

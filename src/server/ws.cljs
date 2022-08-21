@@ -101,10 +101,7 @@
      [:div#sente-csrf-token {:data-csrf-token (str (.csrfToken  ring-req))}]
      [:meta {:charset "utf-8"}]
      [:link {:rel "stylesheet"
-             :href "css/main.css"}]
-     (comment ; TODO remove if this isn't being used 
-       [:link {:rel "stylesheet"
-                      :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}])]
+             :href "css/main.css"}]]
     [:body
      [:div {:id "app"}]
      [:script {:src "js/showdown.min.js"}]
@@ -190,7 +187,7 @@
   (println "ping"))  ;;TODO: print "." without flush?
 
 (defmethod -event-msg-handler
-  :ssb/post  
+  :ssb/post
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (let [msg (:msg ?data)]
     (debugf "Post event: %s" event)
@@ -206,10 +203,10 @@
 (defmethod -event-msg-handler
   :ssb/create
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
-  (let [type (:type ?data)
-        content (:content ?data)]
-    ;(dispatch! :create {:uid uid :type type :content content})
-    (ssb/publish! uid (merge content {:type type}) :response)))
+  (let [content (:content ?data)]
+    (println (str content))
+    ;(dispatch! :create {:uid uid :type type :content content}) 
+    (ssb/publish! uid content :created)))
 
 (defmethod -event-msg-handler
   :ssb/update
@@ -294,6 +291,7 @@
   {:error  (fn [{:keys [uid message]}] (println "Error: " message)
              (chsk-send! uid [:ssb/error-event {:message message}]))
    :response (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/response {:message message}]))
+   :created (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/created {:message message}]))
    :feed (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/feed {:message  message}]))
    :query-response (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/query-response {:message message}]))
    :name (fn [{:keys [uid message]}] (chsk-send! uid [:ssb/contact-name {:message message}]))

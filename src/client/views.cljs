@@ -33,7 +33,7 @@
                        [:a {:href "#" :on-click #(rf/dispatch [:set-active-panel key])} value]]) ) 
                   {:recipe "Recipes" 
                    :inventory "Inventory" 
-                   :supplier "Supplier" 
+                   :supplier "Suppliers" 
                    :schedule "Schedule"
                    :settings "Settings"})]])))
 

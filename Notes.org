@@ -356,3 +356,11 @@ npm uninstall the-thing
    [:li.active "last one"]]]]
 
 #+END_SRC
+
+* Yield Management
+- Recipes yield desireable products and waste.  
+- Waste can eventually be used as an ingredient for another recipe.
+- Locations and equipment yield in a similar way, but the consumable product is time itself, ie a room can be rented for a duration, but if it is not used then that past time period does not remain in inventory. Scheduling is how this resource is managed.
+
+* decentangle
+- decentralized entangle 

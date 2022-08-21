@@ -71,6 +71,11 @@
   [id {:as ?data :keys [message]}]
   (rf/dispatch [:feed (str message)]))
 
+(defmethod chsk-recv 
+  :ssb/created
+  [id {:as ?data :keys [message]}]
+  (rf/dispatch [:feed (str message)]))
+
 (defmethod chsk-recv
   :ssb/blob
   [id {:keys [blob-id url]}]
