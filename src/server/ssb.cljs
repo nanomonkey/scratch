@@ -13,6 +13,7 @@
             ["ssb-query" :as ssb-query]
             ["ssb-keys" :as ssb-keys]
             ["ssb-blobs" :as ssb-blobs]
+            ["ssb-private" :as ssb-private]
             ["ssb-serve-blobs" :as ssb-serve-blobs]
             ["ssb-serve-blobs/id-to-url" :as blob-id->url]
             ["ssb-config/inject" :as ssb-config]
@@ -83,14 +84,15 @@
       id)))
 
 (defonce plugins (do                           
-                   ;(.use ssb-server ssb-master)  TODO: check to see if this is still needed
+                   ;(.use ssb-server ssb-master)  TODO: check to see if this is still needed ʕ•ᴥ•ʔ
                    (.use ssb-server ssb-gossip)
                    (.use ssb-server ssb-replicate)
                    (.use ssb-server ssb-query)
                    (.use ssb-server ssb-backlinks)
                    (.use ssb-server ssb-about)
                    (.use ssb-server ssb-blobs)
-                   (.use ssb-server ssb-serve-blobs)))
+                   (.use ssb-server ssb-serve-blobs)
+                   (.use ssb-server ssb-private)))
 
 (defn start-server [username password]
   "returns db connection"
@@ -104,16 +106,6 @@
  
 (defn parse-json [msg] 
   (js->clj msg :keywordize-keys true))
-
-; TODO: check to see if private needs to be pulled in as plugin (ssb-private), or use ssb-keys
-(defn decrypt [uid msg]  
-  (if-let [^js db (get @db-conns uid)]
-    (.private.unbox db msg
-                    (fn [err, content]
-                      (if err
-                        (dispatch! :error {:uid uid :message err})
-                        (dispatch! :response {:uid uid :message (js->clj content)}))))
-    (dispatch! :error {:uid uid :message "Unable to get server with User-id"})))
 
 (defn whoami! [uid]
   (if-let [^js db (get @db-conns uid)]
@@ -159,6 +151,8 @@
                   (dispatch! bus-tag {:uid uid :message (js->clj msg)}))))
     (dispatch!  :error {:uid uid :message "Unable to get server with User-id"})))
 
+;; Private (encrypted) messages
+
 (defn private-publish! [uid contents recipients]
   (if-let [^js db (get @db-conns uid)]
     (.private.publish db
@@ -169,6 +163,20 @@
                           (dispatch! :error {:uid uid :message err})
                           (dispatch! :response {:uid uid :message (parse-json msg)}))))
     (dispatch! {:uid uid :error "Unable to get server with User-id"})))
+
+(defn decrypt [uid msg]  
+  (if-let [^js db (get @db-conns uid)]
+    (dispatch! :response {:uid uid :message (js->clj (.private.unbox db msg))})
+    (dispatch! :error {:uid uid :message "Unable to get server with User-id"})))
+
+ 
+(defn private-message-query [uid query]
+  (if-let [^js db (get @db-conns uid)]
+    (pull (.private.read db (clj->js query))
+          (.collect pull  (fn [err ary] (if err
+                                          (dispatch! :error {:uid uid :message err})
+                                          (cb (parse-json ary))))))
+    (dispatch! :error {:uid uid :message (str "Unable to get server with User-id: " uid )})))
 
 
 ;; Feed stream
@@ -327,6 +335,20 @@
 (defn atob [b64-str] 
   "base64-encoded ascii data to binary"
   (.toString (.from js/Buffer b64-str "base64" ) "binary"))
+
+(defn base64-to-uint8-array
+  [base64]
+  (let [binary-string (.atob js/window base64)
+        len           (.-length binary-string)
+        bytes         (js/Uint8Array. len)]
+    (dotimes [i len] (aset bytes i (.charCodeAt binary-string i)))
+    bytes))
+
+(defn base64-to-blob
+  [base64-content content-type]
+  (let [byte-array (base64-to-uint8-array base64-content)
+        options    (clj->js {:type content-type})]
+    (js/Blob. #js [byte-array] options)))
 
 ;(assert (base64->binary 'SGVsbG8sIFdvcmxkIQ==') "Hello, World!")
 

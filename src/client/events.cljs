@@ -54,6 +54,8 @@
   "Removes nil values from map, but allows for false values"
   (into {} (remove (comp nil? second) record)))
 
+
+
 ;;;;;;;;;;;;;
 ;; Effects ;;
 ;;;;;;;;;;;;;
