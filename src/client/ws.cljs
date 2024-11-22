@@ -17,8 +17,36 @@
   (def ch-chsk    ch-recv) ; ChannelSocket's receive channel
   (def chsk-send! send-fn) ; ChannelSocket's send API fn
   (def chsk-state state)   ; Watchable, read-only atom
-)
+  )
 
+
+
+;; (def socket (atom nil))
+;; (def ch-chsk (atom nil))    ; ChannelSocket's receive channel
+;; (def chsk-send! (atom nil)) ; ChannelSocket's send API fn
+;; (def chsk-state (atom nil)) ; Watchable, read-only atom
+
+;; (def config {:protocol :http
+;;              :host     "localhost"  ;;TODO get from config file or localstore
+;;              :port     5000
+;;              :type     :auto
+;;              :packer   :edn})
+
+;; (defn state-watcher [_key _atom _old-state new-state]
+;;   (reset! chsk-state new-state)
+;;   (rf/dispatch [:server/status new-state])
+;;   (.warn js/console "New state" new-state))
+
+;; (defn create-client! []
+;;   (let [?csrf-token 
+;;         (when-let [el (.getElementById js/document "sente-csrf-token")]
+;;           (.getAttribute el "data-csrf-token"))
+;;         {:keys [chsk ch-recv send-fn state]} 
+;;         (sente/make-channel-socket-client! "/chsk" (comment ?csrf-token) config)]
+;;     (reset! socket chsk)
+;;     (reset! ch-chsk ch-recv)
+;;     (reset! chsk-send! send-fn)
+;;     (add-watch state :state-watcher state-watcher)))
 
 (defn stop-router! []
   (when-let [stop-f @router_] (stop-f)))
@@ -37,7 +65,7 @@
  our channel socket to reconnect, thereby picking up the new  session" 
   (sente/ajax-lite "/login"
                    {:method :post
-                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
+                    ;:headers {:x-csrf-token (:csrf-token @chsk-state)}
                     :params {:username    (str username)
                              :password    (str password)}}
                    (fn [ajax-resp]
@@ -53,7 +81,7 @@
 (defn ssb-create-account! [username password]   
   (sente/ajax-lite "/new_account"
                    {:method :post
-                    :headers {:x-csrf-token (:csrf-token @chsk-state)}
+                    ;:headers {:x-csrf-token (:csrf-token @chsk-state)}
                     :params {:username    (str username)
                              :password   (str password)}}
                    (fn [ajax-resp]
@@ -68,33 +96,3 @@
                            (ssb-login! username password)))))))
 
 
-;; New methods that don't seem to work reliably
-
-
-(comment
-  (def socket (atom nil))
-  (def ch-chsk (atom nil))    ; ChannelSocket's receive channel
-  (def chsk-send! (atom nil)) ; ChannelSocket's send API fn
-  (def chsk-state (atom nil)) ; Watchable, read-only atom
-
-  (def config {:protocol :http
-               :host     "localhost"  ;;TODO get from config file or localstore
-               :port     5000
-               :type     :auto
-               :packer   :edn})
-
-(defn state-watcher [_key _atom _old-state new-state]
-  (reset! chsk-state new-state)
-  (rf/dispatch [:server/status new-state])
-  (.warn js/console "New state" new-state))
-
-(defn create-client! []
-    (let [?csrf-token (when-let [el (.getElementById js/document "sente-csrf-token")]
-                        (.getAttribute el "data-csrf-token"))
-          {:keys [chsk ch-recv send-fn state]} (sente/make-channel-socket-client! "/chsk" ?csrf-token config)]
-      (reset! socket chsk)
-      (reset! ch-chsk ch-recv)
-      (reset! chsk-send! send-fn)
-      (add-watch state :state-watcher state-watcher)))
-
-)

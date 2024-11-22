@@ -25,7 +25,8 @@
             ["flumeview-reduce" :as fv-reduce]
             ["flumeview-query" :as fv-query]
             ["flumedb" :as flumedb]
-            [editscript.core :as edit])
+            ;[editscript.core :as edit]
+            )
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def scratch-caps (clj->js {:shs "SecugSsSNct6tgFyepgEFCE07p5q+OCAAKusgEb/Jwc="
@@ -84,7 +85,7 @@
       id)))
 
 (defonce plugins (do                           
-                   ;(.use ssb-server ssb-master)  TODO: check to see if this is still needed ʕ•ᴥ•ʔ
+                   ;(.use ssb-server ssb-master)  TODO: still needed?  ʕ•ᴥ•ʔ
                    (.use ssb-server ssb-gossip)
                    (.use ssb-server ssb-replicate)
                    (.use ssb-server ssb-query)
@@ -127,18 +128,6 @@
       (js->clj content)))) 
 
 
-(defn flatten-msg [uid msg]
-  (let [key (gobj/get msg "key")
-        content (gobj/getValueByKeys msg #js ["value" "content"])
-        author (gobj/getValueByKeys msg #js ["value" "author"])
-        encrypted? (and (string? content) (str/includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
-    (conj {:key key
-           :author author
-           :encrypted encrypted?}
-          (if encrypted?
-            (destructure (decrypt uid content))
-            (destructure content)))))
-
 
 ;; Publish to database 
 
@@ -170,7 +159,7 @@
     (dispatch! :error {:uid uid :message "Unable to get server with User-id"})))
 
  
-(defn private-message-query [uid query]
+(defn private-message-query [uid query cb]
   (if-let [^js db (get @db-conns uid)]
     (pull (.private.read db (clj->js query))
           (.collect pull  (fn [err ary] (if err
@@ -296,6 +285,17 @@
               (fn [^js db] (.links db #js {:values true :rel 'root' :dest message-id})) 
               #(dispatch! :feed %)))
 
+(defn flatten-msg [uid msg]            ;; [WIP]
+  (let [key (gobj/get msg "key")
+        content (gobj/getValueByKeys msg #js ["value" "content"])
+        author (gobj/getValueByKeys msg #js ["value" "author"])
+        encrypted? (and (string? content) (str/includes? content ".box"))]  ;;TODO more efficient way of checking for .box end of string
+    (conj {:key key
+           :author author
+           :encrypted encrypted?}
+          (if encrypted?
+            (destructure (decrypt uid content))
+            (destructure content)))))
 
 ;; *************
 ;; **  Blobs  **

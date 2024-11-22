@@ -9,50 +9,46 @@
    [taoensso.encore    :as encore :refer ()]
    [taoensso.timbre    :as timbre :refer-macros (tracef debugf infof warnf errorf)]
    [taoensso.sente     :as sente]
+   ;[taoensso.sente.server-adapters.community.generic-node :as generic-node]
+   ;[taoensso.sente.server-adapters.community.express :as sente-express]
    [taoensso.sente.server-adapters.express :as sente-express]
 
    ;;nodejs libraries
    ["http" :as http]
    ["express" :as express]
    ["express-ws" :as express-ws]
-   ;["ws" :as ws]
+   ["ws" :as ws]
    ["cookie-parser" :as cookie-parser]
    ["body-parser" :as body-parser]
    ["csurf" :as csurf]
    ["express-session" :as express-session]
    ;["express-static" :as express-static]
    ["formidable" :as formidable]
-   ["path" :as path]
-   
-   ;; Optional, for Transit encoding:
-   ;[taoensso.sente.packers.transit :as sente-transit]
-   )
+   ["path" :as path])
   (:require-macros
    [hiccups.core :as hiccups :refer [html]]
    [cljs.core.async.macros :as asyncm :refer (go go-loop)]))
 
 (set! js/console.debug js/console.log)
 (enable-console-print!)
-;;(timbre/set-level! :trace) ; Uncomment for more logging
+(timbre/set-level! :trace) ; Uncomment for more logging
 
 ;;;; Ring handlers
 
-(let [;; Serialization format, must use same val for client + server:
-      packer :edn ; Default packer, a good choice in most cases
-      ;; (sente-transit/get-flexi-packer :edn) ; Experimental, needs Transit dep
-      {:keys [ch-recv send-fn ajax-post-fn ajax-get-or-ws-handshake-fn
+(let [{:keys [ch-recv send-fn ajax-post-fn ajax-get-or-ws-handshake-fn
               connected-uids]}
-      (sente-express/make-express-channel-socket-server! {:packer packer
-                                                          :user-id-fn 
-                                                          ;:csrf-token-fn nil
-                                                          (fn [ring-req] 
-                                                            (aget (:body ring-req) "session" "uid"))})]
+      (sente-express/make-express-channel-socket-server! 
+       {:packer :edn
+        :csrf-token-fn nil
+        ;:csrf-token-fn (fn [^js ring-req] (str (.csrfToken  ring-req)))
+        :user-id-fn (fn [^js ring-req] (aget (:body ring-req) "session" "uid"))})]
   (def ajax-post                ajax-post-fn)
   (def ajax-get-or-ws-handshake ajax-get-or-ws-handshake-fn)
   (def ch-chsk                  ch-recv) ; ChannelSocket's receive channel
   (def chsk-send!               send-fn) ; ChannelSocket's send API fn
   (def connected-uids           connected-uids) ; Watchable, read-only atom
   )
+
 
 (defn express-account-creation-handler
   [req res]
@@ -71,15 +67,16 @@
       (.send res "ERR_making_account"))))
 
 (defn express-login-handler
-  "Here's where we'll add server-side login/auth procedure (Friend, etc.).
-  In our simplified example we'll just always successfully authenticate the user
-  with whatever user-id they provided in the auth request."
   [req res]
   (let [req-session (aget req "session")
         body        (aget req "body")
         username     (aget body "username")
         password      (aget body "password")]
     (aset req-session "uid" username)
+    ;; (-> res
+    ;;     (.status 200)
+    ;;     (.json (clj->js {:username username
+    ;;                      :uid username}))
     (dispatch! :ssb-login {:username username :password password}) ;;TODO create login
     (.send res "Success")))
 
@@ -98,14 +95,14 @@
   (hiccups/html
    [:html5
     [:head
-     [:div#sente-csrf-token {:data-csrf-token (str (.csrfToken  ring-req))}]
+     ;[:div#sente-csrf-token {:data-csrf-token (str (.csrfToken  ring-req))}]
      [:meta {:charset "utf-8"}]
      [:link {:rel "stylesheet"
-             :href "css/main.css"}]]
+             :href "/css/main.css"}]]
     [:body
      [:div {:id "app"}]
-     [:script {:src "js/showdown.min.js"}]
-     [:script {:src "js/main.js"}]]]))
+     [:script {:src "/js/showdown.min.js" :type "application/javascript"}]
+     [:script {:src "/js/main.js" :type "application/javascript"}]]]))
 
 (defn routes [^js express-app]
   (doto express-app
@@ -120,7 +117,7 @@
     (.post "/login" express-login-handler)
     (.post "/new_account" express-account-creation-handler)
     (.post "/upload" express-upload-handler)
-    (.use (.static express "resources/public"))
+    (.use (.static express "resources/public/"))
     (.use (fn [^js req res next]
             (warnf "Unhandled request: %s" (.-originalUrl req))
             (next)))))
@@ -134,14 +131,15 @@
       (.use (express-session
              #js {:secret            cookie-secret
                   :resave            true
-                  :cookie            #js {:sameSite false}
+                  :cookie            #js {:sameSite "None"
+                                          :secure true}
                   :store             (.MemoryStore express-session)
                   :saveUninitialized true}))
       (.use (.urlencoded body-parser
                          #js {:extended false}))
       (.use (cookie-parser cookie-secret))
-      (.use (csurf       ; CSRF protection middleware
-             #js {:cookie false}))
+      ;; (.use (csurf       ; CSRF protection middleware
+      ;;        #js {:cookie true}))
       (routes))))
 
 (defn main-ring-handler [express-app]
@@ -283,6 +281,21 @@
   [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (dispatch! :display-blobs {:uid uid}))
 
+(defmethod -event-msg-handler :chsk/uidport-open
+  [{:as ev-msg :keys [ring-req]}]
+  (let [session (:session ring-req)
+        uid     (:uid     session)]
+    (if uid
+      (timbre/infof "User connected: user-id `%s`" uid)
+      (timbre/infof "User connected: no user-id (user didn't have login session)"))))
+
+(defmethod -event-msg-handler :chsk/uidport-close
+  [{:as ev-msg :keys [ring-req]}]
+  (let [session (:session ring-req)
+        uid     (:uid     session)]
+    (if uid
+      (timbre/infof "User disconnected: user-id `%s`" uid)
+      (timbre/infof "User disconnected: no user-id (user didn't have login session)"))))
 
 ;; Message Bus Handlers
 ;; routes data to seperate processes via tagged async channels

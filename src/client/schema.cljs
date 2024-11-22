@@ -59,6 +59,31 @@
 (defn sha256? [hash] (and (string? hash) (= (count hash) 44)))
 (defn json-object? [x] true)
 
+;; From https://conan.is/blogging/clojure-spec-tips.html
+;;
+;; (s/def ::json-string (s/with-gen
+;;                        (s/and string? #(try (json/decode %) true
+;;                                             (catch Exception _ false)))
+;;                        #(gen/fmap json/encode (s/gen any?))))
+                       
+;; (s/def ::uuid-string (s/with-gen
+;;                        (s/and string? #(try (UUID/fromString %) true
+;;                                             (catch Exception _ false)))
+;;                        #(gen/fmap str (s/gen uuid?))))
+                       
+;; ;; Using https://github.com/dm3/clojure.java-time                       
+;; (s/def ::date-string (s/with-gen
+;;                        (s/and string? #(try (java-time/local-date-time %)
+;;                                             (catch Exception _ false)))
+;;                        #(gen/fmap (comp str (partial apply java-time/local-date-time))
+;;                           (s/gen (s/tuple (s/int-in 1970 2050)
+;;                                           (s/int-in 1 12)
+;;                                           (s/int-in 1 29)
+;;                                           (s/int-in 0 23)
+;;                                           (s/int-in 0 59)
+;;                                           (s/int-in 0 59))))))
+
+
 (s/def ::hash-id ed25519?)
 (s/def ::feed-id sha256?)
 (s/def ::signature sha256?)
@@ -71,3 +96,26 @@
                            :hash "sha256"
                            :content ::content
                            :signature ::signature))
+
+
+;; Database Validation (WIP)
+
+(defn validate
+  "Returns nil if the db conforms to the spec, throws an exception otherwise"
+  [spec db]
+  (when goog.DEBUG
+    (when-let [error (s/explain-data spec db)]
+      (throw (ex-info 
+               (str "DB spec validation failed: " 
+                    (expound/expound-str spec db)) 
+               error)))))
+
+(def validate-interceptor (rf/after (partial validate :my/db)))
+
+;; To use add validator to events:
+;;
+;; (rf/reg-event-db :some/event
+;;   [validate-interceptor]
+;;   (fn [db [event]]
+;;     ;; handle event
+;;     ))

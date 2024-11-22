@@ -1,10 +1,14 @@
 ;; shadow-cljs configuration
 {:source-paths ["src"]
- :dependencies [[cider/cider-nrepl "0.28.3"]
+ :dependencies [[cider/cider-nrepl          "0.28.3"]
+                ;[com.taoensso/encore "3.120.0"]       ; "3.62.1" "3.119.0"
+                ;[com.taoensso/sente         "1.18.0"]  ; "1.19.2"
+                ;[com.taoensso/timbre         "6.2.2"]
+
                 [com.taoensso/timbre      "4.10.0"] ;  "5.1.2"
-                ;[com.taoensso/encore "3.21.0"]  
-                [com.taoensso/sente       "1.11.0"] ; "1.16.2" 
-                [hiccups                   "0.3.0"]
+                [com.taoensso/encore "3.21.0"]  
+                [com.taoensso/sente       "1.11.0"] ; "1.16.2"
+                [hiccups                     "0.3.0"]
                 [reagent                     "1.1.0"]
                 [re-frame                "1.3.0-rc2"]
                 ;[day8.re-frame/tracing      "0.6.2"]
@@ -25,4 +29,6 @@
            :asset-path "/js"
            :dev-http {8000 "public"}
            :devtools {:watch-dir "public"}
+           :release {:compiler-options {:source-map true}}
            :modules {:main {:init-fn client.core/init}}}}}
+
