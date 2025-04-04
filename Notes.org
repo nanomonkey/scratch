@@ -4,35 +4,35 @@ Notes
 ** Recipes
 - A list of individual Tasks needed to produce a Product or Service.  
 ** Task
-- Tasks are a list of instructions for completing a specific task, the inventory items that will be consumed, the equipment you'll use and the final product (if any) from completing the task.  
-- Each task is seperated out by the equipment used and whether or not the task can be done in concurrently, or in a specific order.
-- Tasks that don't result in a product are often called Services. 
+- Tasks are a list of instructions for completing a specific task. The instructions include the inventory items that will be consumed, the equipment you'll use and the final product or service. 
+- Each task is seperated out by the equipment used.
 - A task is different than a recipe in that each individual step needs to be done in order and cannot be done concurrently by seperate individual, or at a later time.
+- Tasks that don't result in a product are called services. 
 *** Composed of three parts
 - An ordered list of Steps to achieve a Task
 - the Equipment needed, and the time required
 - the Ingredient Items needed, and their Units of measure
 - any intermediate Products created used in later Tasks
 ** Items
-- Physical items in your inventory, equipment you use, and products which you produce, or purchase from a supplier are all saved as Items. 
+- Physical items in your inventory, equipment you use, and products which you produce, or purchased from a supplier are all saved as Items. 
 - Items have names, descriptions and are uniquely addressable.
 ** Ingredients
-- Items that are consumed by a Tasks, these can be Products from other Tasks
+- Ingredients are Items that are consumed by a Tasks. These can be Products from other Tasks.
 ** Products
-- Items created by a Recipe's Task
-- also known as physical goods
+- Products are Items created by a Recipe
+- Products can also be known as Physical Goods
 - these can be biproducts (waste) or sellable Items.
 ** Equipment
 - Items used but not consummed by a Task
 ** Duration
 - the time a task takes to complete using equipment
 ** Services
-- Tasks that don't produce Products that are physical goods.
+- Services are non-tangible products of tasks.
 - examples: cleaning, body work, instruction, maintenance tasks
 ** Units
 - the unit of measure needed for each item
-- can be converted when an appropriate conversion factor is saved in the system
-- stored in relation to SI base units
+- These can be converted when an appropriate conversion factor is saved in the system
+- Units are stored in relation to SI base units
 *** SI Base Units
 - Meter (m) length unit of measurement:
   Distance traveled by light in a vacuum in 1/299,792,458 seconds
